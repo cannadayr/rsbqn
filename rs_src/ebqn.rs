@@ -5,6 +5,6 @@ use rustler::resource::ResourceArc;
 #[rustler::nif]
 fn init_st() -> NifResult<(Atom,ResourceArc<State>)> {
     let id : Id = 0;
-    let state = State {root: id};
+    let state = State::new(id);
     Ok((ok(),ResourceArc::new(state)))
 }
