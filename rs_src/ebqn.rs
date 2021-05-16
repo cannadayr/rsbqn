@@ -24,3 +24,8 @@ fn incr_st(arc: ResourceArc<Container>) -> NifResult<Atom> {
     state.incr();
     Ok(ok())
 }
+
+#[rustler::nif]
+fn ls(a: Vec<i64>) -> NifResult<(Atom,Vec<i64>)> {
+    Ok((ok(),a))
+}

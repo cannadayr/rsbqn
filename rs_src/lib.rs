@@ -10,4 +10,5 @@ rustler::init!("ebqn", [
     ebqn::init_st,
     ebqn::st,
     ebqn::incr_st,
+    ebqn::ls,
 ],load=load);
