@@ -3,13 +3,23 @@ use std::sync::Mutex;
 
 pub type Id = u64;
 
+struct Block {
+    t:  Id,
+    i:  Id,
+    st: Id,
+    l:  Id,
+}
+
 pub struct E {
-    parent: Id
+    parent: Id,
+    slots: Vec<Block>
 }
 impl E {
     pub fn new(parent: Id) -> Self {
+        let slots = Vec::new();
         Self {
-            parent: parent
+            parent: parent,
+            slots: slots,
         }
     }
 }
