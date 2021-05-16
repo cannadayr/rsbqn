@@ -17,16 +17,18 @@ impl E {
 pub struct State {
     root: Id,
     id: Id,
-    heap: E,
+    heap: Vec<Option<E>>,
 }
 impl State {
     pub fn new() -> Self {
-        let root = 0;
-        let e = E::new(root);
+        let root_id = 0;
+        let root = E::new(root_id);
+        let mut heap = Vec::new();
+        heap.push(Some(root));
         Self {
-            root: root,
-            id: 1+root,
-            heap: e,
+            root: root_id,
+            id: 1+root_id,
+            heap: heap,
         }
     }
     pub fn id(&self) -> Id {
