@@ -3,11 +3,23 @@ use std::sync::Mutex;
 
 pub type Id = u64;
 
-struct Block {
-    t:  Id,
-    i:  Id,
-    st: Id,
-    l:  Id,
+#[derive(Clone,Copy)]
+pub struct Block {
+    pub t:  Id,
+    pub i:  Id,
+    pub st: Id,
+    pub l:  Id,
+}
+impl Block {
+    pub fn new(bl: Vec<Id>) -> Self {
+        Self {
+            t: bl[0],
+            i: bl[1],
+            st: bl[2],
+            l: bl[3],
+        }
+    }
+
 }
 
 pub struct E {

@@ -1,4 +1,4 @@
-use crate::schema::{Container,Id,State,ok};
+use crate::schema::{Block,Container,Id,State,ok};
 use std::sync::Mutex;
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
@@ -26,6 +26,8 @@ fn incr_st(arc: ResourceArc<Container>) -> NifResult<Atom> {
 }
 
 #[rustler::nif]
-fn ls(b: Vec<Id>,o: Vec<Id>, s: Vec<Vec<Id>>) -> NifResult<(Atom,Vec<Id>,Vec<Id>,Vec<Vec<Id>>)> {
-    Ok((ok(),b,o,s))
+fn run(arc: ResourceArc<Container>,b: Vec<Id>,o: Vec<Id>, s: Vec<Vec<Id>>) -> NifResult<(Atom,Vec<Id>,Vec<Id>,Vec<Vec<Id>>,Id)> {
+    let blocks: Vec<Block> = s.iter().map(|bl| Block::new(bl.to_vec())).collect();
+    let block: Block = blocks[0];
+    Ok((ok(),b,o,s,block.i))
 }

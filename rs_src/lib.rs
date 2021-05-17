@@ -8,7 +8,7 @@ pub fn load(env: Env, _info: Term) -> bool {
 }
 rustler::init!("ebqn", [
     ebqn::init_st,
+    ebqn::run,
     ebqn::st,
     ebqn::incr_st,
-    ebqn::ls,
 ],load=load);
