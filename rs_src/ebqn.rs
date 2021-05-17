@@ -1,5 +1,6 @@
-use crate::schema::{Block,Container,Id,State,ok};
+use crate::schema::{Block,Container,Env,Id,State,ok};
 use std::sync::Mutex;
+use std::mem::drop;
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
 
@@ -25,8 +26,11 @@ fn incr_st(arc: ResourceArc<Container>) -> NifResult<Atom> {
     Ok(ok())
 }
 
-fn load_vm(arc: &ResourceArc<Container>,b: Vec<Id>,o: Vec<Id>, s: Vec<Block>,bl: Block,id: Id) -> Id {
-    1111
+fn load_vm(arc: &ResourceArc<Container>,b: Vec<Id>,o: Vec<Id>, s: Vec<Block>,bl: Block,parent: Id,v: Vec<i64>) -> Id {
+    let mut state = arc.mutex.lock().unwrap();
+    let e: Env = Env::alloc(parent,bl.l);
+    let id = state.alloc(e);
+    id
 }
 #[rustler::nif]
 fn run(arc: ResourceArc<Container>,b: Vec<Id>,o: Vec<Id>, s: Vec<Vec<Id>>) -> NifResult<(Atom,Id)> {
@@ -34,6 +38,8 @@ fn run(arc: ResourceArc<Container>,b: Vec<Id>,o: Vec<Id>, s: Vec<Vec<Id>>) -> Ni
     let block: Block = blocks[0];
     let state = arc.mutex.lock().unwrap();
     let root_id = state.root();
-    let rtn = load_vm(&arc,b,o,blocks,block,root_id);
+    drop(state);
+    let v: Vec<i64> = Vec::new();
+    let rtn = load_vm(&arc,b,o,blocks,block,root_id,v);
     Ok((ok(),rtn))
 }
