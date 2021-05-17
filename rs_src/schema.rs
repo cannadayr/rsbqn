@@ -56,6 +56,9 @@ impl State {
     pub fn id(&self) -> Id {
         self.id
     }
+    pub fn root(&self) -> Id {
+        self.root
+    }
     pub fn incr(&mut self) {
         self.id += 1;
     }

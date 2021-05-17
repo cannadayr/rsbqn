@@ -25,9 +25,15 @@ fn incr_st(arc: ResourceArc<Container>) -> NifResult<Atom> {
     Ok(ok())
 }
 
+fn load_vm(arc: &ResourceArc<Container>,b: Vec<Id>,o: Vec<Id>, s: Vec<Block>,bl: Block,id: Id) -> Id {
+    1111
+}
 #[rustler::nif]
-fn run(arc: ResourceArc<Container>,b: Vec<Id>,o: Vec<Id>, s: Vec<Vec<Id>>) -> NifResult<(Atom,Vec<Id>,Vec<Id>,Vec<Vec<Id>>,Id)> {
+fn run(arc: ResourceArc<Container>,b: Vec<Id>,o: Vec<Id>, s: Vec<Vec<Id>>) -> NifResult<(Atom,Id)> {
     let blocks: Vec<Block> = s.iter().map(|bl| Block::new(bl.to_vec())).collect();
     let block: Block = blocks[0];
-    Ok((ok(),b,o,s,block.i))
+    let state = arc.mutex.lock().unwrap();
+    let root_id = state.root();
+    let rtn = load_vm(&arc,b,o,blocks,block,root_id);
+    Ok((ok(),rtn))
 }
