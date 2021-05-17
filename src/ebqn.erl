@@ -4,7 +4,7 @@
 -on_load(init/0).
 
 -export([init_st/0]).
--export([st/1,incr_st/1,ls/1]).
+-export([st/1,incr_st/1,ls/3]).
 
 init() ->
     ?load_nif_from_crate(ebqn, ?crate_ebqn, 0).
@@ -18,5 +18,5 @@ st(_State) ->
 incr_st(_State) ->
     exit(nif_not_loaded).
 
-ls(_X) ->
+ls(_B,_O,_S) ->
     exit(nif_not_loaded).
