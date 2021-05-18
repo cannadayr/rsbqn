@@ -1,4 +1,4 @@
-use crate::schema::{Block,Container,Env,Id,State,ok};
+use crate::schema::{Block,Container,Entity,Env,Id,Prog,State,ToEntity,ok};
 use std::sync::Mutex;
 use std::mem::drop;
 use rustler::{Atom,NifResult};
@@ -26,20 +26,43 @@ fn incr_st(arc: ResourceArc<Container>) -> NifResult<Atom> {
     Ok(ok())
 }
 
-fn load_vm(arc: &ResourceArc<Container>,b: Vec<Id>,o: Vec<Id>, s: Vec<Block>,bl: Block,parent: Id,v: Vec<i64>) -> Id {
-    let mut state = arc.mutex.lock().unwrap();
-    let e: Env = Env::alloc(parent,bl.l);
-    let id = state.alloc(e);
-    id
+fn vm(arc: &ResourceArc<Container>,prog: Prog,bl: Block,env: Id,mut ptr: usize,mut stack: Vec<Entity>) -> Entity {
+    loop {
+        let op = prog.b[ptr];ptr+=1;
+        match op {
+            0 => {
+                let x = prog.b[ptr];ptr+=1;
+                let r: Entity = prog.o[x].to_entity();
+                stack.push(r)
+            },
+            25 => {
+                break match stack.len() {
+                    1 => {
+                        let r: Entity = stack[0];
+                        r
+                    },
+                    _ => panic!("stack overflow")
+                };
+            }
+            _ => panic!("error finding opcode"),
+        };
+    }
 }
+
 #[rustler::nif]
-fn run(arc: ResourceArc<Container>,b: Vec<Id>,o: Vec<Id>, s: Vec<Vec<Id>>) -> NifResult<(Atom,Id)> {
+fn run(arc: ResourceArc<Container>,b: Vec<usize>,o: Vec<Id>, s: Vec<Vec<Id>>) -> NifResult<(Atom,usize)> {
     let blocks: Vec<Block> = s.iter().map(|bl| Block::new(bl.to_vec())).collect();
-    let block: Block = blocks[0];
-    let state = arc.mutex.lock().unwrap();
-    let root_id = state.root();
+    let bl: Block = blocks[0];
+    let prog = Prog { b: b, o: o, s: blocks };
+    let mut state = arc.mutex.lock().unwrap();
+    let parent = state.root();
+    let e: Env = Env::new(parent,bl.l);
+    let id: Id = state.alloc(e);
     drop(state);
-    let v: Vec<i64> = Vec::new();
-    let rtn = load_vm(&arc,b,o,blocks,block,root_id,v);
+    let stack: Vec<Entity> = Vec::new();
+    let rtn =
+        match vm(&arc,prog,bl,id,bl.st,stack) {
+            Entity::Id(id) => id
+        };
     Ok((ok(),rtn))
 }
