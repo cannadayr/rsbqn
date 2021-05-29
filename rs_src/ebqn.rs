@@ -35,6 +35,9 @@ fn vm(arc: &ResourceArc<Container>,prog: Prog,bl: Block,env: Id,mut ptr: usize,m
                 let r: Entity = prog.o[x].to_entity();
                 stack.push(r)
             },
+            14 => {
+                let _ = stack.pop();
+            },
             25 => {
                 break match stack.len() {
                     1 => {
