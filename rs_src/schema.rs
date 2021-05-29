@@ -1,22 +1,28 @@
 rustler::atoms!{ok}
 use std::sync::Mutex;
 use std::convert::TryFrom;
+use rustler::{Encoder};
 
 pub type Id = usize;
 
-pub trait ToEntity {
-    fn to_entity(&self) -> Entity;
-}
-pub trait FromEntity {
-    fn from_entity(&self) -> Entity;
-}
 #[derive(Debug,Clone,Copy)]
 pub enum Entity {
     Id(Id),
 }
+pub trait ToEntity {
+    fn to_entity(&self) -> Entity;
+}
 impl ToEntity for usize {
     fn to_entity(&self) -> Entity {
         Entity::Id(*self)
+    }
+}
+
+impl<'a> Encoder for Entity {
+    fn encode<'b>(&self, env: rustler::Env<'b>) -> rustler::Term<'b> {
+        match self {
+            Entity::Id(id) => id.encode(env),
+        }
     }
 }
 

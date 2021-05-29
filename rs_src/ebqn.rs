@@ -44,13 +44,13 @@ fn vm(arc: &ResourceArc<Container>,prog: Prog,bl: Block,env: Id,mut ptr: usize,m
                     _ => panic!("stack overflow")
                 };
             }
-            _ => panic!("error finding opcode"),
+            _ => panic!("illegal instruction"),
         };
     }
 }
 
 #[rustler::nif]
-fn run(arc: ResourceArc<Container>,b: Vec<usize>,o: Vec<Id>, s: Vec<Vec<Id>>) -> NifResult<(Atom,usize)> {
+fn run(arc: ResourceArc<Container>,b: Vec<usize>,o: Vec<Id>, s: Vec<Vec<Id>>) -> NifResult<(Atom,Entity)> {
     let blocks: Vec<Block> = s.iter().map(|bl| Block::new(bl.to_vec())).collect();
     let bl: Block = blocks[0];
     let prog = Prog { b: b, o: o, s: blocks };
@@ -60,9 +60,10 @@ fn run(arc: ResourceArc<Container>,b: Vec<usize>,o: Vec<Id>, s: Vec<Vec<Id>>) ->
     let id: Id = state.alloc(e);
     drop(state);
     let stack: Vec<Entity> = Vec::new();
-    let rtn =
-        match vm(&arc,prog,bl,id,bl.st,stack) {
-            Entity::Id(id) => id
-        };
+    //let rtn =
+    //    match vm(&arc,prog,bl,id,bl.st,stack) {
+    //        Entity::Id(id) => id
+    //    };
+    let rtn = vm(&arc,prog,bl,id,bl.st,stack);
     Ok((ok(),rtn))
 }
