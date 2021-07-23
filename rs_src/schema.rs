@@ -8,6 +8,7 @@ pub type Id = usize;
 #[derive(Debug,Clone,Copy)]
 pub enum Entity {
     Id(Id),
+    Slot(Id,Id),
 }
 pub trait ToEntity {
     fn to_entity(&self) -> Entity;
@@ -17,14 +18,22 @@ impl ToEntity for usize {
         Entity::Id(*self)
     }
 }
+impl ToEntity for Slot {
+    fn to_entity(&self) -> Entity {
+        Entity::Slot((*self).0,(*self).1)
+    }
+}
 
 impl<'a> Encoder for Entity {
     fn encode<'b>(&self, env: rustler::Env<'b>) -> rustler::Term<'b> {
         match self {
             Entity::Id(id) => id.encode(env),
+            Entity::Slot(x,w) => (-1).encode(env), // don't expose to erlang
         }
     }
 }
+
+pub struct Slot (pub Id,pub Id);
 
 pub struct A {
     pub sh: Vec<Entity>,

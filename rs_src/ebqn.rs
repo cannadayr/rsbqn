@@ -1,4 +1,4 @@
-use crate::schema::{Block,Container,Entity,Env,Id,Prog,State,ToEntity,ok};
+use crate::schema::{Block,Container,Entity,Env,Id,Prog,Slot,State,ToEntity,ok};
 use std::sync::Mutex;
 use std::mem::drop;
 use rustler::{Atom,NifResult};
