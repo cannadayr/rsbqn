@@ -78,11 +78,12 @@ impl Block {
 
 pub struct Env {
     parent: Id,
-    slots: Vec<Entity>
+    slots: Vec<Option<Entity>>
 }
 impl Env {
     pub fn new(parent: Id,capacity: usize) -> Self {
-        let slots = Vec::with_capacity(capacity);
+        let mut slots: Vec<Option<Entity>> = Vec::with_capacity(capacity);
+        slots.resize_with(capacity, || None);
         Self {
             parent: parent,
             slots: slots,
