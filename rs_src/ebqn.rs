@@ -26,6 +26,32 @@ fn incr_st(arc: ResourceArc<Container>) -> NifResult<Atom> {
     Ok(ok())
 }
 
+fn ge(arc: &ResourceArc<Container>,mut env: Id,mut i: Id) -> Id {
+    loop {
+        match i {
+            0 => {
+                break env
+            },
+            _ => {
+                panic!("ge not matching");
+                i -= 1; // unreachable
+            }
+        }
+    }
+}
+fn set(arc: &ResourceArc<Container>,d: Id,i: Entity,v: Entity) -> Entity {
+    match i {
+        Entity::Slot(eid,sid) => {
+            // acquire mutex
+            let mut state = arc.mutex.lock().unwrap();
+            state.set(d,eid,sid,v);
+            // drop mutex
+            drop(state);
+        }
+        _ => panic!("didnt get a slot"),
+    };
+    return v;
+}
 fn vm(arc: &ResourceArc<Container>,prog: Prog,bl: Block,env: Id,mut ptr: usize,mut stack: Vec<Entity>) -> Entity {
     loop {
         let op = prog.b[ptr];ptr+=1;
