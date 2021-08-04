@@ -91,6 +91,19 @@ fn vm(arc: &ResourceArc<Container>,prog: Prog,bl: Block,env: Id,mut ptr: usize,m
                 stack.push(r);
                 drop(state);
             },
+            17 => {
+                let w = stack.pop();
+                let f = stack.pop();
+                let x = stack.pop();
+                let mut state = arc.mutex.lock().unwrap();
+                let r =
+                    match state.call(f,x,w) {
+                        Some(entity) => entity,
+                        None => panic!("no entity from call fn"),
+                    };
+                stack.push(r);
+                drop(state);
+            },
             21 => {
                 let x = prog.b[ptr];ptr+=1;
                 let w = prog.b[ptr];ptr+=1;
