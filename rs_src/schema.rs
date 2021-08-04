@@ -120,7 +120,26 @@ impl State {
     pub fn alloc(&mut self,e: Env) -> Id {
         self.heap.push(Some(e));
         self.id += 1;
-        self.id
+        self.id - 1
+    }
+    pub fn get(&self,eid: Id,sid: Id) -> Entity {
+        let env =
+            match &self.heap[eid] {
+                Some(env) => env,
+                _ => panic!("bad env"),
+            };
+        match env.slots[sid] {
+            Some(entity) => entity,
+            _ => panic!("bad entity"),
+        }
+    }
+    pub fn set(&mut self,d: Id,a: Id,i: Id,v: Entity) {
+        let mut env =
+            match &mut self.heap[a] {
+                Some(env) => env,
+                _ => panic!("bad env"),
+            };
+        env.slots[i] = Some(v); // should we clone?
     }
 }
 
