@@ -141,6 +141,16 @@ impl State {
             };
         env.slots[i] = Some(v); // should we clone?
     }
+    pub fn call(&self,f: Option<Entity>,x: Option<Entity>,w: Option<Entity>) -> Option<Entity> {
+        match (f,x,w) {
+            (_,None,_) => {
+                let none: Option<Entity> = None;
+                none
+            },
+            (Some(Entity::Id(f)),_,_) => Some(f.to_entity()),
+            (_,_,_) => panic!("call match not impled"),
+        }
+    }
 }
 
 pub struct Container {
