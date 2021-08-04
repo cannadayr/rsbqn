@@ -61,8 +61,37 @@ fn vm(arc: &ResourceArc<Container>,prog: Prog,bl: Block,env: Id,mut ptr: usize,m
                 let r: Entity = prog.o[x].to_entity();
                 stack.push(r)
             },
+            // no slot sanity checking for now
+            11|12 => {
+                let i = stack.pop();
+                let ie = match i {
+                    Some(entity) => entity,
+                    None => panic!("got something wrong from stack"),
+                };
+                let v = stack.pop();
+                let ve = match v {
+                    Some(entity) => entity,
+                    None => panic!("got something wrong from stack"),
+                };
+                set(arc,1,ie,ve);
+                stack.push(ve);
+            },
             14 => {
                 let _ = stack.pop();
+            },
+            21 => {
+                let x = prog.b[ptr];ptr+=1;
+                let w = prog.b[ptr];ptr+=1;
+                let t = ge(arc,env,x);
+                let mut state = arc.mutex.lock().unwrap();
+                stack.push(state.get(t,w));
+            },
+            22 => {
+                let x = prog.b[ptr];ptr+=1;
+                let w = prog.b[ptr];ptr+=1;
+                let t = ge(arc,env,x);
+                let r = Slot(t,w).to_entity();
+                stack.push(r)
             },
             25 => {
                 break match stack.len() {
@@ -70,7 +99,10 @@ fn vm(arc: &ResourceArc<Container>,prog: Prog,bl: Block,env: Id,mut ptr: usize,m
                         let r: Entity = stack[0];
                         r
                     },
-                    _ => panic!("stack overflow")
+                    _ => {
+                        println!("{:?}",stack);
+                        panic!("stack overflow")
+                    }
                 };
             }
             _ => panic!("illegal instruction"),
