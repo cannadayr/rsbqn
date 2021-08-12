@@ -1,10 +1,12 @@
-use crate::schema::{Id,State,ok};
+use crate::schema::{Container,State,ok};
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
+use std::sync::Mutex;
 
 #[rustler::nif]
-fn init_st() -> NifResult<(Atom,ResourceArc<State>)> {
-    let id : Id = 0;
-    let state = State {root: id};
-    Ok((ok(),ResourceArc::new(state)))
+fn init_st() -> NifResult<(Atom,ResourceArc<Container>)> {
+    let state = State {};
+    let mutex = Mutex::new(state);
+    let container = Container { mutex };
+    Ok((ok(),ResourceArc::new(container)))
 }
