@@ -13,3 +13,4 @@ crate-type = ["dylib"]
 
 [dependencies]
 rustler = "0.22.0"
+once_cell = "1.8.0"

@@ -1,5 +1,7 @@
 use std::sync::Arc;
 use std::sync::Mutex;
+use once_cell::sync::OnceCell;
+//use std::collections::HashMap; // TODO
 
 rustler::atoms!{ok}
 
@@ -38,4 +40,50 @@ impl State {
 }
 pub struct Container {
     pub mutex: Mutex<State>,
+}
+
+//
+
+/*
+fn global_data() -> &'static Mutex<HashMap<i32, String>> {
+    static INSTANCE: OnceCell<Mutex<HashMap<i32, String>>> = OnceCell::new();
+    INSTANCE.get_or_init(|| {
+        let mut m = HashMap::new();
+        m.insert(13, "Spica".to_string());
+        m.insert(74, "Hoyten".to_string());
+        Mutex::new(m)
+    })
+}
+*/
+
+#[derive(Debug)]
+pub struct LateInit<T> {
+    cell: OnceCell<T>,
+}
+
+impl<T> LateInit<T> {
+    pub fn init(&self, value: T) {
+        assert!(self.cell.set(value).is_ok())
+    }
+}
+
+impl<T> Default for LateInit<T> {
+    fn default() -> Self { LateInit { cell: OnceCell::default() } }
+}
+
+impl<T> std::ops::Deref for LateInit<T> {
+    type Target = T;
+    fn deref(&self) -> &T {
+        self.cell.get().unwrap()
+    }
+}
+
+#[derive(Default, Debug)]
+pub struct A<'a> {
+    pub b: LateInit<&'a B<'a>>,
+}
+
+#[derive(Default, Debug)]
+pub struct B<'a> {
+    pub a: LateInit<&'a A<'a>>
 }
