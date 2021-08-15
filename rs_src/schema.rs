@@ -45,20 +45,7 @@ pub struct Container {
     pub mutex: Mutex<State>,
 }
 
-//
-
-/*
-fn global_data() -> &'static Mutex<HashMap<i32, String>> {
-    static INSTANCE: OnceCell<Mutex<HashMap<i32, String>>> = OnceCell::new();
-    INSTANCE.get_or_init(|| {
-        let mut m = HashMap::new();
-        m.insert(13, "Spica".to_string());
-        m.insert(74, "Hoyten".to_string());
-        Mutex::new(m)
-    })
-}
-*/
-
+// https://github.com/rust-lang/rfcs/pull/2788
 #[derive(Debug)]
 pub struct LateInit<T> {
     cell: OnceCell<T>,
