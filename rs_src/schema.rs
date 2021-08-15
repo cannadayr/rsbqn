@@ -1,11 +1,10 @@
-use rustler::{Encoder};
 use std::sync::Arc;
 use std::sync::Mutex;
 
 rustler::atoms!{ok}
 
 pub enum V {
-    BlockInst { typ: u8, def: Arc<Block>, parent: Env, args: Vec<Vn> },
+    BlockInst,
 }
 pub type Vn = Option<V>;
 struct Code {
@@ -28,9 +27,14 @@ struct BlockInst {
     args:  Vec<Vn>,
 }
 pub struct State {
-    //root: usize,
-    //pos:  usize,
-    //heap: Vec<Option<Env>>,
+    root: usize,
+    pos:  usize,
+    heap: Vec<Option<Env>>,
+}
+impl State {
+    pub fn new() -> Self {
+        Self { root: 0, pos: 0, heap: Vec::new(), }
+    }
 }
 pub struct Container {
     pub mutex: Mutex<State>,
