@@ -14,12 +14,12 @@ pub type Vn = Option<V>;
 pub struct Code<'a> {
     bc:    Vec<usize>,
     objs:  Vec<V>,
-    pub blocks:Vec<Arc<LateInit<&'a Block<'a>>>>,
+    pub blocks:LateInit<&'a Vec<Arc<Block<'a>>>>,
 }
 #[derive(Default, Debug)]
 pub struct Block<'a> {
     pub typ:u8, pub imm:bool, pub locals:usize, pub pos:usize,
-    pub code: Arc<LateInit<&'a Code<'a>>>,
+    pub code:LateInit<&'a Arc<Code<'a>>>,
 }
 struct Env {
     parent: Arc<Env>,
