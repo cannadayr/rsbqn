@@ -5,26 +5,29 @@ use once_cell::sync::OnceCell;
 
 rustler::atoms!{ok}
 
+#[derive(Debug)]
 pub enum V {
     BlockInst,
 }
 pub type Vn = Option<V>;
-struct Code {
+#[derive(Default, Debug)]
+pub struct Code<'a> {
     bc:    Vec<usize>,
     objs:  Vec<V>,
-    blocks:Vec<Arc<Block>>,
+    pub blocks:Vec<Arc<LateInit<&'a Block<'a>>>>,
 }
-struct Block {
-    typ:u8, imm:bool, locals:usize,
-    code: Arc<Code>, pos: usize,
+#[derive(Default, Debug)]
+pub struct Block<'a> {
+    pub typ:u8, pub imm:bool, pub locals:usize, pub pos:usize,
+    pub code: Arc<LateInit<&'a Code<'a>>>,
 }
 struct Env {
     parent: Arc<Env>,
     vars:   Vec<Vn>,
 }
-struct BlockInst {
+struct BlockInst<'a> {
     typ:   u8,
-    def:   Arc<Block>,
+    def:   Arc<&'a Block<'a>>,
     parent:Env,
     args:  Vec<Vn>,
 }
@@ -76,14 +79,4 @@ impl<T> std::ops::Deref for LateInit<T> {
     fn deref(&self) -> &T {
         self.cell.get().unwrap()
     }
-}
-
-#[derive(Default, Debug)]
-pub struct A<'a> {
-    pub b: LateInit<&'a B<'a>>,
-}
-
-#[derive(Default, Debug)]
-pub struct B<'a> {
-    pub a: LateInit<&'a A<'a>>
 }
