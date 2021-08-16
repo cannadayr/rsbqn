@@ -12,10 +12,12 @@ fn init_st() -> NifResult<(Atom,ResourceArc<Container>)> {
     let bc = vec![0,0,25];
     let code1 = Code {bc: bc, ..code0};
     let code1arc = Arc::new(code1);
-    let block0 = Arc::new(Block::default());
+    let block0 = Block::default();
+    let block1 = Block {typ: 0, imm: true, locals: 0, pos: 0, ..block0};
+    let block2 = Arc::new(block1);
     //[0,0,25],[5],[[0,1,0,0]]
-    block0.code.init(&code1arc);
-    let blocks = vec![block0];
+    block2.code.init(&code1arc);
+    let blocks = vec![block2];
     code1arc.blocks.init(&blocks);
 
     let mutex = Mutex::new(state);
