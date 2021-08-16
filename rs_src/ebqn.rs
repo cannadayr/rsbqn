@@ -6,8 +6,6 @@ use std::sync::Arc;
 
 #[rustler::nif]
 fn init_st() -> NifResult<(Atom,ResourceArc<Container<'static>>)> {
-    let mut state = State::new();
-
     //[0,0,25],[5],[[0,1,0,0]]
     let code0 = Code::default();
     let bc = vec![0,0,25];
@@ -24,8 +22,9 @@ fn init_st() -> NifResult<(Atom,ResourceArc<Container<'static>>)> {
     let env0: Env = Env::default();
     let env1 = Env {vars: Vec::new(), ..env0};
     let env1arc = Arc::new(env1);
-    env1arc.parent.init(&env1arc);
 
+    let mut state = State::new();
+    state.alloc(env1arc);
     let mutex = Mutex::new(state);
     let container = Container { mutex };
 

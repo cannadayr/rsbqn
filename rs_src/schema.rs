@@ -35,11 +35,16 @@ struct BlockInst<'a> {
 pub struct State<'a> {
     root: usize,
     pos:  usize,
-    heap: Vec<Option<Env<'a>>>,
+    heap: Vec<Arc<Env<'a>>>,
 }
 impl<'a> State<'a> {
     pub fn new() -> Self {
         Self { root: 0, pos: 0, heap: Vec::new(), }
+    }
+    pub fn alloc(&mut self,env: Arc<Env<'a>>) -> usize {
+        self.heap.push(env);
+        self.pos += 1;
+        self.pos - 1
     }
 }
 pub struct Container<'a> {
