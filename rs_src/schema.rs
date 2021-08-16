@@ -21,28 +21,29 @@ pub struct Block<'a> {
     pub typ:u8, pub imm:bool, pub locals:usize, pub pos:usize,
     pub code:LateInit<&'a Arc<Code<'a>>>,
 }
-struct Env {
-    parent: Arc<Env>,
-    vars:   Vec<Vn>,
+#[derive(Default,Debug)]
+pub struct Env<'a> {
+    pub parent:LateInit<&'a Arc<Env<'a>>>,
+    pub vars:   Vec<Vn>,
 }
 struct BlockInst<'a> {
     typ:   u8,
     def:   Arc<&'a Block<'a>>,
-    parent:Env,
+    parent:Env<'a>,
     args:  Vec<Vn>,
 }
-pub struct State {
+pub struct State<'a> {
     root: usize,
     pos:  usize,
-    heap: Vec<Option<Env>>,
+    heap: Vec<Option<Env<'a>>>,
 }
-impl State {
+impl<'a> State<'a> {
     pub fn new() -> Self {
         Self { root: 0, pos: 0, heap: Vec::new(), }
     }
 }
-pub struct Container {
-    pub mutex: Mutex<State>,
+pub struct Container<'a> {
+    pub mutex: Mutex<State<'a>>,
 }
 
 // https://docs.rs/once_cell/1.8.0/once_cell/#lateinit

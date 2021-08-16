@@ -1,11 +1,11 @@
-use crate::schema::{LateInit,V,Block,Code,Container,State,ok};
+use crate::schema::{LateInit,V,Block,Code,Env,Container,State,ok};
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
 use std::sync::Mutex;
 use std::sync::Arc;
 
 #[rustler::nif]
-fn init_st() -> NifResult<(Atom,ResourceArc<Container>)> {
+fn init_st() -> NifResult<(Atom,ResourceArc<Container<'static>>)> {
     let mut state = State::new();
 
     //[0,0,25],[5],[[0,1,0,0]]
@@ -20,6 +20,11 @@ fn init_st() -> NifResult<(Atom,ResourceArc<Container>)> {
     block2.code.init(&code1arc);
     let blocks = vec![block2];
     code1arc.blocks.init(&blocks);
+
+    let env0: Env = Env::default();
+    let env1 = Env {vars: Vec::new(), ..env0};
+    let env1arc = Arc::new(env1);
+    env1arc.parent.init(&env1arc);
 
     let mutex = Mutex::new(state);
     let container = Container { mutex };
