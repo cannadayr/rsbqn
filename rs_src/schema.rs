@@ -6,6 +6,7 @@ rustler::atoms!{ok}
 
 #[derive(Debug)]
 pub enum V {
+    Float(f64),
     BlockInst,
 }
 pub type Vn = Option<V>;
