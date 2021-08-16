@@ -1,7 +1,6 @@
 use std::sync::Arc;
 use std::sync::Mutex;
 use once_cell::sync::OnceCell;
-//use std::collections::HashMap; // TODO
 
 rustler::atoms!{ok}
 
@@ -10,10 +9,10 @@ pub enum V {
     BlockInst,
 }
 pub type Vn = Option<V>;
-#[derive(Default, Debug)]
+#[derive(Default,Debug)]
 pub struct Code<'a> {
-    bc:    Vec<usize>,
-    objs:  Vec<V>,
+    pub bc:    Vec<usize>,
+    pub objs:  Vec<V>,
     pub blocks:LateInit<&'a Vec<Arc<Block<'a>>>>,
 }
 #[derive(Default, Debug)]
@@ -45,6 +44,7 @@ pub struct Container {
     pub mutex: Mutex<State>,
 }
 
+// https://docs.rs/once_cell/1.8.0/once_cell/#lateinit
 // https://github.com/rust-lang/rfcs/pull/2788
 #[derive(Debug)]
 pub struct LateInit<T> {
