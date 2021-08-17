@@ -16,6 +16,11 @@ pub struct Code<'a> {
     pub objs:  Vec<V>,
     pub blocks:LateInit<&'a Vec<Arc<Block<'a>>>>,
 }
+impl<'a> Code<'a> {
+    fn new() -> Self {
+        Code::default()
+    }
+}
 #[derive(Default, Debug)]
 pub struct Block<'a> {
     pub typ:u8, pub imm:bool, pub locals:usize, pub pos:usize,
