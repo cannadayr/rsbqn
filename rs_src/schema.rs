@@ -17,8 +17,15 @@ pub struct Code<'a> {
     pub blocks:LateInit<&'a Vec<Arc<Block<'a>>>>,
 }
 impl<'a> Code<'a> {
-    pub fn new(bc: Vec<usize>,objs: Vec<V>) -> Self {
-        Self {bc: bc, objs: objs, ..Code::default()}
+    pub fn new(bc: Vec<usize>,objs: Vec<V>,blocks_raw: Vec<(u8,bool,usize,usize)>) -> Self {
+        let block_derv = blocks_raw.iter().map(|block|
+            match block {
+                (typ,imm,locals,pos) =>
+                    Block { typ: *typ, imm: *imm, locals: *locals, pos: *pos, .. Block::default() }
+            }
+        ).collect::<Vec<Block>>();
+        let code = Self {bc: bc, objs: objs, ..Code::default()};
+        code
     }
 }
 #[derive(Default, Debug)]
