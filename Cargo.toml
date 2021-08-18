@@ -14,3 +14,4 @@ crate-type = ["dylib"]
 [dependencies]
 rustler = "0.22.0"
 once_cell = "1.8.0"
+cc_mt = { git = "https://github.com/jrmuizel/cc-mt" }

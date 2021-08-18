@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use std::sync::Mutex;
 use once_cell::sync::OnceCell;
+use cc_mt::{Cc, Trace, Tracer, collect_cycles};
 
 rustler::atoms!{ok}
 
@@ -42,6 +43,13 @@ pub struct Env<'a> {
     pub parent:LateInit<&'a Arc<Env<'a>>>,
     pub vars:   Vec<Vn>,
 }
+impl<'a> Trace for Env<'a> {
+    fn trace(&self, tracer: &mut Tracer) {
+        println!("tracing!");
+    }
+
+}
+
 struct BlockInst<'a> {
     typ:   u8,
     def:   Arc<&'a Block<'a>>,
@@ -52,6 +60,7 @@ struct BlockInst<'a> {
 pub struct State<'a> {
     root: Arc<Mutex<Env<'a>>>,
     heap: Vec<Arc<Mutex<Env<'a>>>>,
+    foo: Arc<Mutex<Cc<Env<'static>>>>,
 }
 impl<'a> State<'a> {
     pub fn new() -> (Self,Arc<Mutex<Env<'a>>>) {
