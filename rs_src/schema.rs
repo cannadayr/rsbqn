@@ -54,11 +54,11 @@ pub struct State<'a> {
     heap: Vec<Arc<Mutex<Env<'a>>>>,
 }
 impl<'a> State<'a> {
-    pub fn new() -> Self {
+    pub fn new() -> (Self,Arc<Mutex<Env<'a>>>) {
         let root = Arc::new(Mutex::new(Env{vars: Vec::new(), ..Env::default()}));
         let mut state = Self {root: root.clone(), heap: Vec::new(), ..Self::default()};
-        state.alloc(root);
-        state
+        state.alloc(root.clone());
+        (state,root)
     }
     pub fn alloc(&mut self,env: Arc<Mutex<Env<'a>>>) {
         self.heap.push(env);
