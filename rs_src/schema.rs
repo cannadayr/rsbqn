@@ -14,20 +14,21 @@ pub type Vn = Option<V>;
 pub struct Code<'a> {
     pub bc:    Vec<usize>,
     pub objs:  Vec<V>,
-    pub blocks:LateInit<&'a Vec<Arc<Block<'a>>>>,
+    pub blocks:LateInit<Vec<Arc<Block<'a>>>>,
 }
 impl<'a> Code<'a> {
     pub fn new(bc: Vec<usize>,objs: Vec<V>,blocks_raw: Vec<(u8,bool,usize,usize)>) -> Arc<Self> {
         let code = Arc::new(Self {bc: bc, objs: objs, ..Code::default()});
-        let block_derv = blocks_raw.iter().map(|block|
+        let blocks_derv = blocks_raw.iter().map(|block|
             match block {
                 (typ,imm,locals,pos) => {
                     let b = Block { typ: *typ, imm: *imm, locals: *locals, pos: *pos, .. Block::default() };
                     b.code.init(code.clone());
-                    b
+                    Arc::new(b)
                 }
             }
-        ).collect::<Vec<Block>>();
+        ).collect::<Vec<Arc<Block>>>();
+        code.blocks.init(blocks_derv);
         code
     }
 }
