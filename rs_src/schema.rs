@@ -48,19 +48,20 @@ struct BlockInst<'a> {
     parent:Env<'a>,
     args:  Vec<Vn>,
 }
+#[derive(Default,Debug)]
 pub struct State<'a> {
-    root: usize,
-    pos:  usize,
-    heap: Vec<Arc<Env<'a>>>,
+    root: Arc<Mutex<Env<'a>>>,
+    heap: Vec<Arc<Mutex<Env<'a>>>>,
 }
 impl<'a> State<'a> {
     pub fn new() -> Self {
-        Self { root: 0, pos: 0, heap: Vec::new(), }
+        let root = Arc::new(Mutex::new(Env{vars: Vec::new(), ..Env::default()}));
+        let mut state = Self {root: root.clone(), heap: Vec::new(), ..Self::default()};
+        state.alloc(root);
+        state
     }
-    pub fn alloc(&mut self,env: Arc<Env<'a>>) -> usize {
+    pub fn alloc(&mut self,env: Arc<Mutex<Env<'a>>>) {
         self.heap.push(env);
-        self.pos += 1;
-        self.pos - 1
     }
 }
 pub struct Container<'a> {
