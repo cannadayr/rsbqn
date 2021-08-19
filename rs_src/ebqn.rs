@@ -3,8 +3,9 @@ use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
 use std::sync::Mutex;
 use std::sync::Arc;
+use cc_mt::{Cc, Trace, Tracer, collect_cycles};
 
-fn vm(state: &State,code: &Arc<Code>,block: &Arc<Block>,env: Arc<Mutex<Env>>) -> bool {
+fn vm(state: &State,code: &Arc<Code>,block: &Arc<Block>,env: Cc<Mutex<Env>>) -> bool {
     true
 }
 
@@ -15,7 +16,7 @@ fn init_st() -> NifResult<(Atom,ResourceArc<State>)> {
 
     let state = State::new();
 
-    //let rtn = vm(&state,&code,&code.blocks[0],env);
+    let rtn = vm(&state,&code,&code.blocks[0],state.root.clone());
 
     //let mutex = Mutex::new(state);
     //let container = Container { mutex };

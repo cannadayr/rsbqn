@@ -58,7 +58,7 @@ struct BlockInst<'a> {
 }
 #[derive(Default,Debug)]
 pub struct State {
-    root: Cc<Mutex<Env<'static>>>,
+    pub root: Cc<Mutex<Env<'static>>>,
 }
 impl State {
     pub fn new() -> Self {
