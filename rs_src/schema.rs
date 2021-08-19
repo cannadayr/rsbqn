@@ -3,22 +3,30 @@ use std::sync::Mutex;
 use once_cell::sync::OnceCell;
 use cc_mt::{Cc, Trace, Tracer, collect_cycles};
 use log::{debug, trace, error, log_enabled, info, Level};
+use rustler::{Encoder};
 
 rustler::atoms!{ok}
 
 #[derive(Debug,Clone,Copy)]
 pub enum V {
-    Float(f64),
+    Scalar(f64),
     BlockInst,
-    //Cc(Cc<V>),
 }
 impl Trace for V {
     fn trace(&self, tracer: &mut Tracer) {
-        debug!("clearing V");
+        panic!("clearing V");
+    }
+}
+impl Encoder for V {
+    fn encode<'a>(&self, env: rustler::Env<'a>) -> rustler::Term<'a> {
+        match self {
+            V::Scalar(n) => n.encode(env),
+            V::BlockInst => panic!("can't encode blockinst to BEAM"),
+        }
     }
 }
 pub type Vn = Option<V>;
-//type Stack = Vec<V>;
+
 #[derive(Default,Debug)]
 pub struct Code<'a> {
     pub bc:    Vec<usize>,
@@ -42,11 +50,13 @@ impl<'a> Code<'a> {
         code
     }
 }
+
 #[derive(Default, Debug)]
 pub struct Block<'a> {
     pub typ:u8, pub imm:bool, pub locals:usize, pub pos:usize,
     pub code:LateInit<Arc<Code<'a>>>,
 }
+
 #[derive(Default,Debug)]
 pub struct Env<'a> {
     pub parent:LateInit<&'a Cc<Env<'static>>>,
@@ -54,7 +64,7 @@ pub struct Env<'a> {
 }
 impl<'a> Trace for Env<'a> {
     fn trace(&self, tracer: &mut Tracer) {
-        debug!("clearing env");
+        panic!("clearing env");
     }
 }
 
@@ -64,6 +74,7 @@ struct BlockInst<'a> {
     parent:Env<'a>,
     args:  Vec<Vn>,
 }
+
 #[derive(Default,Debug)]
 pub struct State {
     pub root: Cc<Mutex<Env<'static>>>,
