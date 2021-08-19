@@ -57,25 +57,24 @@ struct BlockInst<'a> {
     args:  Vec<Vn>,
 }
 #[derive(Default,Debug)]
-pub struct State<'a> {
-    root: Arc<Mutex<Env<'a>>>,
-    heap: Vec<Arc<Mutex<Env<'a>>>>,
-    foo: Arc<Mutex<Cc<Env<'static>>>>,
+pub struct State {
+    root: Cc<Mutex<Env<'static>>>,
 }
-impl<'a> State<'a> {
-    pub fn new() -> (Self,Arc<Mutex<Env<'a>>>) {
-        let root = Arc::new(Mutex::new(Env{vars: Vec::new(), ..Env::default()}));
-        let mut state = Self {root: root.clone(), heap: Vec::new(), ..Self::default()};
-        state.alloc(root.clone());
-        (state,root)
+impl State {
+    pub fn new() -> Self {
+        Self {root: Cc::new(Mutex::new(Env{vars: Vec::new(), ..Env::default()}))}
     }
-    pub fn alloc(&mut self,env: Arc<Mutex<Env<'a>>>) {
+    /*
+    pub fn alloc(&mut self,env: Cc<Mutex<Env>>) {
         self.heap.push(env);
     }
+    */
 }
+/*
 pub struct Container<'a> {
     pub mutex: Mutex<State<'a>>,
 }
+*/
 
 // https://docs.rs/once_cell/1.8.0/once_cell/#lateinit
 // https://github.com/rust-lang/rfcs/pull/2788
