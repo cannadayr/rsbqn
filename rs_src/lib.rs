@@ -4,6 +4,7 @@ use rustler::{Env,Term};
 
 pub fn load(env: Env, _info: Term) -> bool {
     rustler::resource!(schema::State, env);
+    env_logger::init();
     true
 }
 rustler::init!("ebqn", [ebqn::init_st],load=load);

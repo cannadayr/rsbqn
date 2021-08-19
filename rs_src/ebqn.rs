@@ -4,8 +4,10 @@ use rustler::resource::ResourceArc;
 use std::sync::Mutex;
 use std::sync::Arc;
 use cc_mt::{Cc, Trace, Tracer, collect_cycles};
+use log::{debug, trace, error, log_enabled, info, Level};
 
 fn vm(state: &State,code: &Arc<Code>,block: &Arc<Block>,env: Cc<Mutex<Env>>) -> bool {
+    debug!("in VM\n");
     true
 }
 
