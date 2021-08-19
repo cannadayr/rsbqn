@@ -19,6 +19,18 @@ fn vm(state: &State,code: &Arc<Code>,block: &Arc<Block>,env: Cc<Mutex<Env>>,mut 
             14 => {
                 let _ = stack.pop();
             },
+            22 => {
+                let x = code.bc[pos];pos+=1;
+                let w = code.bc[pos];pos+=1;
+                debug!("opcode 22 (x,w) : ({},{})",x,w);
+                let t =
+                    match x {
+                        0 => env.clone(),
+                        _ => panic!("ge not implemented")
+                    };
+                let r = V::Slot(t,w);
+                stack.push(r)
+            },
             25 => {
                 break match stack.len() {
                     1 => {
@@ -42,7 +54,8 @@ fn vm(state: &State,code: &Arc<Code>,block: &Arc<Block>,env: Cc<Mutex<Env>>,mut 
 fn init_st() -> NifResult<(Atom,ResourceArc<State>,V)> {
     //[0,0,25],[5],[[0,1,0,0]]
     //let code = Code::new(vec![0,0,25],&vec![V::Scalar(5.0)],vec![(0,true,0,0)]); // 5
-    let code = Code::new(vec![0,0,14,0,1,25],&vec![V::Scalar(4.0),V::Scalar(3.0)],vec![(0,true,0,0)]); // 3
+    //let code = Code::new(vec![0,0,14,0,1,25],&vec![V::Scalar(4.0),V::Scalar(3.0)],vec![(0,true,0,0)]); // 3
+    let code = Code::new(vec![0,0,22,0,0,11,25],vec![V::Scalar(5.0)],vec![(0,true,1,0)]); // 5
 
     let state = State::new();
 
