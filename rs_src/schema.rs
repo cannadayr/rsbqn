@@ -7,9 +7,11 @@ use rustler::{Encoder};
 
 rustler::atoms!{ok}
 
-#[derive(Debug,Clone,Copy)]
+#[derive(Debug,Clone)]
 pub enum V {
     Scalar(f64),
+    Obj(Cc<V>),
+    Slot(Cc<Mutex<Option<V>>>),
     BlockInst,
 }
 impl Trace for V {
@@ -17,10 +19,17 @@ impl Trace for V {
         panic!("clearing V");
     }
 }
+impl Trace for &V {
+    fn trace(&self, tracer: &mut Tracer) {
+        panic!("clearing &V");
+    }
+}
 impl Encoder for V {
     fn encode<'a>(&self, env: rustler::Env<'a>) -> rustler::Term<'a> {
         match self {
             V::Scalar(n) => n.encode(env),
+            V::Obj(obj) => panic!("can't encode obj to BEAM"),
+            V::Slot(slot) => panic!("can't encode slot to BEAM"),
             V::BlockInst => panic!("can't encode blockinst to BEAM"),
         }
     }
@@ -34,9 +43,8 @@ pub struct Code<'a> {
     pub blocks:LateInit<Vec<Arc<Block<'a>>>>,
 }
 impl<'a> Code<'a> {
-    pub fn new(bc: Vec<usize>,objs_raw: &Vec<V>,blocks_raw: Vec<(u8,bool,usize,usize)>) -> Arc<Self> {
-        let objs_derv = objs_raw.iter().map(|obj| Cc::new(*obj)).collect::<Vec<Cc<V>>>();
-        let code = Arc::new(Self {bc: bc, objs: objs_derv, ..Code::default()});
+    pub fn new(bc: Vec<usize>,objs: Vec<Cc<V>>,blocks_raw: Vec<(u8,bool,usize,usize)>) -> Arc<Self> {
+        let code = Arc::new(Self {bc: bc, objs: objs, ..Code::default()});
         let blocks_derv = blocks_raw.iter().map(|block|
             match block {
                 (typ,imm,locals,pos) => {
@@ -60,7 +68,7 @@ pub struct Block<'a> {
 #[derive(Default,Debug)]
 pub struct Env<'a> {
     pub parent:LateInit<&'a Cc<Env<'static>>>,
-    pub vars:   Vec<Vn>,
+    pub vars:   Vec<Cc<Mutex<Option<V>>>>,
 }
 impl<'a> Trace for Env<'a> {
     fn trace(&self, tracer: &mut Tracer) {
