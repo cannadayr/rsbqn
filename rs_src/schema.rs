@@ -90,7 +90,9 @@ pub struct State {
 impl State {
     pub fn new(block: &Arc<Block>) -> Self {
         debug!("block is {}",block.locals);
-        Self {root: Cc::new(Mutex::new(Env{vars: Vec::new(), ..Env::default()}))}
+        let mut vars: Vec<Cc<Mutex<Option<V>>>> = Vec::with_capacity(block.locals);
+        vars.resize_with(block.locals, || Cc::new(Mutex::new(None)));
+        Self {root: Cc::new(Mutex::new(Env{vars: vars, ..Env::default()}))}
     }
 }
 

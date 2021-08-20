@@ -28,9 +28,8 @@ fn vm(state: &State,code: &Arc<Code>,block: &Arc<Block>,env: Cc<Mutex<Env>>,mut 
                         0 => {
                             let mut env_guard = env.lock().unwrap();
                             let slot = env_guard.vars[w].clone();
-                            let rtn = slot;
                             drop(env_guard);
-                            rtn
+                            slot
                         },
                         _ => panic!("ge not implemented")
                     };
