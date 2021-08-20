@@ -62,7 +62,7 @@ fn init_st() -> NifResult<(Atom,ResourceArc<State>,V)> {
     //let code = Code::new(vec![0,0,14,0,1,25],&vec![V::Scalar(4.0),V::Scalar(3.0)],vec![(0,true,0,0)]); // 3
     let code = Code::new(vec![0,0,22,0,0,11,25],vec![Cc::new(V::Scalar(5.0))],vec![(0,true,1,0)]); // 5
 
-    let state = State::new();
+    let state = State::new(&code.blocks[0]);
 
     let rtn =
         match vm(&state,&code,&code.blocks[0],state.root.clone(),code.blocks[0].pos,Vec::new()) {

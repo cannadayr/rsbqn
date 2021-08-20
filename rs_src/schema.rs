@@ -88,7 +88,8 @@ pub struct State {
     pub root: Cc<Mutex<Env<'static>>>,
 }
 impl State {
-    pub fn new() -> Self {
+    pub fn new(block: &Arc<Block>) -> Self {
+        debug!("block is {}",block.locals);
         Self {root: Cc::new(Mutex::new(Env{vars: Vec::new(), ..Env::default()}))}
     }
 }
