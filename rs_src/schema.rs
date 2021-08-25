@@ -28,8 +28,13 @@ impl Encoder for V {
     fn encode<'a>(&self, env: rustler::Env<'a>) -> rustler::Term<'a> {
         match self {
             V::Scalar(n) => n.encode(env),
-            V::Obj(obj) => panic!("can't encode obj to BEAM"),
-            V::Slot(slot) => panic!("can't encode slot to BEAM"),
+            V::Obj(obj) => (**obj).encode(env),
+            V::Slot(slot) => {
+                let guard = slot.lock().unwrap();
+                let r = guard.as_ref().unwrap().encode(env);
+                drop(guard);
+                r
+            },
             V::BlockInst => panic!("can't encode blockinst to BEAM"),
         }
     }
@@ -89,7 +94,7 @@ pub struct State {
 }
 impl State {
     pub fn new(block: &Arc<Block>) -> Self {
-        debug!("block is {}",block.locals);
+        debug!("block {}",block.locals);
         let mut vars: Vec<Cc<Mutex<Option<V>>>> = Vec::with_capacity(block.locals);
         vars.resize_with(block.locals, || Cc::new(Mutex::new(None)));
         Self {root: Cc::new(Mutex::new(Env{vars: vars, ..Env::default()}))}
