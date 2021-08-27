@@ -110,10 +110,24 @@ impl Env {
     pub fn new(env: EnvUnboxed) -> Self {
         Env(Cc::new(Mutex::new(env)))
     }
+    pub fn get(&self,id: usize) -> V {
+        match self {
+            Env(arc) => {
+                let guard = arc.lock().unwrap();
+                debug!("slot is {:?}",(*guard).vars[id]);
+                let vh = &(*guard).vars[id];
+                match vh {
+                    Vh::V(v) => v.clone(),
+                    _ => panic!("can't get unset slot"),
+                }
+            },
+        }
+    }
     pub fn set(&self,id: usize,v: V) -> V {
         match self {
             Env(arc) => {
                 let mut guard = arc.lock().unwrap();
+                debug!("slot is {:?}",(*guard).vars[id]);
                 (*guard).vars[id] = Vh::V(v.clone());
                 v
             },

@@ -32,6 +32,13 @@ fn vm(state: &State,code: &Arc<Code>,block: &Arc<Block>,env: Env,mut pos: usize,
             14 => {
                 let _ = stack.pop();
             },
+            21 => {
+                let x = code.bc[pos];pos+=1;
+                let w = code.bc[pos];pos+=1;
+                debug!("opcode 21 (x,w):({},{})",x,w);
+                let t = ge(env.clone(),x);
+                stack.push(Vs::Ref(t.get(w)))
+            },
             22 => {
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
@@ -59,11 +66,14 @@ fn vm(state: &State,code: &Arc<Code>,block: &Arc<Block>,env: Env,mut pos: usize,
 
 #[rustler::nif]
 fn init_st() -> NifResult<(Atom,ResourceArc<State>,Vs)> {
-    // remember to swap last 2 block types from erlang version
+    // remember to swap last 2 block attrs from erlang version
+    //let code = Code::new(vec![],vec![],vec![]);
+
     //let code = Code::new(vec![0,0,25],vec![new_scalar(5.0)],vec![(0,true,0,0)]); // 5
     //let code = Code::new(vec![0,0,14,0,1,25],vec![new_scalar(4.0),new_scalar(3.0)],vec![(0,true,0,0)]); // 3
     //let code = Code::new(vec![0,0,22,0,0,11,25],vec![new_scalar(5.0)],vec![(0,true,1,0)]); // 5
-    let code = Code::new(vec![0,0,22,0,0,11,14,0,1,22,0,0,12,25],vec![new_scalar(5.0),new_scalar(4.0)],vec![(0,true,1,0)]); // 4
+    //let code = Code::new(vec![0,0,22,0,0,11,14,0,1,22,0,0,12,25],vec![new_scalar(5.0),new_scalar(4.0)],vec![(0,true,1,0)]); // 4
+    let code = Code::new(vec![0,0,22,0,0,11,14,0,1,22,0,1,11,14,21,0,0,25],vec![new_scalar(2.0),new_scalar(3.0)],vec![(0,true,2,0)]); // 2
 
     let state = State::new(&code.blocks[0]);
 
