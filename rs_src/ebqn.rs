@@ -26,6 +26,9 @@ fn call(a: Vn,x: Vn, w: Vn) -> Vs {
     }
 }
 
+fn derive(state: &State,code: &Arc<Code>,block: &Arc<Block>,env: Env) -> Vs {
+    panic!("nothing to derive");
+}
 fn vm(state: &State,code: &Arc<Code>,block: &Arc<Block>,env: Env,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
     debug!("block (typ,imm,locals,pos) : ({},{},{},{})",block.typ,block.imm,block.locals,block.pos);
     loop {
@@ -45,6 +48,11 @@ fn vm(state: &State,code: &Arc<Code>,block: &Arc<Block>,env: Env,mut pos: usize,
             },
             14 => {
                 let _ = stack.pop();
+            },
+            15 => {
+                let x = code.bc[pos];pos+=1;
+                let r = derive(&state,&code,&code.blocks[x],env.clone());
+                stack.push(r);
             },
             16 => {
                 let f = stack.pop().unwrap();
@@ -102,7 +110,10 @@ fn init_st() -> NifResult<(Atom,ResourceArc<State>,Vs)> {
     //let code = Code::new(vec![0,0,22,0,0,11,14,0,1,22,0,0,12,25],vec![new_scalar(5.0),new_scalar(4.0)],vec![(0,true,1,0)]); // 4
     //let code = Code::new(vec![0,0,22,0,0,11,14,0,1,22,0,1,11,14,21,0,0,25],vec![new_scalar(2.0),new_scalar(3.0)],vec![(0,true,2,0)]); // 2
     //let code = Code::new(vec![0,0,22,0,0,11,14,0,1,21,0,0,16,25],vec![new_scalar(1.0),new_scalar(4.0)],vec![(0,true,1,0)]); // 1
-    let code = Code::new(vec![0,0,22,0,0,11,14,0,2,21,0,0,0,1,17,25],vec![new_scalar(2.0),new_scalar(3.0),new_scalar(4.0)],vec![(0,true,1,0)]); // 2
+    //let code = Code::new(vec![0,0,22,0,0,11,14,0,2,21,0,0,0,1,17,25],vec![new_scalar(2.0),new_scalar(3.0),new_scalar(4.0)],vec![(0,true,1,0)]); // 2
+    let code = Code::new(vec![0,0,15,1,16,25,21,0,1,25],vec![new_scalar(6.0)],vec![(0,true,0,0),(0,false,3,6)]); // 6
+
+
 
     let state = State::new(&code.blocks[0]);
 
