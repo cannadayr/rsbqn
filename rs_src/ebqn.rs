@@ -5,6 +5,13 @@ use std::sync::Arc;
 use cc_mt::{Cc, Trace, Tracer, collect_cycles};
 use log::{debug, trace, error, log_enabled, info, Level};
 
+fn ge(env: Env,i: usize) -> Env {
+    match i {
+        0 => env,
+        _ => panic!("ge not implemented for i > 0")
+    }
+}
+
 fn vm(state: &State,code: &Arc<Code>,block: &Arc<Block>,env: Env,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
     debug!("block (typ,imm,locals,pos) : ({},{},{},{})",block.typ,block.imm,block.locals,block.pos);
     loop {
@@ -28,13 +35,9 @@ fn vm(state: &State,code: &Arc<Code>,block: &Arc<Block>,env: Env,mut pos: usize,
             22 => {
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
-                debug!("opcode 22 (x,w) : ({},{})",x,w);
-                let t =
-                    match x {
-                        0 => Vs::Slot(env.clone(),w),
-                        _ => panic!("ge not implemented")
-                    };
-                stack.push(t)
+                debug!("opcode 22 (x,w):({},{})",x,w);
+                let t = ge(env.clone(),x);
+                stack.push(Vs::Slot(t,w))
             },
             25 => {
                 break match stack.len() {
