@@ -1,4 +1,4 @@
-use crate::schema::{Env,Vu,Vs,Block,Code,State,new_scalar,ok};
+use crate::schema::{Env,Vu,Vs,Block,Code,State,set,new_scalar,ok};
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
 use std::sync::Arc;
@@ -19,7 +19,7 @@ fn vm(state: &State,code: &Arc<Code>,block: &Arc<Block>,env: Env,mut pos: usize,
             11|12 => {
                 let i = stack.pop().unwrap();
                 let v = stack.pop().unwrap();
-                let r = i.set(true,v); // rtns a reference to v
+                let r = set(true,i,v); // rtns a reference to v
                 stack.push(Vs::Ref(r));
             },
             14 => {

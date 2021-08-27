@@ -44,14 +44,7 @@ pub enum Vs {
     Ref(V),
     Slot(Env,usize),
 }
-impl Vs {
-    pub fn set(&self,d: bool,vs: Vs) -> V {
-        match (self,vs) {
-            (Vs::Slot(env,id),Vs::Ref(v)) => { env.set(*id,v) },
-            _ => panic!("can only set slots"),
-        }
-    }
-}
+
 impl Encoder for Vs {
     fn encode<'a>(&self, env: rustler::Env<'a>) -> rustler::Term<'a> {
         match self {
@@ -174,6 +167,12 @@ impl<T> std::ops::Deref for LateInit<T> {
 }
 
 // Utility fns
+pub fn set(d: bool,is: Vs,vs: Vs) -> V {
+    match (is,vs) {
+        (Vs::Slot(env,id),Vs::Ref(v)) => { env.set(id,v) },
+        _ => panic!("can only set slots"),
+    }
+}
 pub fn new_scalar(n: f64) -> V {
     Cc::new(Vu::Scalar(n))
 }
