@@ -13,7 +13,11 @@ fn ge(env: Env,i: usize) -> Env {
 }
 
 fn call(a: Vn,x: Vn, w: Vn) -> Vs {
-    panic!("can't call fn");
+    debug!("(a,x,w):({:?},{:?},{:?})",a,x,w);
+    match a {
+        Some(v) => Vs::Ref(v),
+        _ => panic!("unimplemented call"),
+    }
 }
 fn vm(state: &State,code: &Arc<Code>,block: &Arc<Block>,env: Env,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
     debug!("block (typ,imm,locals,pos) : ({},{},{},{})",block.typ,block.imm,block.locals,block.pos);
@@ -82,7 +86,8 @@ fn init_st() -> NifResult<(Atom,ResourceArc<State>,Vs)> {
     //let code = Code::new(vec![0,0,14,0,1,25],vec![new_scalar(4.0),new_scalar(3.0)],vec![(0,true,0,0)]); // 3
     //let code = Code::new(vec![0,0,22,0,0,11,25],vec![new_scalar(5.0)],vec![(0,true,1,0)]); // 5
     //let code = Code::new(vec![0,0,22,0,0,11,14,0,1,22,0,0,12,25],vec![new_scalar(5.0),new_scalar(4.0)],vec![(0,true,1,0)]); // 4
-    let code = Code::new(vec![0,0,22,0,0,11,14,0,1,22,0,1,11,14,21,0,0,25],vec![new_scalar(2.0),new_scalar(3.0)],vec![(0,true,2,0)]); // 2
+    //let code = Code::new(vec![0,0,22,0,0,11,14,0,1,22,0,1,11,14,21,0,0,25],vec![new_scalar(2.0),new_scalar(3.0)],vec![(0,true,2,0)]); // 2
+    let code = Code::new(vec![0,0,22,0,0,11,14,0,1,21,0,0,16,25],vec![new_scalar(1.0),new_scalar(4.0)],vec![(0,true,1,0)]);
 
     let state = State::new(&code.blocks[0]);
 
