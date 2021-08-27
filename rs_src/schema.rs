@@ -8,35 +8,36 @@ use rustler::{Encoder};
 rustler::atoms!{ok}
 
 #[derive(Debug,Clone)]
-pub enum V {
+pub enum Vu {
     Scalar(f64),
     BlockInst,
 }
-impl Trace for V {
+impl Trace for Vu {
     fn trace(&self, tracer: &mut Tracer) {
         panic!("clearing V");
     }
 }
-impl Trace for &V {
+impl Trace for &Vu {
     fn trace(&self, tracer: &mut Tracer) {
         panic!("clearing &V");
     }
 }
-impl Encoder for V {
+impl Encoder for Vu {
     fn encode<'a>(&self, env: rustler::Env<'a>) -> rustler::Term<'a> {
         match self {
-            V::Scalar(n) => n.encode(env),
-            V::BlockInst => panic!("can't encode blockinst to BEAM"),
+            Vu::Scalar(n) => n.encode(env),
+            Vu::BlockInst => panic!("can't encode blockinst to BEAM"),
         }
     }
 }
+pub type V = Cc<Vu>;
 #[derive(Debug,Clone)]
 pub enum Vs {
-    Ref(Cc<V>),
+    Ref(V),
     Slot(EnvRef,usize),
 }
 impl Vs {
-    pub fn set(&self,d: bool,vs: Vs) -> Cc<V> {
+    pub fn set(&self,d: bool,vs: Vs) -> V {
         match (self,vs) {
             (Vs::Slot(env,id),Vs::Ref(v)) => { env.set(*id,v) },
             _ => panic!("can only set slots"),
@@ -57,17 +58,17 @@ pub type Vn = Option<V>;
 pub enum Vh {
     Undefined,
     None,
-    V(Cc<V>),
+    V(V),
 }
 
 #[derive(Default,Debug)]
 pub struct Code<'a> {
     pub bc:    Vec<usize>,
-    pub objs:  Vec<Cc<V>>,
+    pub objs:  Vec<V>,
     pub blocks:LateInit<Vec<Arc<Block<'a>>>>,
 }
 impl<'a> Code<'a> {
-    pub fn new(bc: Vec<usize>,objs: Vec<Cc<V>>,blocks_raw: Vec<(u8,bool,usize,usize)>) -> Arc<Self> {
+    pub fn new(bc: Vec<usize>,objs: Vec<V>,blocks_raw: Vec<(u8,bool,usize,usize)>) -> Arc<Self> {
         let code = Arc::new(Self {bc: bc, objs: objs, ..Code::default()});
         let blocks_derv = blocks_raw.iter().map(|block|
             match block {
@@ -95,7 +96,7 @@ impl EnvRef {
     pub fn new(env: Env) -> Self {
         EnvRef(Cc::new(Mutex::new(env)))
     }
-    pub fn set(&self,id: usize,v: Cc<V>) -> Cc<V> {
+    pub fn set(&self,id: usize,v: V) -> V {
         match self {
             EnvRef(arc) => {
                 let mut guard = arc.lock().unwrap();
