@@ -10,8 +10,6 @@ rustler::atoms!{ok}
 #[derive(Debug,Clone)]
 pub enum V {
     Scalar(f64),
-    Obj(Cc<V>),
-    Slot(Cc<Mutex<Option<V>>>),
     BlockInst,
 }
 impl Trace for V {
@@ -28,18 +26,39 @@ impl Encoder for V {
     fn encode<'a>(&self, env: rustler::Env<'a>) -> rustler::Term<'a> {
         match self {
             V::Scalar(n) => n.encode(env),
-            V::Obj(obj) => (**obj).encode(env),
-            V::Slot(slot) => {
-                let guard = slot.lock().unwrap();
-                let r = guard.as_ref().unwrap().encode(env);
-                drop(guard);
-                r
-            },
             V::BlockInst => panic!("can't encode blockinst to BEAM"),
         }
     }
 }
+#[derive(Debug,Clone)]
+pub enum Vs {
+    Ref(Cc<V>),
+    Slot(EnvRef,usize),
+}
+impl Vs {
+    pub fn set(&self,d: bool,vs: Vs) -> Cc<V> {
+        match (self,vs) {
+            (Vs::Slot(env,id),Vs::Ref(v)) => { env.set(*id,v) },
+            _ => panic!("can only set slots"),
+        }
+    }
+}
+impl Encoder for Vs {
+    fn encode<'a>(&self, env: rustler::Env<'a>) -> rustler::Term<'a> {
+        match self {
+            Vs::Ref(r) => (**r).encode(env),
+            Vs::Slot(env,slot) => panic!("cant encode slot to BEAM"),
+        }
+    }
+}
 pub type Vn = Option<V>;
+
+#[derive(Debug)]
+pub enum Vu {
+    Undefined,
+    None,
+    V(Cc<V>),
+}
 
 #[derive(Default,Debug)]
 pub struct Code<'a> {
@@ -70,12 +89,28 @@ pub struct Block<'a> {
     pub code:LateInit<Arc<Code<'a>>>,
 }
 
-#[derive(Default,Debug)]
-pub struct Env<'a> {
-    pub parent:LateInit<&'a Cc<Env<'static>>>,
-    pub vars:   Vec<Cc<Mutex<Option<V>>>>,
+#[derive(Clone,Default,Debug)]
+pub struct EnvRef(Cc<Mutex<Env>>);
+impl EnvRef {
+    pub fn new(env: Env) -> Self {
+        EnvRef(Cc::new(Mutex::new(env)))
+    }
+    pub fn set(&self,id: usize,v: Cc<V>) -> Cc<V> {
+        match self {
+            EnvRef(arc) => {
+                let mut guard = arc.lock().unwrap();
+                (*guard).vars[id] = Vu::V(v.clone());
+                v
+            },
+        }
+    }
 }
-impl<'a> Trace for Env<'a> {
+#[derive(Default,Debug)]
+pub struct Env {
+    pub parent:Option<EnvRef>,
+    pub vars:   Vec<Vu>,
+}
+impl Trace for Env {
     fn trace(&self, tracer: &mut Tracer) {
         panic!("clearing env");
     }
@@ -84,20 +119,21 @@ impl<'a> Trace for Env<'a> {
 struct BlockInst<'a> {
     typ:   u8,
     def:   Arc<&'a Block<'a>>,
-    parent:Env<'a>,
+    parent:EnvRef,
     args:  Vec<Vn>,
 }
 
 #[derive(Default,Debug)]
 pub struct State {
-    pub root: Cc<Mutex<Env<'static>>>,
+    pub root: EnvRef,
 }
 impl State {
     pub fn new(block: &Arc<Block>) -> Self {
         debug!("block {}",block.locals);
-        let mut vars: Vec<Cc<Mutex<Option<V>>>> = Vec::with_capacity(block.locals);
-        vars.resize_with(block.locals, || Cc::new(Mutex::new(None)));
-        Self {root: Cc::new(Mutex::new(Env{vars: vars, ..Env::default()}))}
+        let mut vars: Vec<Vu> = Vec::with_capacity(block.locals);
+        vars.resize_with(block.locals, || Vu::None);
+        let env = Env {parent: None, vars: vars};
+        Self {root: EnvRef::new(env) }
     }
 }
 
