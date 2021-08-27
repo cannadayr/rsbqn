@@ -41,7 +41,7 @@ pub type Vn = Option<V>;
 #[derive(Debug,Clone)]
 pub enum Vs {
     Ref(V),
-    Slot(EnvRef,usize),
+    Slot(Env,usize),
 }
 impl Vs {
     pub fn set(&self,d: bool,vs: Vs) -> V {
@@ -102,7 +102,7 @@ pub struct Block<'a> {
 // Env (Unboxed)
 #[derive(Default,Debug)]
 pub struct EnvUnboxed {
-    pub parent:Option<EnvRef>,
+    pub parent:Option<Env>,
     pub vars:   Vec<Vh>,
 }
 impl Trace for EnvUnboxed {
@@ -111,14 +111,14 @@ impl Trace for EnvUnboxed {
     }
 }
 #[derive(Clone,Default,Debug)]
-pub struct EnvRef(Cc<Mutex<EnvUnboxed>>);
-impl EnvRef {
+pub struct Env(Cc<Mutex<EnvUnboxed>>);
+impl Env {
     pub fn new(env: EnvUnboxed) -> Self {
-        EnvRef(Cc::new(Mutex::new(env)))
+        Env(Cc::new(Mutex::new(env)))
     }
     pub fn set(&self,id: usize,v: V) -> V {
         match self {
-            EnvRef(arc) => {
+            Env(arc) => {
                 let mut guard = arc.lock().unwrap();
                 (*guard).vars[id] = Vh::V(v.clone());
                 v
@@ -130,13 +130,13 @@ impl EnvRef {
 struct BlockInst<'a> {
     typ:   u8,
     def:   Arc<&'a Block<'a>>,
-    parent:EnvRef,
+    parent:Env,
     args:  Vec<Vn>,
 }
 
 #[derive(Default,Debug)]
 pub struct State {
-    pub root: EnvRef,
+    pub root: Env,
 }
 impl State {
     pub fn new(block: &Arc<Block>) -> Self {
@@ -144,7 +144,7 @@ impl State {
         let mut vars: Vec<Vh> = Vec::with_capacity(block.locals);
         vars.resize_with(block.locals, || Vh::None);
         let env = EnvUnboxed {parent: None, vars: vars};
-        Self {root: EnvRef::new(env) }
+        Self {root: Env::new(env) }
     }
 }
 

@@ -1,4 +1,4 @@
-use crate::schema::{LateInit,EnvRef,Vu,Vs,Block,Code,EnvUnboxed,State,ok};
+use crate::schema::{Env,Vu,Vs,Block,Code,State,ok};
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
 use std::sync::Mutex;
@@ -6,7 +6,7 @@ use std::sync::Arc;
 use cc_mt::{Cc, Trace, Tracer, collect_cycles};
 use log::{debug, trace, error, log_enabled, info, Level};
 
-fn vm(state: &State,code: &Arc<Code>,block: &Arc<Block>,env: EnvRef,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
+fn vm(state: &State,code: &Arc<Code>,block: &Arc<Block>,env: Env,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
     debug!("block (typ,imm,locals,pos) : ({},{},{},{})",block.typ,block.imm,block.locals,block.pos);
     loop {
         let op = code.bc[pos];pos+=1;
