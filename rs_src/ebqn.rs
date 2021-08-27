@@ -1,7 +1,6 @@
-use crate::schema::{Env,Vu,Vs,Block,Code,State,ok};
+use crate::schema::{Env,Vu,Vs,Block,Code,State,new_scalar,ok};
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
-use std::sync::Mutex;
 use std::sync::Arc;
 use cc_mt::{Cc, Trace, Tracer, collect_cycles};
 use log::{debug, trace, error, log_enabled, info, Level};
@@ -57,10 +56,11 @@ fn vm(state: &State,code: &Arc<Code>,block: &Arc<Block>,env: Env,mut pos: usize,
 
 #[rustler::nif]
 fn init_st() -> NifResult<(Atom,ResourceArc<State>,Vs)> {
-    //[0,0,25],[5],[[0,1,0,0]]
-    //let code = Code::new(vec![0,0,25],vec![Cc::new(Vu::Scalar(5.0))],vec![(0,true,0,0)]); // 5
-    //let code = Code::new(vec![0,0,14,0,1,25],vec![Cc::new(Vu::Scalar(4.0)),Cc::new(Vu::Scalar(3.0))],vec![(0,true,0,0)]); // 3
-    let code = Code::new(vec![0,0,22,0,0,11,25],vec![Cc::new(Vu::Scalar(5.0))],vec![(0,true,1,0)]); // 5
+    // remember to swap last 2 block types from erlang version
+    //let code = Code::new(vec![0,0,25],vec![new_scalar(5.0)],vec![(0,true,0,0)]); // 5
+    //let code = Code::new(vec![0,0,14,0,1,25],vec![new_scalar(4.0),new_scalar(3.0)],vec![(0,true,0,0)]); // 3
+    //let code = Code::new(vec![0,0,22,0,0,11,25],vec![new_scalar(5.0)],vec![(0,true,1,0)]); // 5
+    let code = Code::new(vec![0,0,22,0,0,11,14,0,1,22,0,0,12,25],vec![new_scalar(5.0),new_scalar(4.0)],vec![(0,true,1,0)]); // 4
 
     let state = State::new(&code.blocks[0]);
 

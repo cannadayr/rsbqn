@@ -34,6 +34,7 @@ impl Encoder for Vu {
 
 // Value
 pub type V = Cc<Vu>;
+
 // Value (Optional)
 pub type Vn = Option<V>;
 
@@ -170,4 +171,9 @@ impl<T> std::ops::Deref for LateInit<T> {
     fn deref(&self) -> &T {
         self.cell.get().unwrap()
     }
+}
+
+// Utility fns
+pub fn new_scalar(n: f64) -> V {
+    Cc::new(Vu::Scalar(n))
 }
