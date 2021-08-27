@@ -7,6 +7,7 @@ use rustler::{Encoder};
 
 rustler::atoms!{ok}
 
+// Value (unboxed)
 #[derive(Debug,Clone)]
 pub enum Vu {
     Scalar(f64),
@@ -30,7 +31,13 @@ impl Encoder for Vu {
         }
     }
 }
+
+// Value
 pub type V = Cc<Vu>;
+// Value (Optional)
+pub type Vn = Option<V>;
+
+// Value (boxed on the stack)
 #[derive(Debug,Clone)]
 pub enum Vs {
     Ref(V),
@@ -52,8 +59,8 @@ impl Encoder for Vs {
         }
     }
 }
-pub type Vn = Option<V>;
 
+// Value (boxed on the heap)
 #[derive(Debug)]
 pub enum Vh {
     Undefined,
@@ -61,6 +68,7 @@ pub enum Vh {
     V(V),
 }
 
+// Code
 #[derive(Default,Debug)]
 pub struct Code<'a> {
     pub bc:    Vec<usize>,
@@ -84,16 +92,28 @@ impl<'a> Code<'a> {
     }
 }
 
+// Block
 #[derive(Default, Debug)]
 pub struct Block<'a> {
     pub typ:u8, pub imm:bool, pub locals:usize, pub pos:usize,
     pub code:LateInit<Arc<Code<'a>>>,
 }
 
+// Env (Unboxed)
+#[derive(Default,Debug)]
+pub struct EnvUnboxed {
+    pub parent:Option<EnvRef>,
+    pub vars:   Vec<Vh>,
+}
+impl Trace for EnvUnboxed {
+    fn trace(&self, tracer: &mut Tracer) {
+        panic!("clearing env");
+    }
+}
 #[derive(Clone,Default,Debug)]
-pub struct EnvRef(Cc<Mutex<Env>>);
+pub struct EnvRef(Cc<Mutex<EnvUnboxed>>);
 impl EnvRef {
-    pub fn new(env: Env) -> Self {
+    pub fn new(env: EnvUnboxed) -> Self {
         EnvRef(Cc::new(Mutex::new(env)))
     }
     pub fn set(&self,id: usize,v: V) -> V {
@@ -104,16 +124,6 @@ impl EnvRef {
                 v
             },
         }
-    }
-}
-#[derive(Default,Debug)]
-pub struct Env {
-    pub parent:Option<EnvRef>,
-    pub vars:   Vec<Vh>,
-}
-impl Trace for Env {
-    fn trace(&self, tracer: &mut Tracer) {
-        panic!("clearing env");
     }
 }
 
@@ -133,7 +143,7 @@ impl State {
         debug!("block {}",block.locals);
         let mut vars: Vec<Vh> = Vec::with_capacity(block.locals);
         vars.resize_with(block.locals, || Vh::None);
-        let env = Env {parent: None, vars: vars};
+        let env = EnvUnboxed {parent: None, vars: vars};
         Self {root: EnvRef::new(env) }
     }
 }

@@ -1,4 +1,4 @@
-use crate::schema::{LateInit,EnvRef,Vu,Vs,Block,Code,Env,State,ok};
+use crate::schema::{LateInit,EnvRef,Vu,Vs,Block,Code,EnvUnboxed,State,ok};
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
 use std::sync::Mutex;
