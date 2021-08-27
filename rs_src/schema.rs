@@ -54,7 +54,7 @@ impl Encoder for Vs {
 pub type Vn = Option<V>;
 
 #[derive(Debug)]
-pub enum Vu {
+pub enum Vh {
     Undefined,
     None,
     V(Cc<V>),
@@ -99,7 +99,7 @@ impl EnvRef {
         match self {
             EnvRef(arc) => {
                 let mut guard = arc.lock().unwrap();
-                (*guard).vars[id] = Vu::V(v.clone());
+                (*guard).vars[id] = Vh::V(v.clone());
                 v
             },
         }
@@ -108,7 +108,7 @@ impl EnvRef {
 #[derive(Default,Debug)]
 pub struct Env {
     pub parent:Option<EnvRef>,
-    pub vars:   Vec<Vu>,
+    pub vars:   Vec<Vh>,
 }
 impl Trace for Env {
     fn trace(&self, tracer: &mut Tracer) {
@@ -130,8 +130,8 @@ pub struct State {
 impl State {
     pub fn new(block: &Arc<Block>) -> Self {
         debug!("block {}",block.locals);
-        let mut vars: Vec<Vu> = Vec::with_capacity(block.locals);
-        vars.resize_with(block.locals, || Vu::None);
+        let mut vars: Vec<Vh> = Vec::with_capacity(block.locals);
+        vars.resize_with(block.locals, || Vh::None);
         let env = Env {parent: None, vars: vars};
         Self {root: EnvRef::new(env) }
     }
