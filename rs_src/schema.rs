@@ -44,6 +44,14 @@ pub enum Vs {
     Ref(V),
     Slot(Env,usize),
 }
+impl Vs {
+    pub fn to_ref(&self) -> &V {
+        match self {
+            Vs::Ref(v) => v,
+            _ => panic!("can't convert to ref"),
+        }
+    }
+}
 
 impl Encoder for Vs {
     fn encode<'a>(&self, env: rustler::Env<'a>) -> rustler::Term<'a> {

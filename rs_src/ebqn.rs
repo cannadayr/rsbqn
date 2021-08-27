@@ -1,4 +1,4 @@
-use crate::schema::{Env,Vu,Vs,Block,Code,State,set,new_scalar,ok};
+use crate::schema::{Env,Vu,Vs,Vn,Block,Code,State,set,new_scalar,ok};
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
 use std::sync::Arc;
@@ -12,6 +12,9 @@ fn ge(env: Env,i: usize) -> Env {
     }
 }
 
+fn call(a: Vn,x: Vn, w: Vn) -> Vs {
+    panic!("can't call fn");
+}
 fn vm(state: &State,code: &Arc<Code>,block: &Arc<Block>,env: Env,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
     debug!("block (typ,imm,locals,pos) : ({},{},{},{})",block.typ,block.imm,block.locals,block.pos);
     loop {
@@ -31,6 +34,12 @@ fn vm(state: &State,code: &Arc<Code>,block: &Arc<Block>,env: Env,mut pos: usize,
             },
             14 => {
                 let _ = stack.pop();
+            },
+            16 => {
+                let f = stack.pop().unwrap();
+                let x = stack.pop().unwrap();
+                let r = call(Some(f.to_ref().clone()),Some(x.to_ref().clone()),None);
+                stack.push(r);
             },
             21 => {
                 let x = code.bc[pos];pos+=1;
