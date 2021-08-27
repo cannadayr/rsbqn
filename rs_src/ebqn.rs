@@ -15,10 +15,17 @@ fn ge(env: Env,i: usize) -> Env {
 fn call(a: Vn,x: Vn, w: Vn) -> Vs {
     debug!("(a,x,w):({:?},{:?},{:?})",a,x,w);
     match a {
-        Some(v) => Vs::Ref(v),
+        Some(v) => {
+            debug!("v is {:?}",v);
+            match *v {
+                Vu::Scalar(n) => Vs::Ref(v),
+                _ => panic!("unrecognized call arg"),
+            }
+        },
         _ => panic!("unimplemented call"),
     }
 }
+
 fn vm(state: &State,code: &Arc<Code>,block: &Arc<Block>,env: Env,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
     debug!("block (typ,imm,locals,pos) : ({},{},{},{})",block.typ,block.imm,block.locals,block.pos);
     loop {
