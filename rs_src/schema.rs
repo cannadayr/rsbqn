@@ -72,33 +72,43 @@ pub enum Vh {
 
 // Code
 #[derive(Default,Debug)]
-pub struct Code<'a> {
+pub struct Code {
     pub bc:    Vec<usize>,
     pub objs:  Vec<V>,
-    pub blocks:LateInit<Vec<Arc<Block<'a>>>>,
+    pub blocks:LateInit<Vec<Cc<Block>>>,
 }
-impl<'a> Code<'a> {
-    pub fn new(bc: Vec<usize>,objs: Vec<V>,blocks_raw: Vec<(u8,bool,usize,usize)>) -> Arc<Self> {
-        let code = Arc::new(Self {bc: bc, objs: objs, ..Code::default()});
+impl Code {
+    pub fn new(bc: Vec<usize>,objs: Vec<V>,blocks_raw: Vec<(u8,bool,usize,usize)>) -> Cc<Self> {
+        let code = Cc::new(Self {bc: bc, objs: objs, ..Code::default()});
         let blocks_derv = blocks_raw.iter().map(|block|
             match block {
                 (typ,imm,locals,pos) => {
                     let b = Block { typ: *typ, imm: *imm, locals: *locals, pos: *pos, .. Block::default() };
                     b.code.init(code.clone());
-                    Arc::new(b)
+                    Cc::new(b)
                 }
             }
-        ).collect::<Vec<Arc<Block>>>();
+        ).collect::<Vec<Cc<Block>>>();
         code.blocks.init(blocks_derv);
         code
+    }
+}
+impl Trace for Code {
+    fn trace(&self, tracer: &mut Tracer) {
+        panic!("clearing Code");
     }
 }
 
 // Block
 #[derive(Default, Debug)]
-pub struct Block<'a> {
+pub struct Block {
     pub typ:u8, pub imm:bool, pub locals:usize, pub pos:usize,
-    pub code:LateInit<Arc<Code<'a>>>,
+    pub code:LateInit<Cc<Code>>,
+}
+impl Trace for Block {
+    fn trace(&self, tracer: &mut Tracer) {
+        panic!("clearing Code");
+    }
 }
 
 // Env (Unboxed)
@@ -143,9 +153,9 @@ impl Env {
     }
 }
 
-struct BlockInst<'a> {
+pub struct BlockInst {
     typ:   u8,
-    def:   Arc<&'a Block<'a>>,
+    def:   Cc<Block>,
     parent:Env,
     args:  Vec<Vn>,
 }
@@ -155,7 +165,7 @@ pub struct State {
     pub root: Env,
 }
 impl State {
-    pub fn new(block: &Arc<Block>) -> Self {
+    pub fn new(block: &Cc<Block>) -> Self {
         debug!("block {}",block.locals);
         let mut vars: Vec<Vh> = Vec::with_capacity(block.locals);
         vars.resize_with(block.locals, || Vh::None);

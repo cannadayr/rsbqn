@@ -1,7 +1,6 @@
-use crate::schema::{Env,Vu,Vs,Vn,Block,Code,State,set,new_scalar,ok};
+use crate::schema::{Env,Vu,Vs,Vn,Block,BlockInst,Code,State,set,new_scalar,ok};
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
-use std::sync::Arc;
 use cc_mt::{Cc, Trace, Tracer, collect_cycles};
 use log::{debug, trace, error, log_enabled, info, Level};
 
@@ -26,10 +25,18 @@ fn call(a: Vn,x: Vn, w: Vn) -> Vs {
     }
 }
 
-fn derive(state: &State,code: &Arc<Code>,block: &Arc<Block>,env: Env) -> Vs {
+fn derive(state: &State,code: &Cc<Code>,block: &Cc<Block>,env: Env) -> Vs {
+    match (block.typ,block.imm) {
+        (0,true) => panic!("imm block"),
+        (typ,_) => {
+            panic!("non imm block")
+            //let block_inst = BlockInst::new(code.clone(),typ,(*block).clone(),vec![None,None,None],env);
+            //Vs::Ref(block_inst)
+        },
+    }
     panic!("nothing to derive");
 }
-fn vm(state: &State,code: &Arc<Code>,block: &Arc<Block>,env: Env,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
+fn vm(state: &State,code: &Cc<Code>,block: &Cc<Block>,env: Env,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
     debug!("block (typ,imm,locals,pos) : ({},{},{},{})",block.typ,block.imm,block.locals,block.pos);
     loop {
         let op = code.bc[pos];pos+=1;
@@ -112,8 +119,6 @@ fn init_st() -> NifResult<(Atom,ResourceArc<State>,Vs)> {
     //let code = Code::new(vec![0,0,22,0,0,11,14,0,1,21,0,0,16,25],vec![new_scalar(1.0),new_scalar(4.0)],vec![(0,true,1,0)]); // 1
     //let code = Code::new(vec![0,0,22,0,0,11,14,0,2,21,0,0,0,1,17,25],vec![new_scalar(2.0),new_scalar(3.0),new_scalar(4.0)],vec![(0,true,1,0)]); // 2
     let code = Code::new(vec![0,0,15,1,16,25,21,0,1,25],vec![new_scalar(6.0)],vec![(0,true,0,0),(0,false,3,6)]); // 6
-
-
 
     let state = State::new(&code.blocks[0]);
 
