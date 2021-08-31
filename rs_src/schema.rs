@@ -140,11 +140,11 @@ impl Trace for EnvUnboxed {
 #[derive(Clone,Default,Debug)]
 pub struct Env(Cc<Mutex<EnvUnboxed>>);
 impl Env {
-    pub fn new(block: &Cc<Block>) -> Self {
+    pub fn new(parent: Option<Env>,block: &Cc<Block>) -> Self {
         debug!("block {}",block.locals);
         let mut vars: Vec<Vh> = Vec::with_capacity(block.locals);
         vars.resize_with(block.locals, || Vh::None);
-        let env = EnvUnboxed {parent: None, vars: vars};
+        let env = EnvUnboxed {parent: parent, vars: vars};
         Self(Cc::new(Mutex::new(env)))
     }
     pub fn get(&self,id: usize) -> V {

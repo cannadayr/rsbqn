@@ -113,7 +113,7 @@ fn init_st() -> NifResult<(Atom,ResourceArc<Env>,Vs)> {
     //let code = Code::new(vec![0,0,22,0,0,11,14,0,2,21,0,0,0,1,17,25],vec![new_scalar(2.0),new_scalar(3.0),new_scalar(4.0)],vec![(0,true,1,0)]); // 2
     let code = Code::new(vec![0,0,15,1,16,25,21,0,1,25],vec![new_scalar(6.0)],vec![(0,true,0,0),(0,false,3,6)]); // 6
 
-    let root = Env::new(&code.blocks[0]);
+    let root = Env::new(None,&code.blocks[0]);
 
     let rtn = vm(&root,&code,&code.blocks[0],code.blocks[0].pos,Vec::new());
 
