@@ -12,7 +12,6 @@ fn ge(env: Env,i: usize) -> Env {
 }
 
 fn call(a: Vn,x: Vn, w: Vn) -> Vs {
-    debug!("(a,x,w):({:?},{:?},{:?})",a,x,w);
     match a {
         Some(v) => v.call(x,w),
         _ => panic!("unimplemented call"),
@@ -29,7 +28,8 @@ fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>) -> Vs {
         },
     }
 }
-fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
+
+pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
     debug!("block (typ,imm,locals,pos) : ({},{},{},{})",block.typ,block.imm,block.locals,block.pos);
     loop {
         let op = code.bc[pos];pos+=1;

@@ -3,6 +3,7 @@ use once_cell::sync::OnceCell;
 use cc_mt::{Cc, Trace, Tracer, collect_cycles};
 use log::{debug, trace, error, log_enabled, info, Level};
 use rustler::{Encoder};
+use crate::ebqn::vm;
 
 rustler::atoms!{ok}
 
@@ -40,7 +41,8 @@ impl Calleable for Vu {
         match self {
             Vu::BlockInst(b) => {
                 assert!(b.typ == 0);
-                panic!("calling blockinst");
+                let env = Env::new(Some(b.parent.clone()),&b.def);
+                vm(&env,&b.def.code,&b.def,b.def.pos,Vec::new())
             },
             _ => panic!("no call fn for type"),
         }
@@ -151,7 +153,6 @@ impl Env {
         match self {
             Env(arc) => {
                 let guard = arc.lock().unwrap();
-                debug!("slot is {:?}",(*guard).vars[id]);
                 let vh = &(*guard).vars[id];
                 match vh {
                     Vh::V(v) => v.clone(),
@@ -164,7 +165,6 @@ impl Env {
         match self {
             Env(arc) => {
                 let mut guard = arc.lock().unwrap();
-                debug!("slot is {:?}",(*guard).vars[id]);
                 (*guard).vars[id] = Vh::V(v.clone());
                 v
             },
