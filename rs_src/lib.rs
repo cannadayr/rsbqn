@@ -3,7 +3,7 @@ mod ebqn;
 use rustler::{Env,Term};
 
 pub fn load(env: Env, _info: Term) -> bool {
-    rustler::resource!(schema::State, env);
+    rustler::resource!(schema::Env, env);
     env_logger::init();
     true
 }

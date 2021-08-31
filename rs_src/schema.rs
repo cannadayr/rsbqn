@@ -6,6 +6,11 @@ use rustler::{Encoder};
 
 rustler::atoms!{ok}
 
+// Traits
+pub trait Calleable {
+    fn call(&self,x: Vn,w: Vn) -> Vs;
+}
+
 // Value (unboxed)
 #[derive(Debug,Clone)]
 pub enum Vu {
@@ -27,6 +32,17 @@ impl Encoder for Vu {
         match self {
             Vu::Scalar(n) => n.encode(env),
             Vu::BlockInst(b) => panic!("can't encode blockinst to BEAM"),
+        }
+    }
+}
+impl Calleable for Vu {
+    fn call(&self,x: Vn, w: Vn) -> Vs {
+        match self {
+            Vu::BlockInst(b) => {
+                assert!(b.typ == 0);
+                panic!("calling blockinst");
+            },
+            _ => panic!("no call fn for type"),
         }
     }
 }
@@ -124,8 +140,12 @@ impl Trace for EnvUnboxed {
 #[derive(Clone,Default,Debug)]
 pub struct Env(Cc<Mutex<EnvUnboxed>>);
 impl Env {
-    pub fn new(env: EnvUnboxed) -> Self {
-        Env(Cc::new(Mutex::new(env)))
+    pub fn new(block: &Cc<Block>) -> Self {
+        debug!("block {}",block.locals);
+        let mut vars: Vec<Vh> = Vec::with_capacity(block.locals);
+        vars.resize_with(block.locals, || Vh::None);
+        let env = EnvUnboxed {parent: None, vars: vars};
+        Self(Cc::new(Mutex::new(env)))
     }
     pub fn get(&self,id: usize) -> V {
         match self {
@@ -160,22 +180,8 @@ pub struct BlockInst {
     args:  Vec<Vn>,
 }
 impl BlockInst {
-    pub fn new(code: Cc<Code>, typ: u8, block: Cc<Block>, args: Vec<Vn>, env: Env) -> Self {
+    pub fn new(env: Env,code: Cc<Code>, typ: u8, block: Cc<Block>, args: Vec<Vn>) -> Self {
         BlockInst {typ: typ, def: block, parent: env, args: args }
-    }
-}
-
-#[derive(Default,Debug)]
-pub struct State {
-    pub root: Env,
-}
-impl State {
-    pub fn new(block: &Cc<Block>) -> Self {
-        debug!("block {}",block.locals);
-        let mut vars: Vec<Vh> = Vec::with_capacity(block.locals);
-        vars.resize_with(block.locals, || Vh::None);
-        let env = EnvUnboxed {parent: None, vars: vars};
-        Self {root: Env::new(env) }
     }
 }
 

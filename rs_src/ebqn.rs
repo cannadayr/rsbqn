@@ -1,4 +1,4 @@
-use crate::schema::{Env,Vu,Vs,Vn,Block,BlockInst,Code,State,set,new_scalar,ok};
+use crate::schema::{Env,Vu,Vs,Vn,Block,BlockInst,Code,Calleable,set,new_scalar,ok};
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
 use cc_mt::{Cc, Trace, Tracer, collect_cycles};
@@ -14,25 +14,26 @@ fn ge(env: Env,i: usize) -> Env {
 fn call(a: Vn,x: Vn, w: Vn) -> Vs {
     debug!("(a,x,w):({:?},{:?},{:?})",a,x,w);
     match a {
-        Some(v) => Vs::Ref(v),
+        Some(v) => v.call(x,w),
         _ => panic!("unimplemented call"),
     }
 }
 
-fn derv(state: &State,code: &Cc<Code>,block: &Cc<Block>,env: Env) -> Vs {
+fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>) -> Vs {
     match (block.typ,block.imm) {
         (0,true) => panic!("imm block"),
         (typ,_) => {
-            let block_inst = BlockInst::new(code.clone(),typ,(*block).clone(),vec![None,None,None],env);
+            let block_inst = BlockInst::new(env.clone(),code.clone(),typ,(*block).clone(),vec![None,None,None]);
             let r = Vs::Ref(Cc::new(Vu::BlockInst(block_inst)));
             r
         },
     }
 }
-fn vm(state: &State,code: &Cc<Code>,block: &Cc<Block>,env: Env,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
+fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
     debug!("block (typ,imm,locals,pos) : ({},{},{},{})",block.typ,block.imm,block.locals,block.pos);
     loop {
         let op = code.bc[pos];pos+=1;
+        debug!("dbging (op,pos) : {},{}",op,pos);
         match op {
             0 => {
                 let x = code.bc[pos];pos+=1;
@@ -51,7 +52,7 @@ fn vm(state: &State,code: &Cc<Code>,block: &Cc<Block>,env: Env,mut pos: usize,mu
             },
             15 => {
                 let x = code.bc[pos];pos+=1;
-                let r = derv(&state,&code,&code.blocks[x],env.clone());
+                let r = derv(env.clone(),&code,&code.blocks[x]);
                 stack.push(r);
             },
             16 => {
@@ -99,7 +100,7 @@ fn vm(state: &State,code: &Cc<Code>,block: &Cc<Block>,env: Env,mut pos: usize,mu
 }
 
 #[rustler::nif]
-fn init_st() -> NifResult<(Atom,ResourceArc<State>,Vs)> {
+fn init_st() -> NifResult<(Atom,ResourceArc<Env>,Vs)> {
     // remember to swap last 2 block attrs from erlang version
     //let code = Code::new(vec![],vec![],vec![]);
 
@@ -112,9 +113,9 @@ fn init_st() -> NifResult<(Atom,ResourceArc<State>,Vs)> {
     //let code = Code::new(vec![0,0,22,0,0,11,14,0,2,21,0,0,0,1,17,25],vec![new_scalar(2.0),new_scalar(3.0),new_scalar(4.0)],vec![(0,true,1,0)]); // 2
     let code = Code::new(vec![0,0,15,1,16,25,21,0,1,25],vec![new_scalar(6.0)],vec![(0,true,0,0),(0,false,3,6)]); // 6
 
-    let state = State::new(&code.blocks[0]);
+    let root = Env::new(&code.blocks[0]);
 
-    let rtn = vm(&state,&code,&code.blocks[0],state.root.clone(),code.blocks[0].pos,Vec::new());
+    let rtn = vm(&root,&code,&code.blocks[0],code.blocks[0].pos,Vec::new());
 
-    Ok((ok(),ResourceArc::new(state),rtn))
+    Ok((ok(),ResourceArc::new(root),rtn))
 }
