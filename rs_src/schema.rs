@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use std::sync::Mutex;
 use once_cell::sync::OnceCell;
 use cc_mt::{Cc, Trace, Tracer, collect_cycles};
@@ -11,7 +10,7 @@ rustler::atoms!{ok}
 #[derive(Debug,Clone)]
 pub enum Vu {
     Scalar(f64),
-    BlockInst,
+    BlockInst(BlockInst),
 }
 impl Trace for Vu {
     fn trace(&self, tracer: &mut Tracer) {
@@ -27,7 +26,7 @@ impl Encoder for Vu {
     fn encode<'a>(&self, env: rustler::Env<'a>) -> rustler::Term<'a> {
         match self {
             Vu::Scalar(n) => n.encode(env),
-            Vu::BlockInst => panic!("can't encode blockinst to BEAM"),
+            Vu::BlockInst(b) => panic!("can't encode blockinst to BEAM"),
         }
     }
 }
@@ -153,11 +152,17 @@ impl Env {
     }
 }
 
+#[derive(Debug,Clone)]
 pub struct BlockInst {
     typ:   u8,
     def:   Cc<Block>,
     parent:Env,
     args:  Vec<Vn>,
+}
+impl BlockInst {
+    pub fn new(code: Cc<Code>, typ: u8, block: Cc<Block>, args: Vec<Vn>, env: Env) -> Self {
+        BlockInst {typ: typ, def: block, parent: env, args: args }
+    }
 }
 
 #[derive(Default,Debug)]

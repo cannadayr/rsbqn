@@ -14,27 +14,20 @@ fn ge(env: Env,i: usize) -> Env {
 fn call(a: Vn,x: Vn, w: Vn) -> Vs {
     debug!("(a,x,w):({:?},{:?},{:?})",a,x,w);
     match a {
-        Some(v) => {
-            debug!("v is {:?}",v);
-            match *v {
-                Vu::Scalar(n) => Vs::Ref(v),
-                _ => panic!("unrecognized call arg"),
-            }
-        },
+        Some(v) => Vs::Ref(v),
         _ => panic!("unimplemented call"),
     }
 }
 
-fn derive(state: &State,code: &Cc<Code>,block: &Cc<Block>,env: Env) -> Vs {
+fn derv(state: &State,code: &Cc<Code>,block: &Cc<Block>,env: Env) -> Vs {
     match (block.typ,block.imm) {
         (0,true) => panic!("imm block"),
         (typ,_) => {
-            panic!("non imm block")
-            //let block_inst = BlockInst::new(code.clone(),typ,(*block).clone(),vec![None,None,None],env);
-            //Vs::Ref(block_inst)
+            let block_inst = BlockInst::new(code.clone(),typ,(*block).clone(),vec![None,None,None],env);
+            let r = Vs::Ref(Cc::new(Vu::BlockInst(block_inst)));
+            r
         },
     }
-    panic!("nothing to derive");
 }
 fn vm(state: &State,code: &Cc<Code>,block: &Cc<Block>,env: Env,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
     debug!("block (typ,imm,locals,pos) : ({},{},{},{})",block.typ,block.imm,block.locals,block.pos);
@@ -58,7 +51,7 @@ fn vm(state: &State,code: &Cc<Code>,block: &Cc<Block>,env: Env,mut pos: usize,mu
             },
             15 => {
                 let x = code.bc[pos];pos+=1;
-                let r = derive(&state,&code,&code.blocks[x],env.clone());
+                let r = derv(&state,&code,&code.blocks[x],env.clone());
                 stack.push(r);
             },
             16 => {
@@ -102,7 +95,6 @@ fn vm(state: &State,code: &Cc<Code>,block: &Cc<Block>,env: Env,mut pos: usize,mu
                 panic!("unreachable op: {}",op);
             }
         }
-        debug!("op : {}",op);
     }
 }
 
