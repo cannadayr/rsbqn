@@ -41,10 +41,19 @@ impl Calleable for Cc<Vu> {
         match &**self {
             Vu::BlockInst(b) => {
                 assert!(b.typ == 0);
-                let mut v: Vec<Vn> = vec![Some(self.clone()),x,w];
-                let mut args = b.args.iter().map(|a| a.clone()).collect::<Vec<Vn>>();
-                v.append(&mut args);
-                let env = Env::new(Some(b.parent.clone()),&b.def,Some(v));
+                let slots =
+                    match &b.args {
+                        None => {
+                            vec![Vh::V(self.clone()),none_or_clone(&x),none_or_clone(&w)]
+                        },
+                        Some(args) => {
+                            let mut v: Vec<Vh> = vec![Vh::V(self.clone()),none_or_clone(&x),none_or_clone(&w)];
+                            let mut a = args.iter().map(|b| Vh::V(b.as_ref().unwrap().clone())).collect::<Vec<Vh>>();
+                            v.append(&mut a);
+                            v
+                        },
+                    };
+                let env = Env::new(Some(b.parent.clone()),&b.def,Some(slots));
                 vm(&env,&b.def.code,&b.def,b.def.pos,Vec::new())
             },
             _ => panic!("no call fn for type"),
@@ -145,10 +154,20 @@ impl Trace for EnvUnboxed {
 #[derive(Clone,Default,Debug)]
 pub struct Env(Cc<Mutex<EnvUnboxed>>);
 impl Env {
-    pub fn new(parent: Option<Env>,block: &Cc<Block>,args: Option<Vec<Vn>>) -> Self {
+    pub fn new(parent: Option<Env>,block: &Cc<Block>,args: Option<Vec<Vh>>) -> Self {
         debug!("initializing block of size {}",block.locals);
-        let mut vars: Vec<Vh> = Vec::with_capacity(block.locals);
-        vars.resize_with(block.locals, || Vh::None);
+        let vars =
+            match args {
+                None => {
+                    let mut v: Vec<Vh> = Vec::with_capacity(block.locals);
+                    v.resize_with(block.locals, || Vh::None);
+                    v
+                },
+                Some(mut v) => {
+                    v.resize_with(block.locals, || Vh::None);
+                    v
+                },
+            };
         let env = EnvUnboxed {parent: parent, vars: vars};
         Self(Cc::new(Mutex::new(env)))
     }
@@ -181,10 +200,10 @@ pub struct BlockInst {
     typ:   u8,
     def:   Cc<Block>,
     parent:Env,
-    args:  Vec<Vn>,
+    args:  Option<Vec<Vn>>,
 }
 impl BlockInst {
-    pub fn new(env: Env,code: Cc<Code>, typ: u8, block: Cc<Block>, args: Vec<Vn>) -> Self {
+    pub fn new(env: Env,code: Cc<Code>, typ: u8, block: Cc<Block>, args: Option<Vec<Vn>>) -> Self {
         BlockInst {typ: typ, def: block, parent: env, args: args }
     }
 }
@@ -222,4 +241,10 @@ pub fn set(d: bool,is: Vs,vs: Vs) -> V {
 }
 pub fn new_scalar(n: f64) -> V {
     Cc::new(Vu::Scalar(n))
+}
+pub fn none_or_clone(vn: &Vn) -> Vh {
+    match vn {
+        None => Vh::None,
+        Some(v) => Vh::V(v.clone()),
+    }
 }

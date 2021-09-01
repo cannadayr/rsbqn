@@ -22,7 +22,7 @@ fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>) -> Vs {
     match (block.typ,block.imm) {
         (0,true) => panic!("imm block"),
         (typ,_) => {
-            let block_inst = BlockInst::new(env.clone(),code.clone(),typ,(*block).clone(),vec![None,None,None]);
+            let block_inst = BlockInst::new(env.clone(),code.clone(),typ,(*block).clone(),None);
             let r = Vs::Ref(Cc::new(Vu::BlockInst(block_inst)));
             r
         },
