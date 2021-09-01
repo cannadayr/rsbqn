@@ -41,9 +41,10 @@ impl Calleable for Cc<Vu> {
         match &**self {
             Vu::BlockInst(b) => {
                 assert!(b.typ == 0);
-                let env = Env::new(Some(b.parent.clone()),&b.def);
                 let mut v: Vec<Vn> = vec![Some(self.clone()),x,w];
-                //v.append(&mut b.args);
+                let mut args = b.args.iter().map(|a| a.clone()).collect::<Vec<Vn>>();
+                v.append(&mut args);
+                let env = Env::new(Some(b.parent.clone()),&b.def,Some(v));
                 vm(&env,&b.def.code,&b.def,b.def.pos,Vec::new())
             },
             _ => panic!("no call fn for type"),
@@ -144,7 +145,7 @@ impl Trace for EnvUnboxed {
 #[derive(Clone,Default,Debug)]
 pub struct Env(Cc<Mutex<EnvUnboxed>>);
 impl Env {
-    pub fn new(parent: Option<Env>,block: &Cc<Block>) -> Self {
+    pub fn new(parent: Option<Env>,block: &Cc<Block>,args: Option<Vec<Vn>>) -> Self {
         debug!("initializing block of size {}",block.locals);
         let mut vars: Vec<Vh> = Vec::with_capacity(block.locals);
         vars.resize_with(block.locals, || Vh::None);
