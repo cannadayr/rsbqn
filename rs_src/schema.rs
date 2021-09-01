@@ -36,12 +36,14 @@ impl Encoder for Vu {
         }
     }
 }
-impl Calleable for Vu {
+impl Calleable for Cc<Vu> {
     fn call(&self,x: Vn, w: Vn) -> Vs {
-        match self {
+        match &**self {
             Vu::BlockInst(b) => {
                 assert!(b.typ == 0);
                 let env = Env::new(Some(b.parent.clone()),&b.def);
+                let mut v: Vec<Vn> = vec![Some(self.clone()),x,w];
+                //v.append(&mut b.args);
                 vm(&env,&b.def.code,&b.def,b.def.pos,Vec::new())
             },
             _ => panic!("no call fn for type"),
@@ -143,7 +145,7 @@ impl Trace for EnvUnboxed {
 pub struct Env(Cc<Mutex<EnvUnboxed>>);
 impl Env {
     pub fn new(parent: Option<Env>,block: &Cc<Block>) -> Self {
-        debug!("block {}",block.locals);
+        debug!("initializing block of size {}",block.locals);
         let mut vars: Vec<Vh> = Vec::with_capacity(block.locals);
         vars.resize_with(block.locals, || Vh::None);
         let env = EnvUnboxed {parent: parent, vars: vars};
@@ -164,6 +166,7 @@ impl Env {
     pub fn set(&self,id: usize,v: V) -> V {
         match self {
             Env(arc) => {
+                debug!("setting slot id {}",id);
                 let mut guard = arc.lock().unwrap();
                 (*guard).vars[id] = Vh::V(v.clone());
                 v
