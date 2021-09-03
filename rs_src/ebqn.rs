@@ -65,7 +65,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: 
                 let w = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
-                let r = call(Some(f.to_ref().clone()),Some(x.to_ref().clone()),Some(x.to_ref().clone()));
+                let r = call(Some(f.to_ref().clone()),Some(x.to_ref().clone()),Some(w.to_ref().clone()));
                 stack.push(r);
             },
             21 => {
@@ -111,7 +111,8 @@ fn init_st() -> NifResult<(Atom,ResourceArc<Env>,Vs)> {
     //let code = Code::new(vec![0,0,22,0,0,11,14,0,1,22,0,1,11,14,21,0,0,25],vec![new_scalar(2.0),new_scalar(3.0)],vec![(0,true,2,0)]); // 2
     //let code = Code::new(vec![0,0,22,0,0,11,14,0,1,21,0,0,16,25],vec![new_scalar(1.0),new_scalar(4.0)],vec![(0,true,1,0)]); // 1
     //let code = Code::new(vec![0,0,22,0,0,11,14,0,2,21,0,0,0,1,17,25],vec![new_scalar(2.0),new_scalar(3.0),new_scalar(4.0)],vec![(0,true,1,0)]); // 2
-    let code = Code::new(vec![0,0,15,1,16,25,21,0,1,25],vec![new_scalar(6.0)],vec![(0,true,0,0),(0,false,3,6)]); // 6
+    //let code = Code::new(vec![0,0,15,1,16,25,21,0,1,25],vec![new_scalar(6.0)],vec![(0,true,0,0),(0,false,3,6)]); // 6
+    let code = Code::new(vec![15,1,22,0,0,11,14,0,1,21,0,0,0,0,17,25,21,0,2,25],vec![new_scalar(3.0),new_scalar(4.0)],vec![(0,true,1,0),(0,false,3,16)]); // 3
 
     let root = Env::new(None,&code.blocks[0],None);
 
