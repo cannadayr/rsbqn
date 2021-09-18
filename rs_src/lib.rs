@@ -7,4 +7,4 @@ pub fn load(env: Env, _info: Term) -> bool {
     env_logger::init();
     true
 }
-rustler::init!("ebqn", [ebqn::init_st],load=load);
+rustler::init!("ebqn", [ebqn::init_st,ebqn::test],load=load);
