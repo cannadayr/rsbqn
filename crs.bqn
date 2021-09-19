@@ -14,7 +14,10 @@ FLines ← {𝕨•FLines path∾𝕩}
 
 # Javascript/JSON formatting
 L ← "vec!["∾"]"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native list/array
-T ← "("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native tuple
+Tuple ← "("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native tuple
+Block ← Tuple # Native block
+Body ← Tuple # Native body
+Code ← Tuple # Native code
 Ind ← {∾𝕨‿"["‿𝕩‿"]"}          # Native list/array indexing
 Cat ← {∾𝕨‿".concat("‿𝕩‿")"}   # Native list/array concatenation (like ∾)
 # Escape the special characters that appear in BQN sources.
@@ -37,7 +40,7 @@ useInd ← "-i"≡⊑args ⋄ args↓˜↩useInd
 Comp ← ((<"runtime" Ind F)¨↕62) glyphs _getComp ⊢
 J ← ∾∾⟜(@+10)¨
 Fconst ← ≡◶⟨@⊸≤◶{Num𝕩}‿Char, Str, ⊑⟩
-Fout ← (≠↑⟨F,Fconst,T =◶⟨F,L(L F¨)¨⟩¨,T·F¨2⊸↑,L F⟩˙) {L𝕎¨𝕩}¨ ⊢
+Fout ← (≠↑⟨F,Fconst,Block=◶⟨F,L(L F¨)¨⟩¨,Body·F¨2⊸↑,L F⟩˙) {L𝕎¨𝕩}¨ ⊢
 Long ← ∾ (≠↑1‿3/⟨"  "⊸∾⋄((@+10)∾" ,")⊸∾⟩˙) {𝕎𝕩}¨ ⊢
 LFC ← Long∘Fout∘Comp
 
@@ -56,5 +59,5 @@ SVG ← {∾⟨"Modify←GetHighlights←⊢⋄"⟩∾ FChars∘∾⟜".bqn"¨ "
   {𝕩⋄LFC FChars "f.bqn"}
   {𝕩⋄LFC SVG "e"}
   {𝕩⋄LFC SVG "p"}
-  ¯1 ↓ · J L∘Fout∘Comp¨
+  ¯1 ↓ · J Code∘Fout∘Comp¨
 ⟩ args
