@@ -82,7 +82,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: 
                 let t = ge(env.clone(),x);
                 stack.push(Vs::Slot(t,w))
             },
-            25 => {
+            7 => {
                 break match stack.len() {
                     1 => {
                         stack.pop().unwrap()
@@ -100,8 +100,8 @@ pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: 
 }
 
 // same type signature as Code::New
-fn run(bc: Vec<usize>,objs: Vec<V>,blocks_raw: Vec<(u8,bool,usize,usize)>) -> f64 {
-    let code = Code::new(bc,objs,blocks_raw);
+fn run(bc: Vec<usize>,objs: Vec<V>,blocks_raw: Vec<(u8,u8,usize)>,bodies_raw: Vec<(usize,usize)>) -> f64 {
+    let code = Code::new(bc,objs,blocks_raw,bodies_raw);
     let root = Env::new(None,&code.blocks[0],None);
     let rtn = vm(&root,&code,&code.blocks[0],code.blocks[0].pos,Vec::new());
     match **rtn.to_ref() {
@@ -110,25 +110,20 @@ fn run(bc: Vec<usize>,objs: Vec<V>,blocks_raw: Vec<(u8,bool,usize,usize)>) -> f6
     }
 }
 
+// TODO convert test to macro
+fn test(a: u64,b: f64) {
+    assert_eq!(a as f64,b)
+}
+
 #[rustler::nif]
-fn test() -> NifResult<Atom> {
-    // remember to swap last 2 block attrs from erlang version
-    //let code = Code::new(vec![],vec![],vec![]);
-    assert_eq!(5.0,run(vec![0,0,25],vec![new_scalar(5.0)],vec![(0,true,0,0)]));
-    assert_eq!(3.0,run(vec![0,0,14,0,1,25],vec![new_scalar(4.0),new_scalar(3.0)],vec![(0,true,0,0)]));
-    assert_eq!(5.0,run(vec![0,0,22,0,0,11,25],vec![new_scalar(5.0)],vec![(0,true,1,0)]));
-    assert_eq!(4.0,run(vec![0,0,22,0,0,11,14,0,1,22,0,0,12,25],vec![new_scalar(5.0),new_scalar(4.0)],vec![(0,true,1,0)]));
-    assert_eq!(2.0,run(vec![0,0,22,0,0,11,14,0,1,22,0,1,11,14,21,0,0,25],vec![new_scalar(2.0),new_scalar(3.0)],vec![(0,true,2,0)]));
-    assert_eq!(1.0,run(vec![0,0,22,0,0,11,14,0,1,21,0,0,16,25],vec![new_scalar(1.0),new_scalar(4.0)],vec![(0,true,1,0)]));
-    assert_eq!(2.0,run(vec![0,0,22,0,0,11,14,0,2,21,0,0,0,1,17,25],vec![new_scalar(2.0),new_scalar(3.0),new_scalar(4.0)],vec![(0,true,1,0)]));
-    assert_eq!(6.0,run(vec![0,0,15,1,16,25,21,0,1,25],vec![new_scalar(6.0)],vec![(0,true,0,0),(0,false,3,6)]));
-    assert_eq!(3.0,run(vec![15,1,22,0,0,11,14,0,1,21,0,0,0,0,17,25,21,0,2,25],vec![new_scalar(3.0),new_scalar(4.0)],vec![(0,true,1,0),(0,false,3,16)]));
+fn tests() -> NifResult<Atom> {
+    test(5,run(vec![0,0,7],vec![new_scalar(5)],vec![(0,1,0)],vec![(0,0)]));
     Ok(ok())
 }
 
 #[rustler::nif]
 fn init_st() -> NifResult<(Atom,ResourceArc<Env>,Vs)> {
-    let code = Code::new(vec![0,0,25],vec![new_scalar(5.0)],vec![(0,true,0,0)]); // 3
+    let code = Code::new(vec![0,0,7],vec![new_scalar(5)],vec![(0,1,0)],vec![(0,0)]); // 3
     let root = Env::new(None,&code.blocks[0],None);
     let rtn = vm(&root,&code,&code.blocks[0],code.blocks[0].pos,Vec::new());
     Ok((ok(),ResourceArc::new(root),rtn))

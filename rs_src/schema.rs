@@ -107,12 +107,13 @@ pub struct Code {
     pub blocks:LateInit<Vec<Cc<Block>>>,
 }
 impl Code {
-    pub fn new(bc: Vec<usize>,objs: Vec<V>,blocks_raw: Vec<(u8,bool,usize,usize)>) -> Cc<Self> {
+    pub fn new(bc: Vec<usize>,objs: Vec<V>,blocks_raw: Vec<(u8,u8,usize)>,bodies_raw: Vec<(usize,usize)>) -> Cc<Self> {
         let code = Cc::new(Self {bc: bc, objs: objs, ..Code::default()});
         let blocks_derv = blocks_raw.iter().map(|block|
             match block {
-                (typ,imm,locals,pos) => {
-                    let b = Block { typ: *typ, imm: *imm, locals: *locals, pos: *pos, .. Block::default() };
+                (typ,imm,pos) => {
+                    let (_pos,locals) = bodies_raw[*pos];
+                    let b = Block { typ: *typ, imm: (*imm) != 0, locals: locals, pos: *pos, .. Block::default() };
                     b.code.init(code.clone());
                     Cc::new(b)
                 }
@@ -239,8 +240,8 @@ pub fn set(d: bool,is: Vs,vs: Vs) -> V {
         _ => panic!("can only set slots"),
     }
 }
-pub fn new_scalar(n: f64) -> V {
-    Cc::new(Vu::Scalar(n))
+pub fn new_scalar(n: i64) -> V {
+    Cc::new(Vu::Scalar(n as f64))
 }
 pub fn none_or_clone(vn: &Vn) -> Vh {
     match vn {
