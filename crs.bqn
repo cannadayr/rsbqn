@@ -9,9 +9,12 @@ args↓˜↩ return
 path←(⊑args)∾"/src/"
 args↓˜↩1
 Import ← {𝕨•Import path∾𝕩}
+FChars ← {𝕨•FChars path∾𝕩}
+FLines ← {𝕨•FLines path∾𝕩}
 
 # Javascript/JSON formatting
 L ← "vec!["∾"]"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native list/array
+T ← "("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native tuple
 Ind ← {∾𝕨‿"["‿𝕩‿"]"}          # Native list/array indexing
 Cat ← {∾𝕨‿".concat("‿𝕩‿")"}   # Native list/array concatenation (like ∾)
 # Escape the special characters that appear in BQN sources.
@@ -34,7 +37,7 @@ useInd ← "-i"≡⊑args ⋄ args↓˜↩useInd
 Comp ← ((<"runtime" Ind F)¨↕62) glyphs _getComp ⊢
 J ← ∾∾⟜(@+10)¨
 Fconst ← ≡◶⟨@⊸≤◶{Num𝕩}‿Char, Str, ⊑⟩
-Fout ← (≠↑⟨F,Fconst,L =◶⟨F,L(L F¨)¨⟩¨,L ·F¨2⊸↑,F⟩˙) {L𝕎¨𝕩}¨ ⊢
+Fout ← (≠↑⟨F,Fconst,T =◶⟨F,L(L F¨)¨⟩¨,T·F¨2⊸↑,L F⟩˙) {L𝕎¨𝕩}¨ ⊢
 Long ← ∾ (≠↑1‿3/⟨"  "⊸∾⋄((@+10)∾" ,")⊸∾⟩˙) {𝕎𝕩}¨ ⊢
 LFC ← Long∘Fout∘Comp
 
@@ -43,14 +46,14 @@ RT ← {
   pr←"runtime_0"‿"provide"{(∾𝕨<⊸(<∘Ind⟜F¨)⟜(↕≠)¨𝕩)⊏˜(∾𝕩)⊐∾need}○((-1+1=𝕩)⊸↑)inputs
   Long Fout pr need _getComp src
 }
-CArg ← {Num↩π⊸=◶Num‿"Math.PI" ⋄ J (¯5⊸↓∾𝕩˙)⌾⊑ •FLines "c.bqn"}
-SVG ← {∾⟨"Modify←GetHighlights←⊢⋄"⟩∾ •FChars∘∾⟜".bqn"¨ "../svg"‿𝕩}
+CArg ← {Num↩π⊸=◶Num‿"Math.PI" ⋄ J (¯5⊸↓∾𝕩˙)⌾⊑ FLines "c.bqn"}
+SVG ← {∾⟨"Modify←GetHighlights←⊢⋄"⟩∾ FChars∘∾⟜".bqn"¨ "../svg"‿𝕩}
 
 •Out (⊑"r"‿"r0"‿"r1"‿"c"‿"cc"‿"f"‿"e"‿"p"⊐⊏)◶⟨
   RT∘2, RT∘0, RT∘1
   {𝕩⋄LFC CArg "⟨"∾"⟩"«∾","⊸∾¨'"'(⊣∾∾˜)¨glyphs}
   {𝕩⋄LFC "{"∾"}"∾˜CArg"𝕩"}
-  {𝕩⋄LFC •FChars "f.bqn"}
+  {𝕩⋄LFC FChars "f.bqn"}
   {𝕩⋄LFC SVG "e"}
   {𝕩⋄LFC SVG "p"}
   ¯1 ↓ · J L∘Fout∘Comp¨
