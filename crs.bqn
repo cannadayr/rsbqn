@@ -1,7 +1,17 @@
+#!/usr/bin/env bqn
+
 # Modified version of https://github.com/mlochbaum/BQN/blob/master/src/cjs.bqn, which is under the ISC license (https://github.com/mlochbaum/BQN/blob/master/LICENSE)
 
+args←•args
+"Usage: ./crs.bqn path/to/mlochbaum/BQN <an expression>"!2≤≠args
+return ← 1≡⊑args
+args↓˜↩ return
+path←(⊑args)∾"/src/"
+args↓˜↩1
+Import ← {𝕨•Import path∾𝕩}
+
 # Javascript/JSON formatting
-L ← "["∾"]"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native list/array
+L ← "vec!["∾"]"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native list/array
 Ind ← {∾𝕨‿"["‿𝕩‿"]"}          # Native list/array indexing
 Cat ← {∾𝕨‿".concat("‿𝕩‿")"}   # Native list/array concatenation (like ∾)
 # Escape the special characters that appear in BQN sources.
@@ -16,11 +26,11 @@ Str ← "str("""∾Esc∾""")"˜     # A BQN string
 Char ← "'"(∾∾⊣)Esc∘⥊          # A BQN character
 F ← •Repr                     # Native format
 FP ← ∞⊸=◶⟨F,"Infinity"⟩       # Format positive number
-Num ← 0⊸≤◶⟨"-"∾FP∘|,FP⟩       # Format number
+Num ← 0⊸≤◶⟨")"∾˜"new_scalar(-"∾(FP∘|),")"∾˜"new_scalar("∾FP⟩       # Format number
 
-glyphs ← •Import "glyphs.bqn"
-_getComp ← { (4+useInd) ↑ (𝕗 •Import "c.bqn"){𝔽} }
-useInd ← "-i"≡⊑args←•args ⋄ args↓˜↩useInd
+glyphs ← Import "glyphs.bqn"
+_getComp ← { (4+useInd) ↑ (𝕗 Import "c.bqn"){𝔽} }
+useInd ← "-i"≡⊑args ⋄ args↓˜↩useInd
 Comp ← ((<"runtime" Ind F)¨↕62) glyphs _getComp ⊢
 J ← ∾∾⟜(@+10)¨
 Fconst ← ≡◶⟨@⊸≤◶{Num𝕩}‿Char, Str, ⊑⟩
@@ -29,7 +39,7 @@ Long ← ∾ (≠↑1‿3/⟨"  "⊸∾⋄((@+10)∾" ,")⊸∾⟩˙) {𝕎𝕩}
 LFC ← Long∘Fout∘Comp
 
 RT ← {
-  src‿need‿inputs←𝕩•Import"pr.bqn"
+  src‿need‿inputs←𝕩Import"pr.bqn"
   pr←"runtime_0"‿"provide"{(∾𝕨<⊸(<∘Ind⟜F¨)⟜(↕≠)¨𝕩)⊏˜(∾𝕩)⊐∾need}○((-1+1=𝕩)⊸↑)inputs
   Long Fout pr need _getComp src
 }
