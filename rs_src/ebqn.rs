@@ -40,17 +40,17 @@ pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: 
                 let r = code.objs[x].clone();
                 stack.push(Vs::Ref(r))
             },
-            // combine 11 & 12 for now
-            11|12 => {
+            // combine 48 & 49 for now
+            48|49 => {
                 let i = stack.pop().unwrap();
                 let v = stack.pop().unwrap();
                 let r = set(true,i,v); // rtns a reference to v
                 stack.push(Vs::Ref(r));
             },
-            14 => {
+            6 => {
                 let _ = stack.pop();
             },
-            15 => {
+            1 => {
                 let x = code.bc[pos];pos+=1;
                 let r = derv(env.clone(),&code,&code.blocks[x]);
                 stack.push(r);
@@ -68,17 +68,17 @@ pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: 
                 let r = call(Some(f.to_ref().clone()),Some(x.to_ref().clone()),Some(w.to_ref().clone()));
                 stack.push(r);
             },
-            21 => {
+            34 => {
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
-                debug!("opcode 21 (x,w):({},{})",x,w);
+                debug!("opcode 34 (x,w):({},{})",x,w);
                 let t = ge(env.clone(),x);
                 stack.push(Vs::Ref(t.get(w)))
             },
-            22 => {
+            33 => {
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
-                debug!("opcode 22 (x,w):({},{})",x,w);
+                debug!("opcode 33 (x,w):({},{})",x,w);
                 let t = ge(env.clone(),x);
                 stack.push(Vs::Slot(t,w))
             },
