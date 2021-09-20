@@ -56,6 +56,7 @@ impl Calleable for Cc<Vu> {
                 let env = Env::new(Some(b.parent.clone()),&b.def,Some(slots));
                 vm(&env,&b.def.code,&b.def,b.def.pos,Vec::new())
             },
+            Vu::Scalar(n) => Vs::Ref(self.clone()),
             _ => panic!("no call fn for type"),
         }
     }
