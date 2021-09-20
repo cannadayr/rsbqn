@@ -111,9 +111,9 @@ impl Code {
         let code = Cc::new(Self {bc: bc, objs: objs, ..Code::default()});
         let blocks_derv = blocks_raw.iter().map(|block|
             match block {
-                (typ,imm,pos) => {
-                    let (_pos,locals) = bodies_raw[*pos];
-                    let b = Block { typ: *typ, imm: (*imm) != 0, locals: locals, pos: *pos, .. Block::default() };
+                (typ,imm,block) => {
+                    let (pos,locals) = bodies_raw[*block];
+                    let b = Block { typ: *typ, imm: (*imm) != 0, locals: locals, pos: pos, .. Block::default() };
                     b.code.init(code.clone());
                     Cc::new(b)
                 }
