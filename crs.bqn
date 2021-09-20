@@ -18,6 +18,7 @@ Tuple ← "("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native tuple
 Block ← Tuple # Native block
 Body ← Tuple # Native body
 Code ← Tuple # Native code
+Valence ← Tuple # Native valence
 Ind ← {∾𝕨‿"["‿𝕩‿"]"}          # Native list/array indexing
 Cat ← {∾𝕨‿".concat("‿𝕩‿")"}   # Native list/array concatenation (like ∾)
 # Escape the special characters that appear in BQN sources.
@@ -40,7 +41,7 @@ useInd ← "-i"≡⊑args ⋄ args↓˜↩useInd
 Comp ← ((<"runtime" Ind F)¨↕62) glyphs _getComp ⊢
 J ← ∾∾⟜(@+10)¨
 Fconst ← ≡◶⟨@⊸≤◶{Num𝕩}‿Char, Str, ⊑⟩
-Fout ← (≠↑⟨F,Fconst,Block=◶⟨F,List(List F¨)¨⟩¨,Body·F¨2⊸↑,List F⟩˙) {List 𝕎¨𝕩}¨ ⊢
+Fout ← (≠↑⟨F,Fconst,Block=◶⟨F,Valence(List F¨)¨⟩¨,Body·F¨2⊸↑,List F⟩˙) {List 𝕎¨𝕩}¨ ⊢
 Long ← ∾ (≠↑1‿3/⟨"  "⊸∾⋄((@+10)∾" ,")⊸∾⟩˙) {𝕎𝕩}¨ ⊢
 LFC ← Long∘Fout∘Comp
 
