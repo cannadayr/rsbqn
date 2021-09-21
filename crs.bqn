@@ -17,8 +17,9 @@ List ← "vec!["∾"]"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native list
 Tuple ← "("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native tuple
 Block ← Tuple # Native block
 Body ← Tuple # Native body
-Code ← Tuple # Native code
-Valence ← Tuple # Native valence
+Code ← "Code::new("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native code
+Imm ← "Fn::Imm("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native imm fn
+Defer ← "Fn::Defer("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native deferred fn
 Ind ← {∾𝕨‿"["‿𝕩‿"]"}          # Native list/array indexing
 Cat ← {∾𝕨‿".concat("‿𝕩‿")"}   # Native list/array concatenation (like ∾)
 # Escape the special characters that appear in BQN sources.
@@ -32,8 +33,10 @@ Esc←{
 Str ← "str("""∾Esc∾""")"˜     # A BQN string
 Char ← "'"(∾∾⊣)Esc∘⥊          # A BQN character
 F ← •Repr                     # Native format
-FP ← ∞⊸=◶⟨F,"Infinity"⟩       # Format positive number
-Num ← 0⊸≤◶⟨")"∾˜"new_scalar(-"∾(FP∘|),")"∾˜"new_scalar("∾FP⟩       # Format number
+Scalar ← =⟜⌊˜◶⟨F,".0"∾˜F⟩ # Formats scalar numbers for rust
+FP ← ∞⊸=◶⟨Scalar,"Infinity"⟩       # Format positive number
+Num ← 0⊸≤◶⟨"-"∾(FP∘|),FP⟩       # Format number
+FBlock ← Block ⟨F,⊑⟜"false"‿"true",=◶⟨Imm F,Defer (List F¨)¨⟩⟩ {𝕎𝕩}¨ ⊢
 
 glyphs ← Import "glyphs.bqn"
 _getComp ← { (4+useInd) ↑ (𝕗 Import "c.bqn"){𝔽} }
@@ -41,7 +44,7 @@ useInd ← "-i"≡⊑args ⋄ args↓˜↩useInd
 Comp ← ((<"runtime" Ind F)¨↕62) glyphs _getComp ⊢
 J ← ∾∾⟜(@+10)¨
 Fconst ← ≡◶⟨@⊸≤◶{Num𝕩}‿Char, Str, ⊑⟩
-Fout ← (≠↑⟨F,Fconst,Block=◶⟨F,Valence(List F¨)¨⟩¨,Body·F¨2⊸↑,List F⟩˙) {List 𝕎¨𝕩}¨ ⊢
+Fout ← (≠↑⟨F,Fconst,FBlock,Body·F¨2⊸↑,List F⟩˙) {List 𝕎¨𝕩}¨ ⊢
 Long ← ∾ (≠↑1‿3/⟨"  "⊸∾⋄((@+10)∾" ,")⊸∾⟩˙) {𝕎𝕩}¨ ⊢
 LFC ← Long∘Fout∘Comp
 
