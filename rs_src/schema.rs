@@ -100,6 +100,10 @@ pub enum Vh {
     V(V),
 }
 
+pub enum Fun {
+    Imm(usize),
+    Defer(Vec<usize>,Vec<usize>),
+}
 // Code
 #[derive(Default,Debug)]
 pub struct Code {
@@ -108,15 +112,20 @@ pub struct Code {
     pub blocks:LateInit<Vec<Cc<Block>>>,
 }
 impl Code {
-    pub fn new(bc: Vec<usize>,objs: Vec<V>,blocks_raw: Vec<(u8,u8,usize)>,bodies_raw: Vec<(usize,usize)>) -> Cc<Self> {
+    pub fn new(bc: Vec<usize>,objs: Vec<V>,blocks_raw: Vec<(u8,bool,Fun)>,bodies_raw: Vec<(usize,usize)>) -> Cc<Self> {
         let code = Cc::new(Self {bc: bc, objs: objs, ..Code::default()});
         let blocks_derv = blocks_raw.iter().map(|block|
             match block {
                 (typ,imm,block) => {
-                    let (pos,locals) = bodies_raw[*block];
-                    let b = Block { typ: *typ, imm: (*imm) != 0, locals: locals, pos: pos, .. Block::default() };
-                    b.code.init(code.clone());
-                    Cc::new(b)
+                    match *block {
+                        Fun::Imm(n) => {
+                            let (pos,locals) = bodies_raw[n];
+                            let b = Block { typ: *typ, imm: *imm, locals: locals, pos: pos, .. Block::default() };
+                            b.code.init(code.clone());
+                            Cc::new(b)
+                        }
+                        _ => panic!("no deferred fn support"),
+                    }
                 }
             }
         ).collect::<Vec<Cc<Block>>>();
@@ -241,7 +250,7 @@ pub fn set(d: bool,is: Vs,vs: Vs) -> V {
         _ => panic!("can only set slots"),
     }
 }
-pub fn new_scalar(n: i64) -> V {
+pub fn new_scalar(n: f64) -> V {
     Cc::new(Vu::Scalar(n as f64))
 }
 pub fn none_or_clone(vn: &Vn) -> Vh {

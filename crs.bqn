@@ -18,8 +18,8 @@ Tuple ← "("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native tuple
 Block ← Tuple # Native block
 Body ← Tuple # Native body
 Code ← "Code::new("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native code
-Imm ← "Fn::Imm("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native imm fn
-Defer ← "Fn::Defer("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native deferred fn
+Imm ← "Fun::Imm("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native imm fn
+Defer ← "Fun::Defer("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native deferred fn
 Ind ← {∾𝕨‿"["‿𝕩‿"]"}          # Native list/array indexing
 Cat ← {∾𝕨‿".concat("‿𝕩‿")"}   # Native list/array concatenation (like ∾)
 # Escape the special characters that appear in BQN sources.
@@ -35,7 +35,7 @@ Char ← "'"(∾∾⊣)Esc∘⥊          # A BQN character
 F ← •Repr                     # Native format
 Scalar ← =⟜⌊˜◶⟨F,".0"∾˜F⟩ # Formats scalar numbers for rust
 FP ← ∞⊸=◶⟨Scalar,"Infinity"⟩       # Format positive number
-Num ← 0⊸≤◶⟨"-"∾(FP∘|),FP⟩       # Format number
+Num ← 0⊸≤◶⟨")"∾˜"new_scalar(-"∾(FP∘|),")"∾˜"new_scalar("∾FP⟩
 FBlock ← Block ⟨F,⊑⟜"false"‿"true",=◶⟨Imm F,Defer (List F¨)¨⟩⟩ {𝕎𝕩}¨ ⊢
 
 glyphs ← Import "glyphs.bqn"
