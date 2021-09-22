@@ -1,4 +1,4 @@
-use crate::schema::{Env,V,Vu,Vs,Vn,Block,BlockInst,Code,Calleable,Fun,set,new_scalar,ok};
+use crate::schema::{Env,V,Vu,Vs,Vn,Block,BlockInst,Code,Calleable,Body,set,new_scalar,new_body,ok};
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
 use cc_mt::{Cc, Trace, Tracer, collect_cycles};
@@ -30,7 +30,7 @@ fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>) -> Vs {
 }
 
 pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
-    debug!("block (typ,imm,locals,pos) : ({},{},{},{})",block.typ,block.imm,block.locals,block.pos);
+    debug!("block (typ,imm,body) : ({},{},{:?})",block.typ,block.imm,block.body);
     loop {
         let op = code.bc[pos];pos+=1;
         debug!("dbging (op,pos) : {},{}",op,pos);
@@ -101,7 +101,12 @@ pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: 
 
 fn run(code: Cc<Code>) -> f64 {
     let root = Env::new(None,&code.blocks[0],None);
-    let rtn = vm(&root,&code,&code.blocks[0],code.blocks[0].pos,Vec::new());
+    let (pos,_locals) =
+        match *code.blocks[0].body {
+            Body::Imm(b) => code.bodies[b],
+            Body::Defer(_,_) => panic!("cant run deferred block"),
+        };
+    let rtn = vm(&root,&code,&code.blocks[0],pos,Vec::new());
     match **rtn.to_ref() {
         Vu::Scalar(n) => n,
         _ => panic!("run failed"),
@@ -110,22 +115,23 @@ fn run(code: Cc<Code>) -> f64 {
 
 #[rustler::nif]
 fn tests() -> NifResult<Atom> {
-    assert_eq!(5.0,run(Code::new(vec![0,0,7],vec![new_scalar(5.0)],vec![(0,true,Fun::Imm(0))],vec![(0,0)])));
-    assert_eq!(3.0,run(Code::new(vec![0,0,6,0,1,7],vec![new_scalar(4.0),new_scalar(3.0)],vec![(0,true,Fun::Imm(0))],vec![(0,0)])));
-    assert_eq!(5.0,run(Code::new(vec![0,0,33,0,0,48,7],vec![new_scalar(5.0)],vec![(0,true,Fun::Imm(0))],vec![(0,1)])));
-    assert_eq!(4.0,run(Code::new(vec![0,0,33,0,0,48,6,0,1,33,0,0,49,7],vec![new_scalar(5.0),new_scalar(4.0)],vec![(0,true,Fun::Imm(0))],vec![(0,1)])));
-    assert_eq!(2.0,run(Code::new(vec![0,0,33,0,0,48,6,0,1,33,0,1,48,6,34,0,0,7],vec![new_scalar(2.0),new_scalar(3.0)],vec![(0,true,Fun::Imm(0))],vec![(0,2)])));
-    assert_eq!(1.0,run(Code::new(vec![0,0,33,0,0,48,6,0,1,34,0,0,16,7],vec![new_scalar(1.0),new_scalar(4.0)],vec![(0,true,Fun::Imm(0))],vec![(0,1)])));
-    assert_eq!(2.0,run(Code::new(vec![0,0,33,0,0,48,6,0,2,34,0,0,0,1,17,7],vec![new_scalar(2.0),new_scalar(3.0),new_scalar(4.0)],vec![(0,true,Fun::Imm(0))],vec![(0,1)])));
-    assert_eq!(6.0,run(Code::new(vec![0,0,1,1,16,7,34,0,1,7],vec![new_scalar(6.0)],vec![(0,true,Fun::Imm(0)),(0,false,Fun::Imm(1))],vec![(0,0),(6,3)])));
-    assert_eq!(3.0,run(Code::new(vec![1,1,33,0,0,48,6,0,1,34,0,0,0,0,17,7,34,0,2,7],vec![new_scalar(3.0),new_scalar(4.0)],vec![(0,true,Fun::Imm(0)),(0,false,Fun::Defer(vec![],vec![1]))],vec![(0,1),(16,3)])));
+    assert_eq!(5.0,run(Code::new(vec![0,0,7],vec![new_scalar(5.0)],vec![(0,true,new_body(Body::Imm(0)))],vec![(0,0)])));
+    assert_eq!(3.0,run(Code::new(vec![0,0,6,0,1,7],vec![new_scalar(4.0),new_scalar(3.0)],vec![(0,true,new_body(Body::Imm(0)))],vec![(0,0)])));
+    assert_eq!(5.0,run(Code::new(vec![0,0,33,0,0,48,7],vec![new_scalar(5.0)],vec![(0,true,new_body(Body::Imm(0)))],vec![(0,1)])));
+    assert_eq!(4.0,run(Code::new(vec![0,0,33,0,0,48,6,0,1,33,0,0,49,7],vec![new_scalar(5.0),new_scalar(4.0)],vec![(0,true,new_body(Body::Imm(0)))],vec![(0,1)])));
+    assert_eq!(2.0,run(Code::new(vec![0,0,33,0,0,48,6,0,1,33,0,1,48,6,34,0,0,7],vec![new_scalar(2.0),new_scalar(3.0)],vec![(0,true,new_body(Body::Imm(0)))],vec![(0,2)])));
+    assert_eq!(1.0,run(Code::new(vec![0,0,33,0,0,48,6,0,1,34,0,0,16,7],vec![new_scalar(1.0),new_scalar(4.0)],vec![(0,true,new_body(Body::Imm(0)))],vec![(0,1)])));
+    assert_eq!(2.0,run(Code::new(vec![0,0,33,0,0,48,6,0,2,34,0,0,0,1,17,7],vec![new_scalar(2.0),new_scalar(3.0),new_scalar(4.0)],vec![(0,true,new_body(Body::Imm(0)))],vec![(0,1)])));
+    assert_eq!(6.0,run(Code::new(vec![0,0,1,1,16,7,34,0,1,7],vec![new_scalar(6.0)],vec![(0,true,new_body(Body::Imm(0))),(0,false,new_body(Body::Imm(1)))],vec![(0,0),(6,3)])));
+    assert_eq!(3.0,run(Code::new(vec![1,1,33,0,0,48,6,0,1,34,0,0,0,0,17,7,34,0,2,7],vec![new_scalar(3.0),new_scalar(4.0)],vec![(0,true,new_body(Body::Imm(0))),(0,false,new_body(Body::Defer(vec![],vec![1])))],vec![(0,1),(16,3)])));
     Ok(ok())
 }
 
 #[rustler::nif]
 fn init_st() -> NifResult<(Atom,ResourceArc<Env>,Vs)> {
-    let code = Code::new(vec![0,0,7],vec![new_scalar(5.0)],vec![(0,true,Fun::Imm(0))],vec![(0,0)]);
+    let code = Code::new(vec![0,0,7],vec![new_scalar(5.0)],vec![(0,true,new_body(Body::Imm(0)))],vec![(0,0)]);
     let root = Env::new(None,&code.blocks[0],None);
-    let rtn = vm(&root,&code,&code.blocks[0],code.blocks[0].pos,Vec::new());
-    Ok((ok(),ResourceArc::new(root),rtn))
+    panic!("cant init anything");
+    //let rtn = vm(&root,&code,&code.blocks[0],code.blocks[0].pos,Vec::new());
+    //Ok((ok(),ResourceArc::new(root),rtn))
 }

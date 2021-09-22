@@ -4,6 +4,7 @@ use cc_mt::{Cc, Trace, Tracer, collect_cycles};
 use log::{debug, trace, error, log_enabled, info, Level};
 use rustler::{Encoder};
 use crate::ebqn::vm;
+use std::sync::Arc;
 
 rustler::atoms!{ok}
 
@@ -54,7 +55,12 @@ impl Calleable for Cc<Vu> {
                         },
                     };
                 let env = Env::new(Some(b.parent.clone()),&b.def,Some(slots));
-                vm(&env,&b.def.code,&b.def,b.def.pos,Vec::new())
+                let (pos,_locals) =
+                    match *b.def.body {
+                        Body::Imm(body) => b.def.code.bodies[body],
+                        Body::Defer(_,_) => panic!("cant run deferred block"),
+                    };
+                vm(&env,&b.def.code,&b.def,pos,Vec::new())
             },
             Vu::Scalar(n) => Vs::Ref(self.clone()),
             _ => panic!("no call fn for type"),
@@ -100,35 +106,38 @@ pub enum Vh {
     V(V),
 }
 
-pub enum Fun {
+#[derive(Debug)]
+pub enum Body {
     Imm(usize),
     Defer(Vec<usize>,Vec<usize>),
 }
+
+// This is to get the compiler to stop complaining since Body's are not late-init'ed.
+impl Default for Body {
+    fn default() -> Self { Body::Imm(0) }
+}
+
 // Code
 #[derive(Default,Debug)]
 pub struct Code {
     pub bc:    Vec<usize>,
     pub objs:  Vec<V>,
+    pub bodies:LateInit<Vec<(usize,usize)>>,
     pub blocks:LateInit<Vec<Cc<Block>>>,
 }
 impl Code {
-    pub fn new(bc: Vec<usize>,objs: Vec<V>,blocks_raw: Vec<(u8,bool,Fun)>,bodies_raw: Vec<(usize,usize)>) -> Cc<Self> {
+    pub fn new(bc: Vec<usize>,objs: Vec<V>,blocks_raw: Vec<(u8,bool,Arc<Body>)>,bodies: Vec<(usize,usize)>) -> Cc<Self> {
         let code = Cc::new(Self {bc: bc, objs: objs, ..Code::default()});
         let blocks_derv = blocks_raw.iter().map(|block|
             match block {
-                (typ,imm,block) => {
-                    match *block {
-                        Fun::Imm(n) => {
-                            let (pos,locals) = bodies_raw[n];
-                            let b = Block { typ: *typ, imm: *imm, locals: locals, pos: pos, .. Block::default() };
-                            b.code.init(code.clone());
-                            Cc::new(b)
-                        }
-                        _ => panic!("no deferred fn support"),
-                    }
+                (typ,imm,body) => {
+                        let b = Block { typ: *typ, imm: *imm, body: (*body).clone(), ..Block::default() };
+                        b.code.init(code.clone());
+                        Cc::new(b)
                 }
             }
         ).collect::<Vec<Cc<Block>>>();
+        code.bodies.init(bodies);
         code.blocks.init(blocks_derv);
         code
     }
@@ -140,9 +149,9 @@ impl Trace for Code {
 }
 
 // Block
-#[derive(Default, Debug)]
+#[derive(Default,Debug)]
 pub struct Block {
-    pub typ:u8, pub imm:bool, pub locals:usize, pub pos:usize,
+    pub typ:u8, pub imm:bool, pub body: Arc<Body>,
     pub code:LateInit<Cc<Code>>,
 }
 impl Trace for Block {
@@ -166,16 +175,21 @@ impl Trace for EnvUnboxed {
 pub struct Env(Cc<Mutex<EnvUnboxed>>);
 impl Env {
     pub fn new(parent: Option<Env>,block: &Cc<Block>,args: Option<Vec<Vh>>) -> Self {
-        debug!("initializing block of size {}",block.locals);
+        let (pos,locals) =
+            match *block.body {
+                Body::Imm(b) => block.code.bodies[b],
+                Body::Defer(_,_) => panic!("cant create env for deferred block"),
+            };
+        debug!("initializing block env of size {:?}",locals);
         let vars =
             match args {
                 None => {
-                    let mut v: Vec<Vh> = Vec::with_capacity(block.locals);
-                    v.resize_with(block.locals, || Vh::None);
+                    let mut v: Vec<Vh> = Vec::with_capacity(locals);
+                    v.resize_with(locals, || Vh::None);
                     v
                 },
                 Some(mut v) => {
-                    v.resize_with(block.locals, || Vh::None);
+                    v.resize_with(locals, || Vh::None);
                     v
                 },
             };
@@ -252,6 +266,9 @@ pub fn set(d: bool,is: Vs,vs: Vs) -> V {
 }
 pub fn new_scalar(n: f64) -> V {
     Cc::new(Vu::Scalar(n as f64))
+}
+pub fn new_body(b: Body) -> Arc<Body> {
+    Arc::new(b)
 }
 pub fn none_or_clone(vn: &Vn) -> Vh {
     match vn {
