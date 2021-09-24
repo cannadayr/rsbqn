@@ -33,8 +33,8 @@ gen_code(Todo,Accm) ->
     {Expected,Code,Comment} = hd(Todo),
     Line =
         case Comment of
-            undefined -> [<<"assert_eq!(">>,Expected,<<",run(">>,Code,<<"));\n">>];
-            C         -> [<<"assert_eq!(">>,Expected,<<",run(">>,Code,<<")); // ">>,unicode:characters_to_binary(erlang:binary_to_list(C)),<<"\n">>]
+            undefined -> [<<"panic::catch_unwind(|| { assert_eq!(">>,Expected,<<",run(">>,Code,<<")); });\n">>];
+            C         -> [<<"panic::catch_unwind(|| { assert_eq!(">>,Expected,<<",run(">>,Code,<<")); }); // ">>,unicode:characters_to_binary(erlang:binary_to_list(C)),<<"\n">>]
         end,
     gen_code(tl(Todo),[Line] ++ Accm).
 gen_tests(_Repo,[],Accm) ->
