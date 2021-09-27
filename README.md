@@ -33,4 +33,6 @@ Wildly incomplete.
 Build
 -----
 
-    $ rebar3 compile
+    escript gen_test.erl /path/to/mlochbaum/bqn > rs_src/test.rs
+    rebar3 compile
+
