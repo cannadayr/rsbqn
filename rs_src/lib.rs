@@ -1,5 +1,6 @@
 mod schema;
 mod ebqn;
+mod test;
 use rustler::{Env,Term};
 use syslog::{Facility, Error};
 extern crate log_panics;

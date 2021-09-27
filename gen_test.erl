@@ -33,8 +33,8 @@ gen_code(Todo,Accm) ->
     {Expected,Code,Comment} = hd(Todo),
     Line =
         case Comment of
-            undefined -> [<<"panic::catch_unwind(|| { assert_eq!(">>,Expected,<<",run(">>,Code,<<")); });\n">>];
-            C         -> [<<"panic::catch_unwind(|| { assert_eq!(">>,Expected,<<",run(">>,Code,<<")); }); // ">>,unicode:characters_to_binary(erlang:binary_to_list(C)),<<"\n">>]
+            undefined -> [<<"\tpanic::catch_unwind(|| { assert_eq!(">>,Expected,<<",run(">>,Code,<<")); });\n">>];
+            C         -> [<<"\tdebug!(\"test: ">>,unicode:characters_to_binary(erlang:binary_to_list(C)),<<"\");">>,<<"panic::catch_unwind(|| { assert_eq!(">>,Expected,<<",run(">>,Code,<<")); }); // ">>,unicode:characters_to_binary(erlang:binary_to_list(C)),<<"\n">>]
         end,
     gen_code(tl(Todo),[Line] ++ Accm).
 gen_tests(_Repo,[],Accm) ->
@@ -69,7 +69,13 @@ main([Repo]) ->
     Args = parse(binary:split(Data, [<<"\n">>], [global]),[]),
     Tests = gen_tests(Repo,Args,[]),
     Code = gen_code(Tests,[]),
-    io:format("~ts~n",[erlang:iolist_to_binary(Code)]);
+    io:format("~ts~n",[erlang:iolist_to_binary([
+        <<"use std::panic;\n">>,
+        <<"use log::{debug};\n">>,
+        <<"use crate::ebqn::run;\n">>,
+        <<"use crate::schema::{Code,new_scalar,new_body,Body};\n">>,
+        <<"pub fn bytecode() {\n">>,Code,<<"\n}">>
+    ])]);
 main(_Args) ->
     io:format("bad arguments~n"),
     halt(1).
