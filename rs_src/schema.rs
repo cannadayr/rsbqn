@@ -56,9 +56,16 @@ impl Calleable for Cc<Vu> {
                     };
                 let env = Env::new(Some(b.parent.clone()),&b.def,Some(slots));
                 let (pos,_locals) =
-                    match b.def.body {
-                        Body::Imm(body) => b.def.code.bodies[body],
-                        Body::Defer(_,_) => panic!("cant run deferred block"),
+                    match &b.def.body {
+                        Body::Imm(body) => b.def.code.bodies[*body],
+                        Body::Defer(mon,dya) => {
+                            match (&x,&w) {
+                                (None,None) => panic!("no args for calling deferred blockinst"),
+                                (Some(_),None) => b.def.code.bodies[mon[0]],
+                                (Some(_),Some(_)) => b.def.code.bodies[dya[0]],
+                                _ => panic!("bad call arity"),
+                            }
+                        },
                     };
                 vm(&env,&b.def.code,&b.def,pos,Vec::new())
             },
@@ -170,9 +177,20 @@ pub struct Env(Cc<Mutex<EnvUnboxed>>);
 impl Env {
     pub fn new(parent: Option<Env>,block: &Cc<Block>,args: Option<Vec<Vh>>) -> Self {
         let (pos,locals) =
-            match block.body {
-                Body::Imm(b) => block.code.bodies[b],
-                Body::Defer(_,_) => panic!("cant create env for deferred block"),
+            match &block.body {
+                Body::Imm(b) => block.code.bodies[*b],
+                Body::Defer(mon,dya) => {
+                    let arity =
+                        match &args {
+                            None => panic!("no fn args supplied for deferred block"),
+                            Some(v) => v.len(),
+                        };
+                    match arity {
+                        2 => block.code.bodies[mon[0]],
+                        3 => block.code.bodies[dya[0]],
+                        n => panic!("invalid args supplied for deferred block {}",n),
+                    }
+                },
             };
         debug!("initializing block env of size {:?}",locals);
         let vars =
