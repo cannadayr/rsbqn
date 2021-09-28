@@ -112,32 +112,26 @@ pub enum Body {
     Defer(Vec<usize>,Vec<usize>),
 }
 
-// This is to get the compiler to stop complaining since Body's are not late-init'ed.
-impl Default for Body {
-    fn default() -> Self { Body::Imm(0) }
-}
-
 // Code
 #[derive(Default,Debug)]
 pub struct Code {
     pub bc:    Vec<usize>,
     pub objs:  Vec<V>,
-    pub bodies:LateInit<Vec<(usize,usize)>>,
+    pub bodies:Vec<(usize,usize)>,
     pub blocks:LateInit<Vec<Cc<Block>>>,
 }
 impl Code {
     pub fn new(bc: Vec<usize>,objs: Vec<V>,blocks_raw: Vec<(u8,bool,Body)>,bodies: Vec<(usize,usize)>) -> Cc<Self> {
-        let code = Cc::new(Self {bc: bc, objs: objs, ..Code::default()});
+        let code = Cc::new(Self {bc: bc, objs: objs, bodies: bodies, blocks: LateInit::default(), });
         let blocks_derv = blocks_raw.iter().map(|block|
             match block {
                 (typ,imm,body) => {
-                        let b = Block { typ: *typ, imm: *imm, body: (*body).clone(), ..Block::default() };
+                        let b = Block { typ: *typ, imm: *imm, body: (*body).clone(), code: LateInit::default(), };
                         b.code.init(code.clone());
                         Cc::new(b)
                 }
             }
         ).collect::<Vec<Cc<Block>>>();
-        code.bodies.init(bodies);
         code.blocks.init(blocks_derv);
         code
     }
@@ -149,7 +143,7 @@ impl Trace for Code {
 }
 
 // Block
-#[derive(Default,Debug)]
+#[derive(Debug)]
 pub struct Block {
     pub typ:u8, pub imm:bool, pub body: Body,
     pub code:LateInit<Cc<Code>>,
