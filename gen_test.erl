@@ -73,7 +73,7 @@ main([Repo]) ->
         <<"use std::panic;\n">>,
         <<"use log::{debug};\n">>,
         <<"use crate::ebqn::run;\n">>,
-        <<"use crate::schema::{Code,new_scalar,new_body,Body};\n">>,
+        <<"use crate::schema::{Code,new_scalar,Body};\n">>,
         <<"pub fn bytecode() {\n">>,Code,<<"\n}">>
     ])]);
 main(_Args) ->

@@ -18,8 +18,8 @@ Tuple ← "("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native tuple
 Block ← Tuple # Native block
 Body ← Tuple # Native body
 Code ← "Code::new("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native code
-Imm ← "new_body(Body::Imm("∾"))"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native imm fn
-Defer ← "new_body(Body::Defer("∾"))"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native deferred fn
+Imm ← "Body::Imm("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native imm fn
+Defer ← "Body::Defer("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native deferred fn
 Ind ← {∾𝕨‿"["‿𝕩‿"]"}          # Native list/array indexing
 Cat ← {∾𝕨‿".concat("‿𝕩‿")"}   # Native list/array concatenation (like ∾)
 # Escape the special characters that appear in BQN sources.

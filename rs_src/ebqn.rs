@@ -1,4 +1,4 @@
-use crate::schema::{Env,V,Vu,Vs,Vn,Block,BlockInst,Code,Calleable,Body,set,new_scalar,new_body,ok};
+use crate::schema::{Env,V,Vu,Vs,Vn,Block,BlockInst,Code,Calleable,Body,set,new_scalar,ok};
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
 use cc_mt::{Cc, Trace, Tracer, collect_cycles};
@@ -110,7 +110,7 @@ fn tests() -> NifResult<Atom> {
 pub fn run(code: Cc<Code>) -> f64 {
     let root = Env::new(None,&code.blocks[0],None);
     let (pos,_locals) =
-        match *code.blocks[0].body {
+        match code.blocks[0].body {
             Body::Imm(b) => code.bodies[b],
             Body::Defer(_,_) => panic!("cant run deferred block"),
         };
@@ -123,8 +123,8 @@ pub fn run(code: Cc<Code>) -> f64 {
 
 #[rustler::nif]
 fn init_st() -> NifResult<(Atom,ResourceArc<Env>,Vs)> {
-    let code = Code::new(vec![0,0,7],vec![new_scalar(5.0)],vec![(0,true,new_body(Body::Imm(0)))],vec![(0,0)]);
-    let root = Env::new(None,&code.blocks[0],None);
+    //let code = Code::new(vec![0,0,7],vec![new_scalar(5.0)],vec![(0,true,new_body(Body::Imm(0)))],vec![(0,0)]);
+    //let root = Env::new(None,&code.blocks[0],None);
     panic!("cant init anything");
     //let rtn = vm(&root,&code,&code.blocks[0],code.blocks[0].pos,Vec::new());
     //Ok((ok(),ResourceArc::new(root),rtn))

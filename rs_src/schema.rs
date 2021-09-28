@@ -56,7 +56,7 @@ impl Calleable for Cc<Vu> {
                     };
                 let env = Env::new(Some(b.parent.clone()),&b.def,Some(slots));
                 let (pos,_locals) =
-                    match *b.def.body {
+                    match b.def.body {
                         Body::Imm(body) => b.def.code.bodies[body],
                         Body::Defer(_,_) => panic!("cant run deferred block"),
                     };
@@ -106,7 +106,7 @@ pub enum Vh {
     V(V),
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub enum Body {
     Imm(usize),
     Defer(Vec<usize>,Vec<usize>),
@@ -126,7 +126,7 @@ pub struct Code {
     pub blocks:LateInit<Vec<Cc<Block>>>,
 }
 impl Code {
-    pub fn new(bc: Vec<usize>,objs: Vec<V>,blocks_raw: Vec<(u8,bool,Arc<Body>)>,bodies: Vec<(usize,usize)>) -> Cc<Self> {
+    pub fn new(bc: Vec<usize>,objs: Vec<V>,blocks_raw: Vec<(u8,bool,Body)>,bodies: Vec<(usize,usize)>) -> Cc<Self> {
         let code = Cc::new(Self {bc: bc, objs: objs, ..Code::default()});
         let blocks_derv = blocks_raw.iter().map(|block|
             match block {
@@ -151,7 +151,7 @@ impl Trace for Code {
 // Block
 #[derive(Default,Debug)]
 pub struct Block {
-    pub typ:u8, pub imm:bool, pub body: Arc<Body>,
+    pub typ:u8, pub imm:bool, pub body: Body,
     pub code:LateInit<Cc<Code>>,
 }
 impl Trace for Block {
@@ -176,7 +176,7 @@ pub struct Env(Cc<Mutex<EnvUnboxed>>);
 impl Env {
     pub fn new(parent: Option<Env>,block: &Cc<Block>,args: Option<Vec<Vh>>) -> Self {
         let (pos,locals) =
-            match *block.body {
+            match block.body {
                 Body::Imm(b) => block.code.bodies[b],
                 Body::Defer(_,_) => panic!("cant create env for deferred block"),
             };
@@ -266,9 +266,6 @@ pub fn set(d: bool,is: Vs,vs: Vs) -> V {
 }
 pub fn new_scalar(n: f64) -> V {
     Cc::new(Vu::Scalar(n as f64))
-}
-pub fn new_body(b: Body) -> Arc<Body> {
-    Arc::new(b)
 }
 pub fn none_or_clone(vn: &Vn) -> Vh {
     match vn {
