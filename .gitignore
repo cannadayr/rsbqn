@@ -20,3 +20,4 @@ rebar3.crashdump
 priv
 /target
 Cargo.lock
+rs_src/test.rs

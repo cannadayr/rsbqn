@@ -10,7 +10,7 @@ rustler::atoms!{ok}
 
 // Traits
 pub trait Calleable {
-    fn call(&self,x: Vn,w: Vn) -> Vs;
+    fn call(&self,arity: usize,x: Vn,w: Vn) -> Vs;
 }
 
 // Value (unboxed)
@@ -38,7 +38,7 @@ impl Encoder for Vu {
     }
 }
 impl Calleable for Cc<Vu> {
-    fn call(&self,x: Vn, w: Vn) -> Vs {
+    fn call(&self,arity: usize,x: Vn, w: Vn) -> Vs {
         match &**self {
             Vu::BlockInst(b) => {
                 assert!(b.typ == 0);
@@ -59,10 +59,9 @@ impl Calleable for Cc<Vu> {
                     match &b.def.body {
                         Body::Imm(body) => b.def.code.bodies[*body],
                         Body::Defer(mon,dya) => {
-                            match (&x,&w) {
-                                (None,None) => panic!("no args for calling deferred blockinst"),
-                                (Some(_),None) => b.def.code.bodies[mon[0]],
-                                (Some(_),Some(_)) => b.def.code.bodies[dya[0]],
+                            match arity {
+                                1 => b.def.code.bodies[mon[0]],
+                                2 => b.def.code.bodies[dya[0]],
                                 _ => panic!("bad call arity"),
                             }
                         },

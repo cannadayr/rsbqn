@@ -13,9 +13,9 @@ fn ge(env: Env,i: usize) -> Env {
     }
 }
 
-fn call(a: Vn,x: Vn, w: Vn) -> Vs {
+fn call(arity: usize,a: Vn,x: Vn, w: Vn) -> Vs {
     match a {
-        Some(v) => v.call(x,w),
+        Some(v) => v.call(arity,x,w),
         _ => panic!("unimplemented call"),
     }
 }
@@ -60,14 +60,14 @@ pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: 
             16 => {
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
-                let r = call(Some(f.to_ref().clone()),Some(x.to_ref().clone()),None);
+                let r = call(1,Some(f.to_ref().clone()),Some(x.to_ref().clone()),None);
                 stack.push(r);
             },
             17 => {
                 let w = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
-                let r = call(Some(f.to_ref().clone()),Some(x.to_ref().clone()),Some(w.to_ref().clone()));
+                let r = call(2,Some(f.to_ref().clone()),Some(x.to_ref().clone()),Some(w.to_ref().clone()));
                 stack.push(r);
             },
             34 => {
