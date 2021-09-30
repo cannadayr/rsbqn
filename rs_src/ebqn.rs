@@ -1,4 +1,4 @@
-use crate::schema::{Env,V,Vu,Vs,Vn,Block,BlockInst,Code,Calleable,Body,set,new_scalar,ok};
+use crate::schema::{Env,V,Vu,Vs,Vn,Block,BlockInst,Code,Calleable,Body,A,set,new_scalar,ok};
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
 use cc_mt::{Cc, Trace, Tracer, collect_cycles};
@@ -31,6 +31,16 @@ fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>) -> Vs {
     }
 }
 
+fn list(l: Vec<Vs>) -> Vs {
+    let shape = vec![Cc::new(Vu::Scalar(l.len() as f64))];
+    let ravel = l.into_iter().map(|e|
+        match e {
+            Vs::Ref(v) => v,
+            _ => panic!("illegal slot passed to list"),
+        }
+    ).collect::<Vec<V>>();
+    Vs::Ref(Cc::new(Vu::A(A::new(ravel,shape))))
+}
 pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
     debug!("block (typ,imm,body) : ({},{},{:?})",block.typ,block.imm,block.body);
     loop {
@@ -42,20 +52,29 @@ pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: 
                 let r = code.objs[x].clone();
                 stack.push(Vs::Ref(r))
             },
-            // combine 48 & 49 for now
-            48|49 => {
-                let i = stack.pop().unwrap();
-                let v = stack.pop().unwrap();
-                let r = set(true,i,v); // rtns a reference to v
-                stack.push(Vs::Ref(r));
-            },
-            6 => {
-                let _ = stack.pop();
-            },
             1 => {
                 let x = code.bc[pos];pos+=1;
                 let r = derv(env.clone(),&code,&code.blocks[x]);
                 stack.push(r);
+            },
+            11 => {
+                let x = code.bc[pos];pos+=1;
+                let hd = stack.len() - x;
+                let tl = stack.split_off(hd);
+                stack.push(list(tl));
+            },
+            6 => {
+                let _ = stack.pop();
+            },
+            7 => {
+                break match stack.len() {
+                    1 => {
+                        stack.pop().unwrap()
+                    },
+                    _ => {
+                        panic!("stack overflow")
+                    }
+                };
             },
             16 => {
                 let f = stack.pop().unwrap();
@@ -70,13 +89,6 @@ pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: 
                 let r = call(2,Some(f.to_ref().clone()),Some(x.to_ref().clone()),Some(w.to_ref().clone()));
                 stack.push(r);
             },
-            34 => {
-                let x = code.bc[pos];pos+=1;
-                let w = code.bc[pos];pos+=1;
-                debug!("opcode 34 (x,w):({},{})",x,w);
-                let t = ge(env.clone(),x);
-                stack.push(Vs::Ref(t.get(w)))
-            },
             33 => {
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
@@ -84,15 +96,19 @@ pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: 
                 let t = ge(env.clone(),x);
                 stack.push(Vs::Slot(t,w))
             },
-            7 => {
-                break match stack.len() {
-                    1 => {
-                        stack.pop().unwrap()
-                    },
-                    _ => {
-                        panic!("stack overflow")
-                    }
-                };
+            34 => {
+                let x = code.bc[pos];pos+=1;
+                let w = code.bc[pos];pos+=1;
+                debug!("opcode 34 (x,w):({},{})",x,w);
+                let t = ge(env.clone(),x);
+                stack.push(Vs::Ref(t.get(w)))
+            },
+            // combine 48 & 49 for now
+            48|49 => {
+                let i = stack.pop().unwrap();
+                let v = stack.pop().unwrap();
+                let r = set(true,i,v); // rtns a reference to v
+                stack.push(Vs::Ref(r));
             },
             _ => {
                 panic!("unreachable op: {}",op);

@@ -18,6 +18,7 @@ pub trait Calleable {
 pub enum Vu {
     Scalar(f64),
     BlockInst(BlockInst),
+    A(A),
 }
 impl Trace for Vu {
     fn trace(&self, tracer: &mut Tracer) {
@@ -34,6 +35,7 @@ impl Encoder for Vu {
         match self {
             Vu::Scalar(n) => n.encode(env),
             Vu::BlockInst(b) => panic!("can't encode blockinst to BEAM"),
+            Vu::A(a) => panic!("can't encode array to BEAM"),
         }
     }
 }
@@ -240,7 +242,18 @@ pub struct BlockInst {
 }
 impl BlockInst {
     pub fn new(env: Env,code: Cc<Code>, typ: u8, block: Cc<Block>, args: Option<Vec<Vn>>) -> Self {
-        BlockInst {typ: typ, def: block, parent: env, args: args }
+        Self {typ: typ, def: block, parent: env, args: args }
+    }
+}
+
+#[derive(Debug,Clone)]
+pub struct A {
+    r: Vec<V>,
+    sh: Vec<V>,
+}
+impl A {
+    pub fn new(r: Vec<V>,sh: Vec<V>) -> Self {
+        Self { r: r, sh: sh }
     }
 }
 
