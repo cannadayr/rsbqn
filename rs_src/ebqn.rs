@@ -1,4 +1,4 @@
-use crate::schema::{Env,V,Vu,Vs,Vn,Block,BlockInst,Code,Calleable,Body,A,set,new_scalar,ok};
+use crate::schema::{Env,V,Vu,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Body,A,Ar,set,new_scalar,ok};
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
 use cc_mt::{Cc, Trace, Tracer, collect_cycles};
@@ -25,7 +25,7 @@ fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>) -> Vs {
         (0,true) => panic!("imm block"),
         (typ,_) => {
             let block_inst = BlockInst::new(env.clone(),code.clone(),typ,(*block).clone(),None);
-            let r = Vs::Ref(Cc::new(Vu::BlockInst(block_inst)));
+            let r = Vs::V(Cc::new(Vu::BlockInst(block_inst)));
             r
         },
     }
@@ -35,11 +35,20 @@ fn list(l: Vec<Vs>) -> Vs {
     let shape = vec![Cc::new(Vu::Scalar(l.len() as f64))];
     let ravel = l.into_iter().map(|e|
         match e {
-            Vs::Ref(v) => v,
+            Vs::V(v) => v,
             _ => panic!("illegal slot passed to list"),
         }
     ).collect::<Vec<V>>();
-    Vs::Ref(Cc::new(Vu::A(A::new(ravel,shape))))
+    Vs::V(Cc::new(Vu::A(A::new(ravel,shape))))
+}
+fn listr(l: Vec<Vs>) -> Vs {
+    let ravel = l.into_iter().map(|e|
+        match e {
+            Vs::Slot(env,slot) => Vr::Slot(env,slot),
+            _ => panic!("illegal non-slot passed to list"),
+        }
+    ).collect::<Vec<Vr>>();
+    Vs::Ar(Ar::new(ravel))
 }
 pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
     debug!("block (typ,imm,body) : ({},{},{:?})",block.typ,block.imm,block.body);
@@ -50,7 +59,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: 
             0 => {
                 let x = code.bc[pos];pos+=1;
                 let r = code.objs[x].clone();
-                stack.push(Vs::Ref(r))
+                stack.push(Vs::V(r))
             },
             1 => {
                 let x = code.bc[pos];pos+=1;
@@ -62,6 +71,12 @@ pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: 
                 let hd = stack.len() - x;
                 let tl = stack.split_off(hd);
                 stack.push(list(tl));
+            },
+            12 => {
+                let x = code.bc[pos];pos+=1;
+                let hd = stack.len() - x;
+                let tl = stack.split_off(hd);
+                stack.push(listr(tl));
             },
             6 => {
                 let _ = stack.pop();
@@ -101,14 +116,14 @@ pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: 
                 let w = code.bc[pos];pos+=1;
                 debug!("opcode 34 (x,w):({},{})",x,w);
                 let t = ge(env.clone(),x);
-                stack.push(Vs::Ref(t.get(w)))
+                stack.push(Vs::V(t.get(w)))
             },
             // combine 48 & 49 for now
             48|49 => {
                 let i = stack.pop().unwrap();
                 let v = stack.pop().unwrap();
                 let r = set(true,i,v); // rtns a reference to v
-                stack.push(Vs::Ref(r));
+                stack.push(Vs::V(r));
             },
             _ => {
                 panic!("unreachable op: {}",op);

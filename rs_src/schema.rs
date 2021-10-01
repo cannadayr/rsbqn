@@ -70,7 +70,7 @@ impl Calleable for Cc<Vu> {
                     };
                 vm(&env,&b.def.code,&b.def,pos,Vec::new())
             },
-            Vu::Scalar(n) => Vs::Ref(self.clone()),
+            Vu::Scalar(n) => Vs::V(self.clone()),
             _ => panic!("no call fn for type"),
         }
     }
@@ -85,13 +85,14 @@ pub type Vn = Option<V>;
 // Value (boxed on the stack)
 #[derive(Debug,Clone)]
 pub enum Vs {
-    Ref(V),
+    V(V),
     Slot(Env,usize),
+    Ar(Ar)
 }
 impl Vs {
     pub fn to_ref(&self) -> &V {
         match self {
-            Vs::Ref(v) => v,
+            Vs::V(v) => v,
             _ => panic!("can't convert to ref"),
         }
     }
@@ -100,8 +101,9 @@ impl Vs {
 impl Encoder for Vs {
     fn encode<'a>(&self, env: rustler::Env<'a>) -> rustler::Term<'a> {
         match self {
-            Vs::Ref(r) => (**r).encode(env),
+            Vs::V(r) => (**r).encode(env),
             Vs::Slot(env,slot) => panic!("cant encode slot to BEAM"),
+            Vs::Ar(ar) => panic!("cant encode array of resources to BEAM"),
         }
     }
 }
@@ -112,6 +114,12 @@ pub enum Vh {
     Undefined,
     None,
     V(V),
+}
+
+// value reference
+#[derive(Debug,Clone)]
+pub enum Vr {
+    Slot(Env,usize),
 }
 
 #[derive(Debug,Clone)]
@@ -257,6 +265,16 @@ impl A {
     }
 }
 
+// array of references. rank-1 for now.
+#[derive(Debug,Clone)]
+pub struct Ar {
+    r: Vec<Vr>,
+}
+impl Ar {
+    pub fn new(r: Vec<Vr>) -> Self {
+        Self { r: r }
+    }
+}
 // https://docs.rs/once_cell/1.8.0/once_cell/#lateinit
 // https://github.com/rust-lang/rfcs/pull/2788
 #[derive(Debug)]
@@ -284,7 +302,16 @@ impl<T> std::ops::Deref for LateInit<T> {
 // Utility fns
 pub fn set(d: bool,is: Vs,vs: Vs) -> V {
     match (is,vs) {
-        (Vs::Slot(env,id),Vs::Ref(v)) => { env.set(id,v) },
+        (Vs::Slot(env,id),Vs::V(v)) => { env.set(id,v) },
+        (Vs::Ar(a),Vs::V(v)) => {
+            a.r.into_iter().fold(None::<Cc<Vu>>,|accm,e|
+                match e {
+                    Vr::Slot(env,id) => { Some(env.set(id,v)) },
+                    _ => panic!("can only set array refs of slots!"),
+                }
+            );
+            v
+        },
         _ => panic!("can only set slots"),
     }
 }
