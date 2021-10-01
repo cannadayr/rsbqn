@@ -146,8 +146,9 @@ pub fn run(code: Cc<Code>) -> f64 {
             Body::Defer(_,_) => panic!("cant run deferred block"),
         };
     let rtn = vm(&root,&code,&code.blocks[0],pos,Vec::new());
-    match **rtn.to_ref() {
-        Vu::Scalar(n) => n,
+    match &**rtn.to_ref() {
+        Vu::Scalar(n) => *n,
+        Vu::A(a) => panic!("got array w/ shape {:?}",a.sh),
         _ => panic!("run failed"),
     }
 }

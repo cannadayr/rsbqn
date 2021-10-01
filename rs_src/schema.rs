@@ -229,13 +229,12 @@ impl Env {
             },
         }
     }
-    pub fn set(&self,id: usize,v: V) -> V {
+    pub fn set(&self,id: usize,v: &V) {
         match self {
             Env(arc) => {
                 debug!("setting slot id {}",id);
                 let mut guard = arc.lock().unwrap();
-                (*guard).vars[id] = Vh::V(v.clone());
-                v
+                (*guard).vars[id] = Vh::V((*v).clone());
             },
         }
     }
@@ -257,7 +256,7 @@ impl BlockInst {
 #[derive(Debug,Clone)]
 pub struct A {
     r: Vec<V>,
-    sh: Vec<V>,
+    pub sh: Vec<V>,
 }
 impl A {
     pub fn new(r: Vec<V>,sh: Vec<V>) -> Self {
@@ -302,11 +301,13 @@ impl<T> std::ops::Deref for LateInit<T> {
 // Utility fns
 pub fn set(d: bool,is: Vs,vs: Vs) -> V {
     match (is,vs) {
-        (Vs::Slot(env,id),Vs::V(v)) => { env.set(id,v) },
+        (Vs::Slot(env,id),Vs::V(v)) => { env.set(id,&v); v },
         (Vs::Ar(a),Vs::V(v)) => {
-            a.r.into_iter().fold(None::<Cc<Vu>>,|accm,e|
+            a.r.into_iter().fold((),|accm: (),e|
                 match e {
-                    Vr::Slot(env,id) => { Some(env.set(id,v)) },
+                    Vr::Slot(env,id) => {
+                        env.set(id,&v);
+                    },
                     _ => panic!("can only set array refs of slots!"),
                 }
             );
