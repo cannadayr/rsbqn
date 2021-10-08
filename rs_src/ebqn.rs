@@ -66,18 +66,6 @@ pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: 
                 let r = derv(env.clone(),&code,&code.blocks[x]);
                 stack.push(r);
             },
-            11 => {
-                let x = code.bc[pos];pos+=1;
-                let hd = stack.len() - x;
-                let tl = stack.split_off(hd);
-                stack.push(list(tl));
-            },
-            12 => {
-                let x = code.bc[pos];pos+=1;
-                let hd = stack.len() - x;
-                let tl = stack.split_off(hd);
-                stack.push(listr(tl));
-            },
             6 => {
                 let _ = stack.pop();
             },
@@ -90,6 +78,18 @@ pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: 
                         panic!("stack overflow")
                     }
                 };
+            },
+            11 => {
+                let x = code.bc[pos];pos+=1;
+                let hd = stack.len() - x;
+                let tl = stack.split_off(hd);
+                stack.push(list(tl));
+            },
+            12 => {
+                let x = code.bc[pos];pos+=1;
+                let hd = stack.len() - x;
+                let tl = stack.split_off(hd);
+                stack.push(listr(tl));
             },
             16 => {
                 let f = stack.pop().unwrap();
