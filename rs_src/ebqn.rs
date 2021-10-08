@@ -139,7 +139,7 @@ fn tests() -> NifResult<Atom> {
 }
 
 pub fn run(code: Cc<Code>) -> f64 {
-    let root = Env::new(None,&code.blocks[0],None);
+    let root = Env::new(None,&code.blocks[0],0,None);
     let (pos,_locals) =
         match code.blocks[0].body {
             Body::Imm(b) => code.bodies[b],

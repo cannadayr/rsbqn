@@ -56,7 +56,7 @@ impl Calleable for Cc<Vu> {
                             v
                         },
                     };
-                let env = Env::new(Some(b.parent.clone()),&b.def,Some(slots));
+                let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(slots));
                 let (pos,_locals) =
                     match &b.def.body {
                         Body::Imm(body) => b.def.code.bodies[*body],
@@ -184,19 +184,14 @@ impl Trace for EnvUnboxed {
 #[derive(Clone,Default,Debug)]
 pub struct Env(Cc<Mutex<EnvUnboxed>>);
 impl Env {
-    pub fn new(parent: Option<Env>,block: &Cc<Block>,args: Option<Vec<Vh>>) -> Self {
+    pub fn new(parent: Option<Env>,block: &Cc<Block>,arity: usize,args: Option<Vec<Vh>>) -> Self {
         let (pos,locals) =
             match &block.body {
                 Body::Imm(b) => block.code.bodies[*b],
                 Body::Defer(mon,dya) => {
-                    let arity =
-                        match &args {
-                            None => panic!("no fn args supplied for deferred block"),
-                            Some(v) => v.len(),
-                        };
                     match arity {
-                        2 => block.code.bodies[mon[0]],
-                        3 => block.code.bodies[dya[0]],
+                        1 => block.code.bodies[mon[0]],
+                        2 => block.code.bodies[dya[0]],
                         n => panic!("invalid args supplied for deferred block {}",n),
                     }
                 },
