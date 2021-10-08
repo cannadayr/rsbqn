@@ -196,7 +196,7 @@ impl Env {
                     }
                 },
             };
-        debug!("initializing block env of size {:?}",locals);
+        debug!("initializing env of size {} and body {:?}",locals,block.body);
         let vars =
             match args {
                 None => {
@@ -251,7 +251,10 @@ impl BlockInst {
             false => panic!("got deferred block!"),
             true => {
                 let pos = match self.def.body {
-                   Body::Imm(p) => p,
+                   Body::Imm(b) => {
+                        let (p,_l) = self.def.code.bodies[b];
+                        p
+                    }
                     _ => panic!("body immediacy doesnt match block definition"),
                 };
                 let env = Env::new(Some(self.parent.clone()),&self.def,arity,Some(args));
