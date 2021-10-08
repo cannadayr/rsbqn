@@ -246,12 +246,18 @@ impl BlockInst {
     pub fn new(env: Env,code: Cc<Code>, typ: u8, block: Cc<Block>, args: Option<Vec<Vn>>) -> Self {
         Self {typ: typ, def: block, parent: env, args: args }
     }
-    pub fn call_block(&self,args: Vec<Vh>) -> Vs {
+    pub fn call_block(&self,arity:usize,args: Vec<Vh>) -> Vs {
         match self.def.imm {
             false => panic!("got deferred block!"),
-            true => panic!("got imm block!"),
+            true => {
+                let pos = match self.def.body {
+                   Body::Imm(p) => p,
+                    _ => panic!("body immediacy doesnt match block definition"),
+                };
+                let env = Env::new(Some(self.parent.clone()),&self.def,arity,Some(args));
+                vm(&env,&self.def.code,&self.def,pos,Vec::new())
+            },
         }
-        Vs::V(Cc::new(Vu::Scalar(-1.0))) // return junk for now
     }
 }
 
