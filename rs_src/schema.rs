@@ -237,7 +237,7 @@ impl Env {
 
 #[derive(Debug,Clone)]
 pub struct BlockInst {
-    typ:   u8,
+    pub typ:   u8,
     def:   Cc<Block>,
     parent:Env,
     args:  Option<Vec<Vn>>,

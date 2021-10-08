@@ -13,10 +13,22 @@ fn ge(env: Env,i: usize) -> Env {
     }
 }
 
+fn call_block(m: &V, args:Vec<V>) -> Vs {
+    Vs::V(Cc::new(Vu::Scalar(-1.0)))
+}
 fn call(arity: usize,a: Vn,x: Vn, w: Vn) -> Vs {
     match a {
         Some(v) => v.call(arity,x,w),
         _ => panic!("unimplemented call"),
+    }
+}
+fn call1(m: V,f: V) -> Vs {
+    match &*m {
+        Vu::BlockInst(bl) => {
+            assert_eq!(1,bl.typ);
+            call_block(&m,vec![m.clone(),f])
+        },
+        _ => panic!("call1 with invalid type"),
     }
 }
 
@@ -102,6 +114,12 @@ pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: 
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
                 let r = call(2,Some(f.to_ref().clone()),Some(x.to_ref().clone()),Some(w.to_ref().clone()));
+                stack.push(r);
+            },
+            26 => {
+                let f = stack.pop().unwrap();
+                let m = stack.pop().unwrap();
+                let r = call1(m.to_ref().clone(),f.to_ref().clone());
                 stack.push(r);
             },
             33 => {
