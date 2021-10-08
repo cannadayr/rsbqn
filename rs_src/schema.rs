@@ -192,7 +192,7 @@ impl Env {
                     match arity {
                         1 => block.code.bodies[mon[0]],
                         2 => block.code.bodies[dya[0]],
-                        n => panic!("invalid args supplied for deferred block {}",n),
+                        n => panic!("invalid arity for deferred block {}",n),
                     }
                 },
             };
@@ -246,9 +246,12 @@ impl BlockInst {
     pub fn new(env: Env,code: Cc<Code>, typ: u8, block: Cc<Block>, args: Option<Vec<Vn>>) -> Self {
         Self {typ: typ, def: block, parent: env, args: args }
     }
-    pub fn call_block(&self,arity:usize,args: Vec<Vh>) -> Vs {
+    pub fn call_block(&self,arity:usize,args: Vec<Vn>) -> Vs {
         match self.def.imm {
-            false => panic!("got deferred block!"),
+            false => {
+                debug!("got deferred block, creating new block instance with modified args and type...");
+                Vs::V(Cc::new(Vu::BlockInst(BlockInst::new(self.parent.clone(),self.def.code.clone(),0,self.def.clone(),Some(args)))))
+            },
             true => {
                 let pos = match self.def.body {
                    Body::Imm(b) => {
@@ -257,7 +260,8 @@ impl BlockInst {
                     }
                     _ => panic!("body immediacy doesnt match block definition"),
                 };
-                let env = Env::new(Some(self.parent.clone()),&self.def,arity,Some(args));
+                let a = args.iter().map(|v| Vh::V(v.as_ref().unwrap().clone())).collect::<Vec<Vh>>();
+                let env = Env::new(Some(self.parent.clone()),&self.def,arity,Some(a));
                 vm(&env,&self.def.code,&self.def,pos,Vec::new())
             },
         }

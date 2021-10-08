@@ -23,7 +23,7 @@ fn call1(m: V,f: V) -> Vs {
     match &*m {
         Vu::BlockInst(bl) => {
             assert_eq!(1,bl.typ);
-            bl.call_block(1,vec![Vh::V(m.clone()),none_or_clone(&Some(f))])
+            bl.call_block(1,vec![Some(m.clone()),Some(f)])
         },
         _ => panic!("call1 with invalid type"),
     }
