@@ -1,4 +1,4 @@
-use crate::schema::{Env,V,Vu,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Body,A,Ar,set,new_scalar,ok};
+use crate::schema::{Env,V,Vu,Vs,Vr,Vn,Vh,Block,BlockInst,Code,Calleable,Body,A,Ar,set,new_scalar,none_or_clone,ok};
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
 use cc_mt::{Cc, Trace, Tracer, collect_cycles};
@@ -13,9 +13,6 @@ fn ge(env: Env,i: usize) -> Env {
     }
 }
 
-fn call_block(m: &V, args:Vec<V>) -> Vs {
-    Vs::V(Cc::new(Vu::Scalar(-1.0)))
-}
 fn call(arity: usize,a: Vn,x: Vn, w: Vn) -> Vs {
     match a {
         Some(v) => v.call(arity,x,w),
@@ -26,7 +23,7 @@ fn call1(m: V,f: V) -> Vs {
     match &*m {
         Vu::BlockInst(bl) => {
             assert_eq!(1,bl.typ);
-            call_block(&m,vec![m.clone(),f])
+            bl.call_block(vec![Vh::V(m.clone()),none_or_clone(&Some(f))])
         },
         _ => panic!("call1 with invalid type"),
     }

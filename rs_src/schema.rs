@@ -246,6 +246,13 @@ impl BlockInst {
     pub fn new(env: Env,code: Cc<Code>, typ: u8, block: Cc<Block>, args: Option<Vec<Vn>>) -> Self {
         Self {typ: typ, def: block, parent: env, args: args }
     }
+    pub fn call_block(&self,args: Vec<Vh>) -> Vs {
+        match self.def.imm {
+            false => panic!("got deferred block!"),
+            true => panic!("got imm block!"),
+        }
+        Vs::V(Cc::new(Vu::Scalar(-1.0))) // return junk for now
+    }
 }
 
 #[derive(Debug,Clone)]
