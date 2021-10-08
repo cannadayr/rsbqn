@@ -28,10 +28,18 @@ fn call1(m: V,f: V) -> Vs {
         _ => panic!("call1 with invalid type"),
     }
 }
+fn call2(m: V,f: V,g: V) -> Vs {
+    match &*m {
+        Vu::BlockInst(bl) => {
+            assert_eq!(2,bl.typ);
+            bl.call_block(2,vec![Some(m.clone()),Some(f),Some(g)])
+        },
+        _ => panic!("call1 with invalid type"),
+    }
+}
 
 fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>) -> Vs {
     debug!("deriving block from body {:?}",block.body);
-    debug!("code bodies {:?}",code.bodies);
     match (block.typ,block.imm) {
         (0,true) => {
             debug!("deriving immediate block");
@@ -133,6 +141,13 @@ pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: 
                 let f = stack.pop().unwrap();
                 let m = stack.pop().unwrap();
                 let r = call1(m.to_ref().clone(),f.to_ref().clone());
+                stack.push(r);
+            },
+            27 => {
+                let f = stack.pop().unwrap();
+                let m = stack.pop().unwrap();
+                let g = stack.pop().unwrap();
+                let r = call2(m.to_ref().clone(),f.to_ref().clone(),g.to_ref().clone());
                 stack.push(r);
             },
             33 => {
