@@ -1,4 +1,4 @@
-use crate::schema::{Env,V,Vu,Vs,Vr,Vn,Vh,Block,BlockInst,Code,Calleable,Body,A,Ar,set,new_scalar,none_or_clone,ok};
+use crate::schema::{Env,V,Vu,Vs,Vr,Vn,Vh,Block,BlockInst,Code,Calleable,Body,A,Ar,Tr2,set,new_scalar,none_or_clone,ok};
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
 use cc_mt::{Cc, Trace, Tracer, collect_cycles};
@@ -34,7 +34,7 @@ fn call2(m: V,f: V,g: V) -> Vs {
             assert_eq!(2,bl.typ);
             bl.call_block(2,vec![Some(m.clone()),Some(f),Some(g)])
         },
-        _ => panic!("call1 with invalid type"),
+        _ => panic!("call2 with invalid type"),
     }
 }
 
@@ -136,6 +136,12 @@ pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: 
                 let x = stack.pop().unwrap();
                 let r = call(2,Some(f.to_ref().clone()),Some(x.to_ref().clone()),Some(w.to_ref().clone()));
                 stack.push(r);
+            },
+            20 => {
+                let g = stack.pop().unwrap();
+                let h = stack.pop().unwrap();
+                let t = Vs::V(Cc::new(Vu::Tr2(Tr2::new(g,h))));
+                stack.push(t);
             },
             26 => {
                 let f = stack.pop().unwrap();

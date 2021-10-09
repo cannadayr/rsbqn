@@ -19,6 +19,7 @@ pub enum Vu {
     Scalar(f64),
     BlockInst(BlockInst),
     A(A),
+    Tr2(Tr2),
 }
 impl Trace for Vu {
     fn trace(&self, tracer: &mut Tracer) {
@@ -36,6 +37,7 @@ impl Encoder for Vu {
             Vu::Scalar(n) => n.encode(env),
             Vu::BlockInst(b) => panic!("can't encode blockinst to BEAM"),
             Vu::A(a) => panic!("can't encode array to BEAM"),
+            Vu::Tr2(_tr2) => panic!("can't encode train2 to BEAM"),
         }
     }
 }
@@ -71,6 +73,10 @@ impl Calleable for Cc<Vu> {
                 vm(&env,&b.def.code,&b.def,pos,Vec::new())
             },
             Vu::Scalar(n) => Vs::V(self.clone()),
+            Vu::Tr2(Tr2(g,h)) => {
+                let r = h.call(arity,x,w);
+                g.call(1,Some(r.to_ref().clone()),None)
+            },
             _ => panic!("no call fn for type"),
         }
     }
@@ -302,6 +308,15 @@ impl Ar {
         Self { r: r }
     }
 }
+
+#[derive(Debug,Clone)]
+pub struct Tr2(V,V);
+impl Tr2 {
+    pub fn new(g: Vs,h: Vs) -> Self {
+        Self((*g.to_ref()).clone(),(*h.to_ref()).clone())
+    }
+}
+
 // https://docs.rs/once_cell/1.8.0/once_cell/#lateinit
 // https://github.com/rust-lang/rfcs/pull/2788
 #[derive(Debug)]
