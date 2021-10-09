@@ -40,7 +40,7 @@ impl Encoder for Vu {
     }
 }
 impl Calleable for Cc<Vu> {
-    fn call(&self,arity: usize,x: Vn, w: Vn) -> Vs {
+    fn call(&self,arity: usize,x: Vn,w: Vn) -> Vs {
         match &**self {
             Vu::BlockInst(b) => {
                 assert!(b.typ == 0);
@@ -224,9 +224,22 @@ impl Env {
             },
         }
     }
-    pub fn set(&self,id: usize,v: &V) {
+    pub fn is_unset(&self,id: usize) -> bool {
         match self {
             Env(arc) => {
+                let guard = arc.lock().unwrap();
+                let vh = &(*guard).vars[id];
+                match vh {
+                    Vh::None|Vh::Undefined => true,
+                    _ => false,
+                }
+            },
+        }
+    }
+    pub fn set(&self,d: bool,id: usize,v: &V) {
+        match self {
+            Env(arc) => {
+                assert_eq!(d,self.is_unset(id));
                 debug!("setting slot id {}",id);
                 let mut guard = arc.lock().unwrap();
                 (*guard).vars[id] = Vh::V((*v).clone());
@@ -316,7 +329,7 @@ impl<T> std::ops::Deref for LateInit<T> {
 // Utility fns
 pub fn set(d: bool,is: Vs,vs: Vs) -> V {
     match (is,vs) {
-        (Vs::Slot(env,id),Vs::V(v)) => { env.set(id,&v); v },
+        (Vs::Slot(env,id),Vs::V(v)) => { env.set(d,id,&v); v },
         (Vs::Ar(a),Vs::V(v)) => {
             let arr =
                 match &*v {
@@ -326,7 +339,7 @@ pub fn set(d: bool,is: Vs,vs: Vs) -> V {
             a.r.into_iter().fold((),|accm: (),e|
                 match e {
                     Vr::Slot(env,id) => {
-                        env.set(id,&arr.r[id]);
+                        env.set(d,id,&arr.r[id]);
                     },
                     _ => panic!("can only set array refs of slots"),
                 }

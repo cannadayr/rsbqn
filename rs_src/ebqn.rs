@@ -87,7 +87,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: 
     debug!("new vm with body {:?} and pos {}",block.body,pos);
     loop {
         let op = code.bc[pos];pos+=1;
-        debug!("dbging (op,pos) : {},{}",op,pos);
+        debug!("opcode = {}; pos = {}",op,pos);
         match op {
             0 => {
                 let x = code.bc[pos];pos+=1;
@@ -153,22 +153,25 @@ pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: 
             33 => {
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
-                debug!("opcode 33 (x,w):({},{})",x,w);
                 let t = ge(env.clone(),x);
                 stack.push(Vs::Slot(t,w))
             },
             34 => {
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
-                debug!("opcode 34 (x,w):({},{})",x,w);
                 let t = ge(env.clone(),x);
                 stack.push(Vs::V(t.get(w)))
             },
-            // combine 48 & 49 for now
-            48|49 => {
+            48 => {
                 let i = stack.pop().unwrap();
                 let v = stack.pop().unwrap();
                 let r = set(true,i,v); // rtns a reference to v
+                stack.push(Vs::V(r));
+            },
+            49 => {
+                let i = stack.pop().unwrap();
+                let v = stack.pop().unwrap();
+                let r = set(false,i,v); // rtns a reference to v
                 stack.push(Vs::V(r));
             },
             _ => {
