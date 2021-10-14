@@ -351,10 +351,10 @@ pub fn set(d: bool,is: Vs,vs: Vs) -> V {
                     Vu::A(arr) => arr,
                     _ => panic!("can only set array of refs if value is an array"),
                 };
-            a.r.into_iter().fold((),|accm: (),e|
+            a.r.into_iter().enumerate().for_each(|(i,e)|
                 match e {
                     Vr::Slot(env,id) => {
-                        env.set(d,id,&arr.r[id]);
+                        env.set(d,id,&arr.r[i]);
                     },
                     _ => panic!("can only set array refs of slots"),
                 }
