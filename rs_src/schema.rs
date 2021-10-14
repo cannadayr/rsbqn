@@ -20,6 +20,7 @@ pub enum Vu {
     BlockInst(BlockInst),
     A(A),
     Tr2(Tr2),
+    Tr3(Tr3),
 }
 impl Trace for Vu {
     fn trace(&self, tracer: &mut Tracer) {
@@ -38,6 +39,7 @@ impl Encoder for Vu {
             Vu::BlockInst(b) => panic!("can't encode blockinst to BEAM"),
             Vu::A(a) => panic!("can't encode array to BEAM"),
             Vu::Tr2(_tr2) => panic!("can't encode train2 to BEAM"),
+            Vu::Tr3(_tr3) => panic!("can't encode train3 to BEAM"),
         }
     }
 }
@@ -76,6 +78,11 @@ impl Calleable for Cc<Vu> {
             Vu::Tr2(Tr2(g,h)) => {
                 let r = h.call(arity,x,w);
                 g.call(1,Some(r.to_ref().clone()),None)
+            },
+            Vu::Tr3(Tr3(f,g,h)) => {
+                let r = h.call(arity,Some((*x.as_ref().unwrap()).clone()),Some((*w.as_ref().unwrap()).clone()));
+                let l = f.call(arity,x,w);
+                g.call(2,Some(r.to_ref().clone()),Some(l.to_ref().clone()))
             },
             _ => panic!("no call fn for type"),
         }
@@ -314,6 +321,13 @@ pub struct Tr2(V,V);
 impl Tr2 {
     pub fn new(g: Vs,h: Vs) -> Self {
         Self((*g.to_ref()).clone(),(*h.to_ref()).clone())
+    }
+}
+#[derive(Debug,Clone)]
+pub struct Tr3(V,V,V);
+impl Tr3 {
+    pub fn new(f: Vs,g: Vs,h: Vs) -> Self {
+        Self((*f.to_ref()).clone(),(*g.to_ref()).clone(),(*h.to_ref()).clone())
     }
 }
 

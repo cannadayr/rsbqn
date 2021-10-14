@@ -1,4 +1,4 @@
-use crate::schema::{Env,V,Vu,Vs,Vr,Vn,Vh,Block,BlockInst,Code,Calleable,Body,A,Ar,Tr2,set,new_scalar,none_or_clone,ok};
+use crate::schema::{Env,V,Vu,Vs,Vr,Vn,Vh,Block,BlockInst,Code,Calleable,Body,A,Ar,Tr2,Tr3,set,new_scalar,none_or_clone,ok};
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
 use cc_mt::{Cc, Trace, Tracer, collect_cycles};
@@ -141,6 +141,13 @@ pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: 
                 let g = stack.pop().unwrap();
                 let h = stack.pop().unwrap();
                 let t = Vs::V(Cc::new(Vu::Tr2(Tr2::new(g,h))));
+                stack.push(t);
+            },
+            21 => {
+                let f = stack.pop().unwrap();
+                let g = stack.pop().unwrap();
+                let h = stack.pop().unwrap();
+                let t = Vs::V(Cc::new(Vu::Tr3(Tr3::new(f,g,h))));
                 stack.push(t);
             },
             26 => {
