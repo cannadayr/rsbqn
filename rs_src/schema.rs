@@ -263,6 +263,14 @@ impl Env {
             },
         }
     }
+    pub fn get_parent(&self) -> Option<Env> {
+        match self {
+            Env(arc) => {
+                let guard = arc.lock().unwrap();
+                (*guard).parent.clone()
+            },
+        }
+    }
 }
 
 #[derive(Debug,Clone)]

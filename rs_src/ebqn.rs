@@ -6,10 +6,14 @@ use log::{debug, trace, error, log_enabled, info, Level};
 use std::panic;
 use crate::test::{bytecode};
 
-fn ge(env: Env,i: usize) -> Env {
-    match i {
-        0 => env,
-        _ => panic!("ge not implemented for i > 0")
+fn ge(env: Env,mut i: usize) -> Env {
+    // TODO replace w/ Cow ptr
+    let mut cur = env.clone();
+    loop {
+        match i {
+            0 => break cur,
+            _ => { i-=1; cur = cur.get_parent().unwrap(); },
+        }
     }
 }
 
