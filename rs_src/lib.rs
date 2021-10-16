@@ -1,5 +1,6 @@
 mod schema;
 mod late_init;
+mod trace;
 mod ebqn;
 mod test;
 use rustler::{Env,Term};

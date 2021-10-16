@@ -1,5 +1,5 @@
 use std::sync::Mutex;
-use cc_mt::{Cc, Trace, Tracer, /*collect_cycles*/};
+use cc_mt::Cc;
 use rustler::{Encoder};
 use crate::ebqn::vm;
 use crate::late_init::LateInit;
@@ -20,16 +20,6 @@ pub enum Vu {
     A(A),
     Tr2(Tr2),
     Tr3(Tr3),
-}
-impl Trace for Vu {
-    fn trace(&self, _tracer: &mut Tracer) {
-        panic!("clearing V");
-    }
-}
-impl Trace for &Vu {
-    fn trace(&self, _tracer: &mut Tracer) {
-        panic!("clearing &V");
-    }
 }
 impl Encoder for Vu {
     fn encode<'a>(&self, env: rustler::Env<'a>) -> rustler::Term<'a> {
@@ -180,22 +170,12 @@ impl Code {
         code
     }
 }
-impl Trace for Code {
-    fn trace(&self, _tracer: &mut Tracer) {
-        panic!("clearing Code");
-    }
-}
 
 // Block
 #[derive(Debug)]
 pub struct Block {
     pub typ:u8, pub imm:bool, pub body: Body,
     pub code:LateInit<Cc<Code>>,
-}
-impl Trace for Block {
-    fn trace(&self, _tracer: &mut Tracer) {
-        panic!("clearing Code");
-    }
 }
 
 // Env (Unboxed)
@@ -204,11 +184,7 @@ pub struct EnvUnboxed {
     pub parent:Option<Env>,
     pub vars:   Mutex<Vec<Vh>>,
 }
-impl Trace for EnvUnboxed {
-    fn trace(&self, _tracer: &mut Tracer) {
-        panic!("clearing env");
-    }
-}
+
 #[derive(Clone,Default,Debug)]
 pub struct Env(Cc<EnvUnboxed>);
 impl Env {
