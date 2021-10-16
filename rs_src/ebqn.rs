@@ -217,7 +217,7 @@ pub fn run(code: Cc<Code>) -> f64 {
 }
 
 #[rustler::nif]
-fn init_st() -> NifResult<(Atom,ResourceArc<Env>,Vs)> {
+fn init_st() -> NifResult<(Atom,ResourceArc<Env>,Vu)> {
     //let code = Code::new(vec![0,0,7],vec![new_scalar(5.0)],vec![(0,true,new_body(Body::Imm(0)))],vec![(0,0)]);
     //let root = Env::new(None,&code.blocks[0],None);
     panic!("cant init anything");

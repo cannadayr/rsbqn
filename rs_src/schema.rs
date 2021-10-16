@@ -116,16 +116,6 @@ impl Vs {
     }
 }
 
-impl Encoder for Vs {
-    fn encode<'a>(&self, env: rustler::Env<'a>) -> rustler::Term<'a> {
-        match self {
-            Vs::V(r) => (**r).encode(env),
-            Vs::Slot(_env,_slot) => panic!("cant encode slot to BEAM"),
-            Vs::Ar(_ar) => panic!("cant encode array of resources to BEAM"),
-        }
-    }
-}
-
 // Value (boxed on the heap)
 #[derive(Debug)]
 pub enum Vh {
