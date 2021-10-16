@@ -191,6 +191,14 @@ pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: 
                 let r = set(false,i,v); // rtns a reference to v
                 stack.push(Vs::V(r));
             },
+            50 => {
+                let i = stack.pop().unwrap();
+                let f = stack.pop().unwrap();
+                let x = stack.pop().unwrap();
+                let v = call(2,Some(f.to_ref().clone()),Some(x.to_ref().clone()),Some(i.get()));
+                let r = set(false,i,v); // rtns a reference to v
+                stack.push(Vs::V(r));
+            },
             _ => {
                 panic!("unreachable op: {}",op);
             }

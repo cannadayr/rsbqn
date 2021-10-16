@@ -113,6 +113,12 @@ impl Vs {
             _ => panic!("can't convert to ref"),
         }
     }
+    pub fn get(&self) -> V {
+        match self {
+            Vs::Slot(env,id) => env.get(*id),
+            _ => panic!("can only get slots"),
+        }
+    }
 }
 
 impl Encoder for Vs {
