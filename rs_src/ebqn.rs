@@ -1,10 +1,10 @@
-use crate::schema::{Env,V,Vu,Vs,Vr,Vn,Vh,Block,BlockInst,Code,Calleable,Body,A,Ar,Tr2,Tr3,set,new_scalar,none_or_clone,ok};
+use crate::schema::{Env,V,Vu,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Body,A,Ar,Tr2,Tr3,set,ok};
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
-use cc_mt::{Cc, Trace, Tracer, collect_cycles};
-use log::{debug, trace, error, log_enabled, info, Level};
-use std::panic;
+use cc_mt::Cc;
 use crate::test::{bytecode};
+//use std::panic;
+//use log::{debug, trace, error, log_enabled, info, Level};
 
 fn call(arity: usize,a: Vn,x: Vn, w: Vn) -> Vs {
     match a {
@@ -42,10 +42,10 @@ fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>) -> Vs {
                 },
                 _ => panic!("body immediacy derivation doesnt match block definition"),
             };
-            vm(&child,code,block,pos,Vec::new())
+            vm(&child,code,pos,Vec::new())
         },
         (typ,_) => {
-            let block_inst = BlockInst::new(env.clone(),code.clone(),typ,(*block).clone(),None);
+            let block_inst = BlockInst::new(env.clone(),typ,(*block).clone(),None);
             let r = Vs::V(Cc::new(Vu::BlockInst(block_inst)));
             r
         },
@@ -71,7 +71,7 @@ fn listr(l: Vec<Vs>) -> Vs {
     ).collect::<Vec<Vr>>();
     Vs::Ar(Ar::new(ravel))
 }
-pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
+pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
     loop {
         let op = code.bc[pos];pos+=1;
         match op {
@@ -208,7 +208,7 @@ pub fn run(code: Cc<Code>) -> f64 {
             Body::Imm(b) => code.bodies[b],
             Body::Defer(_,_) => panic!("cant run deferred block"),
         };
-    let rtn = vm(&root,&code,&code.blocks[0],pos,Vec::new());
+    let rtn = vm(&root,&code,pos,Vec::new());
     match &**rtn.to_ref() {
         Vu::Scalar(n) => *n,
         Vu::A(a) => panic!("got array w/ shape {:?}",a.sh),

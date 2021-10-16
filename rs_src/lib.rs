@@ -2,12 +2,12 @@ mod schema;
 mod ebqn;
 mod test;
 use rustler::{Env,Term};
-use syslog::{Facility, Error};
+use syslog::Facility;
 extern crate log_panics;
 
 pub fn load(env: Env, _info: Term) -> bool {
     rustler::resource!(schema::Env, env);
-    syslog::init(Facility::LOG_USER,
+    let _r = syslog::init(Facility::LOG_USER,
                  log::LevelFilter::Debug,
                  Some("ebqn"));
     log_panics::init();

@@ -1,10 +1,9 @@
 use std::sync::Mutex;
 use once_cell::sync::OnceCell;
-use cc_mt::{Cc, Trace, Tracer, collect_cycles};
-use log::{debug, trace, error, log_enabled, info, Level};
+use cc_mt::{Cc, Trace, Tracer, /*collect_cycles*/};
 use rustler::{Encoder};
 use crate::ebqn::vm;
-use std::sync::Arc;
+//use log::{debug, trace, error, log_enabled, info, Level};
 
 rustler::atoms!{ok}
 
@@ -23,12 +22,12 @@ pub enum Vu {
     Tr3(Tr3),
 }
 impl Trace for Vu {
-    fn trace(&self, tracer: &mut Tracer) {
+    fn trace(&self, _tracer: &mut Tracer) {
         panic!("clearing V");
     }
 }
 impl Trace for &Vu {
-    fn trace(&self, tracer: &mut Tracer) {
+    fn trace(&self, _tracer: &mut Tracer) {
         panic!("clearing &V");
     }
 }
@@ -36,8 +35,8 @@ impl Encoder for Vu {
     fn encode<'a>(&self, env: rustler::Env<'a>) -> rustler::Term<'a> {
         match self {
             Vu::Scalar(n) => n.encode(env),
-            Vu::BlockInst(b) => panic!("can't encode blockinst to BEAM"),
-            Vu::A(a) => panic!("can't encode array to BEAM"),
+            Vu::BlockInst(_b) => panic!("can't encode blockinst to BEAM"),
+            Vu::A(_a) => panic!("can't encode array to BEAM"),
             Vu::Tr2(_tr2) => panic!("can't encode train2 to BEAM"),
             Vu::Tr3(_tr3) => panic!("can't encode train3 to BEAM"),
         }
@@ -72,9 +71,9 @@ impl Calleable for Cc<Vu> {
                             }
                         },
                     };
-                vm(&env,&b.def.code,&b.def,pos,Vec::new())
+                vm(&env,&b.def.code,pos,Vec::new())
             },
-            Vu::Scalar(n) => Vs::V(self.clone()),
+            Vu::Scalar(_n) => Vs::V(self.clone()),
             Vu::Tr2(Tr2(g,h)) => {
                 let r = h.call(arity,x,w);
                 g.call(1,Some(r.to_ref().clone()),None)
@@ -131,8 +130,8 @@ impl Encoder for Vs {
     fn encode<'a>(&self, env: rustler::Env<'a>) -> rustler::Term<'a> {
         match self {
             Vs::V(r) => (**r).encode(env),
-            Vs::Slot(env,slot) => panic!("cant encode slot to BEAM"),
-            Vs::Ar(ar) => panic!("cant encode array of resources to BEAM"),
+            Vs::Slot(_env,_slot) => panic!("cant encode slot to BEAM"),
+            Vs::Ar(_ar) => panic!("cant encode array of resources to BEAM"),
         }
     }
 }
@@ -182,7 +181,7 @@ impl Code {
     }
 }
 impl Trace for Code {
-    fn trace(&self, tracer: &mut Tracer) {
+    fn trace(&self, _tracer: &mut Tracer) {
         panic!("clearing Code");
     }
 }
@@ -194,7 +193,7 @@ pub struct Block {
     pub code:LateInit<Cc<Code>>,
 }
 impl Trace for Block {
-    fn trace(&self, tracer: &mut Tracer) {
+    fn trace(&self, _tracer: &mut Tracer) {
         panic!("clearing Code");
     }
 }
@@ -206,7 +205,7 @@ pub struct EnvUnboxed {
     pub vars:   Mutex<Vec<Vh>>,
 }
 impl Trace for EnvUnboxed {
-    fn trace(&self, tracer: &mut Tracer) {
+    fn trace(&self, _tracer: &mut Tracer) {
         panic!("clearing env");
     }
 }
@@ -214,7 +213,7 @@ impl Trace for EnvUnboxed {
 pub struct Env(Cc<EnvUnboxed>);
 impl Env {
     pub fn new(parent: Option<Env>,block: &Cc<Block>,arity: usize,args: Option<Vec<Vh>>) -> Self {
-        let (pos,locals) =
+        let (_pos,locals) =
             match &block.body {
                 Body::Imm(b) => block.code.bodies[*b],
                 Body::Defer(mon,dya) => {
@@ -287,13 +286,13 @@ pub struct BlockInst {
     args:  Option<Vec<Vn>>,
 }
 impl BlockInst {
-    pub fn new(env: Env,code: Cc<Code>, typ: u8, block: Cc<Block>, args: Option<Vec<Vn>>) -> Self {
+    pub fn new(env: Env,typ: u8, block: Cc<Block>, args: Option<Vec<Vn>>) -> Self {
         Self {typ: typ, def: block, parent: env, args: args }
     }
     pub fn call_block(&self,arity:usize,args: Vec<Vn>) -> Vs {
         match self.def.imm {
             false => {
-                Vs::V(Cc::new(Vu::BlockInst(BlockInst::new(self.parent.clone(),self.def.code.clone(),0,self.def.clone(),Some(args)))))
+                Vs::V(Cc::new(Vu::BlockInst(BlockInst::new(self.parent.clone(),0,self.def.clone(),Some(args)))))
             },
             true => {
                 let pos = match self.def.body {
@@ -305,7 +304,7 @@ impl BlockInst {
                 };
                 let a = args.iter().map(|v| Vh::V(v.as_ref().unwrap().clone())).collect::<Vec<Vh>>();
                 let env = Env::new(Some(self.parent.clone()),&self.def,arity,Some(a));
-                vm(&env,&self.def.code,&self.def,pos,Vec::new())
+                vm(&env,&self.def.code,pos,Vec::new())
             },
         }
     }
@@ -387,7 +386,6 @@ pub fn set(d: bool,is: Vs,vs: Vs) -> V {
                     Vr::Slot(env,id) => {
                         env.set(d,id,&arr.r[i]);
                     },
-                    _ => panic!("can only set array refs of slots"),
                 }
             );
             v
