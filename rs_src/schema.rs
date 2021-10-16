@@ -225,7 +225,6 @@ impl Env {
                     }
                 },
             };
-        debug!("initializing env of size {} and body {:?}",locals,block.body);
         let vars =
             match args {
                 None => {
@@ -294,7 +293,6 @@ impl BlockInst {
     pub fn call_block(&self,arity:usize,args: Vec<Vn>) -> Vs {
         match self.def.imm {
             false => {
-                debug!("got deferred block, creating new block instance with modified args and type...");
                 Vs::V(Cc::new(Vu::BlockInst(BlockInst::new(self.parent.clone(),self.def.code.clone(),0,self.def.clone(),Some(args)))))
             },
             true => {

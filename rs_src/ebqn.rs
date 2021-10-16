@@ -32,24 +32,19 @@ fn call2(m: V,f: V,g: V) -> Vs {
 }
 
 fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>) -> Vs {
-    debug!("deriving block from body {:?}",block.body);
     match (block.typ,block.imm) {
         (0,true) => {
-            debug!("deriving immediate block");
             let child = Env::new(Some(env.clone()),block,0,None);
             let pos = match block.body {
                 Body::Imm(b) => {
-                    debug!("immediate block body {}",b);
                     let (p,_l) = code.bodies[b];
                     p
                 },
                 _ => panic!("body immediacy derivation doesnt match block definition"),
             };
-            debug!("new child vm with body {:?} and pos {}",block.body,pos);
             vm(&child,code,block,pos,Vec::new())
         },
         (typ,_) => {
-            debug!("deriving block instance from body {:?}",block.body);
             let block_inst = BlockInst::new(env.clone(),code.clone(),typ,(*block).clone(),None);
             let r = Vs::V(Cc::new(Vu::BlockInst(block_inst)));
             r
@@ -77,10 +72,8 @@ fn listr(l: Vec<Vs>) -> Vs {
     Vs::Ar(Ar::new(ravel))
 }
 pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
-    debug!("new vm with body {:?} and pos {}",block.body,pos);
     loop {
         let op = code.bc[pos];pos+=1;
-        debug!("opcode = {}; pos = {}",op,pos);
         match op {
             0 => {
                 let x = code.bc[pos];pos+=1;
@@ -215,7 +208,6 @@ pub fn run(code: Cc<Code>) -> f64 {
             Body::Imm(b) => code.bodies[b],
             Body::Defer(_,_) => panic!("cant run deferred block"),
         };
-    debug!("new root with body {:?} and pos {}",code.blocks[0].body,pos);
     let rtn = vm(&root,&code,&code.blocks[0],pos,Vec::new());
     match &**rtn.to_ref() {
         Vu::Scalar(n) => *n,
