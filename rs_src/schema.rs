@@ -88,7 +88,7 @@ impl Calleable for Cc<Vu> {
                 let l = f.call(arity,x,w);
                 g.call(2,Some(r.to_ref().clone()),Some(l.to_ref().clone()))
             },
-            _ => panic!("no call fn for type"),
+            Vu::A(_) => Vs::V(self.clone()),
         }
     }
 }
