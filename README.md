@@ -28,7 +28,21 @@ Features that are currently out-of-scope:
 Status
 ------
 
-Wildly incomplete.
+|TEST|STATUS|
+|---|---|
+|bytecode|tests passing|
+|fill|not working|
+|header|not working|
+|identity|not working|
+|literal|not working|
+|namespace|not working|
+|prim|not working|
+|simple|not working|
+|syntax|not working|
+|token|not working|
+|under|not working|
+|undo|not working|
+
 
 Build
 -----
