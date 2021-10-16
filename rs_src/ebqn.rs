@@ -6,17 +6,6 @@ use log::{debug, trace, error, log_enabled, info, Level};
 use std::panic;
 use crate::test::{bytecode};
 
-fn ge(env: Env,mut i: usize) -> Env {
-    // TODO replace w/ Cow ptr
-    let mut cur = env.clone();
-    loop {
-        match i {
-            0 => break cur,
-            _ => { i-=1; cur = cur.get_parent().unwrap(); },
-        }
-    }
-}
-
 fn call(arity: usize,a: Vn,x: Vn, w: Vn) -> Vs {
     match a {
         Some(v) => v.call(arity,x,w),
@@ -170,13 +159,13 @@ pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: 
             32|34 => {
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
-                let t = ge(env.clone(),x);
+                let t = env.ge(x);
                 stack.push(Vs::V(t.get(w)))
             },
             33 => {
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
-                let t = ge(env.clone(),x);
+                let t = env.ge(x);
                 stack.push(Vs::Slot(t,w))
             },
             48 => {

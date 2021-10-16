@@ -203,7 +203,7 @@ impl Trace for Block {
 #[derive(Default,Debug)]
 pub struct EnvUnboxed {
     pub parent:Option<Env>,
-    pub vars:   Vec<Vh>,
+    pub vars:   Mutex<Vec<Vh>>,
 }
 impl Trace for EnvUnboxed {
     fn trace(&self, tracer: &mut Tracer) {
@@ -211,7 +211,7 @@ impl Trace for EnvUnboxed {
     }
 }
 #[derive(Clone,Default,Debug)]
-pub struct Env(Cc<Mutex<EnvUnboxed>>);
+pub struct Env(Cc<EnvUnboxed>);
 impl Env {
     pub fn new(parent: Option<Env>,block: &Cc<Block>,arity: usize,args: Option<Vec<Vh>>) -> Self {
         let (pos,locals) =
@@ -238,14 +238,14 @@ impl Env {
                     v
                 },
             };
-        let env = EnvUnboxed {parent: parent, vars: vars};
-        Self(Cc::new(Mutex::new(env)))
+        let env = EnvUnboxed {parent: parent, vars: Mutex::new(vars) };
+        Self(Cc::new(env))
     }
     pub fn get(&self,id: usize) -> V {
         match self {
-            Env(arc) => {
-                let guard = arc.lock().unwrap();
-                let vh = &(*guard).vars[id];
+            Env(e) => {
+                let guard = e.vars.lock().unwrap();
+                let vh = &(*guard)[id];
                 match vh {
                     Vh::V(v) => v.clone(),
                     _ => panic!("can't get unset slot"),
@@ -253,34 +253,29 @@ impl Env {
             },
         }
     }
-    pub fn is_unset(&self,id: usize) -> bool {
-        match self {
-            Env(arc) => {
-                let guard = arc.lock().unwrap();
-                let vh = &(*guard).vars[id];
-                match vh {
-                    Vh::None|Vh::Undefined => true,
-                    _ => false,
-                }
-            },
-        }
-    }
     pub fn set(&self,d: bool,id: usize,v: &V) {
         match self {
-            Env(arc) => {
-                assert_eq!(d,self.is_unset(id));
-                debug!("setting slot id {}",id);
-                let mut guard = arc.lock().unwrap();
-                (*guard).vars[id] = Vh::V((*v).clone());
+            Env(e) => {
+                let mut guard = e.vars.lock().unwrap();
+                let vh = &(*guard)[id];
+                assert_eq!(d,match vh {
+                    Vh::None|Vh::Undefined => true,
+                    _ => false,
+                });
+                (*guard)[id] = Vh::V((*v).clone());
             },
         }
     }
-    pub fn get_parent(&self) -> Option<Env> {
-        match self {
-            Env(arc) => {
-                let guard = arc.lock().unwrap();
-                (*guard).parent.clone()
-            },
+    pub fn ge(&self,mut i: usize) -> Env {
+        let mut cur = self;
+        loop {
+            match i {
+                0 => break (*cur).clone(),
+                _ => {
+                    i-=1;
+                    cur = cur.0.parent.as_ref().unwrap();
+                },
+            }
         }
     }
 }
