@@ -1,8 +1,8 @@
 use std::sync::Mutex;
-use once_cell::sync::OnceCell;
 use cc_mt::{Cc, Trace, Tracer, /*collect_cycles*/};
 use rustler::{Encoder};
 use crate::ebqn::vm;
+use crate::late_init::LateInit;
 //use log::{debug, trace, error, log_enabled, info, Level};
 
 rustler::atoms!{ok}
@@ -344,30 +344,6 @@ pub struct Tr3(V,V,V);
 impl Tr3 {
     pub fn new(f: Vs,g: Vs,h: Vs) -> Self {
         Self((*f.to_ref()).clone(),(*g.to_ref()).clone(),(*h.to_ref()).clone())
-    }
-}
-
-// https://docs.rs/once_cell/1.8.0/once_cell/#lateinit
-// https://github.com/rust-lang/rfcs/pull/2788
-#[derive(Debug)]
-pub struct LateInit<T> {
-    cell: OnceCell<T>,
-}
-
-impl<T> LateInit<T> {
-    pub fn init(&self, value: T) {
-        assert!(self.cell.set(value).is_ok())
-    }
-}
-
-impl<T> Default for LateInit<T> {
-    fn default() -> Self { LateInit { cell: OnceCell::default() } }
-}
-
-impl<T> std::ops::Deref for LateInit<T> {
-    type Target = T;
-    fn deref(&self) -> &T {
-        self.cell.get().unwrap()
     }
 }
 
