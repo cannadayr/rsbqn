@@ -116,7 +116,13 @@ impl Vs {
     pub fn get(&self) -> V {
         match self {
             Vs::Slot(env,id) => env.get(*id),
-            _ => panic!("can only get slots"),
+            Vs::Ar(a) => {
+                let shape = vec![Cc::new(Vu::Scalar(a.r.len() as f64))];
+                let ravel =
+                    a.r.iter().map(|e| match e { Vr::Slot(env,id) => env.get(*id), }).collect::<Vec<V>>();
+                Cc::new(Vu::A(A::new(ravel,shape)))
+            },
+            _ => panic!("can only resolve slots or ref arrays"),
         }
     }
 }
