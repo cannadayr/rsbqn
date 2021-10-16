@@ -171,13 +171,13 @@ pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: 
             48 => {
                 let i = stack.pop().unwrap();
                 let v = stack.pop().unwrap();
-                let r = set(true,i,v); // rtns a reference to v
+                let r = set(true,i,v);
                 stack.push(Vs::V(r));
             },
             49 => {
                 let i = stack.pop().unwrap();
                 let v = stack.pop().unwrap();
-                let r = set(false,i,v); // rtns a reference to v
+                let r = set(false,i,v);
                 stack.push(Vs::V(r));
             },
             50 => {
@@ -185,14 +185,14 @@ pub fn vm(env: &Env,code: &Cc<Code>,block: &Cc<Block>,mut pos: usize,mut stack: 
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
                 let v = call(2,Some(f.to_ref().clone()),Some(x.to_ref().clone()),Some(i.get()));
-                let r = set(false,i,v); // rtns a reference to v
+                let r = set(false,i,v);
                 stack.push(Vs::V(r));
             },
             51 => {
                 let i = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
                 let v = call(1,Some(f.to_ref().clone()),Some(i.get()),None);
-                let r = set(false,i,v); // rtns a reference to v
+                let r = set(false,i,v);
                 stack.push(Vs::V(r));
             },
             _ => {
