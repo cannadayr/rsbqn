@@ -97,9 +97,9 @@ main([Repo]) ->
     io:format("~ts~n",[erlang:iolist_to_binary([
         <<"use log::{debug};\n">>,
         <<"use crate::ebqn::run;\n">>,
-        <<"use crate::schema::{Code,new_scalar,Body};\n">>,
-        <<"pub fn bytecode() {\n">>,ByteCode,<<"\n}">>,
-        <<"pub fn prim() {\n">>,PrimCode,<<"\n}">>
+        <<"use crate::schema::{Code,new_scalar,Body,A};\n">>,
+        <<"pub fn bytecode() {\n">>,ByteCode,<<"\n}\n">>,
+        <<"pub fn prim(runtime: A) {\n">>,PrimCode,<<"\n}\n">>
     ])]);
 main(_Args) ->
     io:format("bad arguments~n"),

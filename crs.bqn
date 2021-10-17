@@ -20,7 +20,7 @@ Body ← Tuple # Native body
 Code ← "Code::new("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native code
 Imm ← "Body::Imm("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native imm fn
 Defer ← "Body::Defer("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native deferred fn
-Ind ← {∾𝕨‿"["‿𝕩‿"]"}          # Native list/array indexing
+Ind ← {∾𝕨‿"["‿𝕩‿"].clone()"}  # Native list/array indexing
 Cat ← {∾𝕨‿".concat("‿𝕩‿")"}   # Native list/array concatenation (like ∾)
 # Escape the special characters that appear in BQN sources.
 Esc←{
@@ -41,7 +41,7 @@ FBlock ← Block ⟨F,⊑⟜"false"‿"true",=◶⟨Imm F,Defer (List F¨)¨⟩�
 glyphs ← Import "glyphs.bqn"
 _getComp ← { (4+useInd) ↑ (𝕗 Import "c.bqn"){𝔽} }
 useInd ← "-i"≡⊑args ⋄ args↓˜↩useInd
-Comp ← ((<"runtime" Ind F)¨↕62) glyphs _getComp ⊢
+Comp ← ((<"runtime.r" Ind F)¨↕62) glyphs _getComp ⊢
 J ← ∾∾⟜(@+10)¨
 Fconst ← ≡◶⟨@⊸≤◶{Num𝕩}‿Char, Str, ⊑⟩
 Fout ← (≠↑⟨F,Fconst,FBlock,Body·F¨2⊸↑,List F⟩˙) {List 𝕎¨𝕩}¨ ⊢
