@@ -1,4 +1,5 @@
 -module(gen_test).
+-mode(compile).
 -export([main/1]).
 
 % usage:
