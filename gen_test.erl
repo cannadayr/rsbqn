@@ -63,17 +63,19 @@ parse([],Accm) ->
 parse(Lines,Accm) ->
     Line = hd(Lines),
     parse(tl(Lines),parse_line(Line,Accm)).
-main([Repo]) ->
-    Path = filename:join([Repo,<<"test/cases/bytecode.bqn">>]),
+suite(Repo,Name) ->
+    Path = filename:join([Repo,<<"test/cases/">>,Name]),
     {ok, Data} = file:read_file(Path),
     Args = parse(binary:split(Data, [<<"\n">>], [global]),[]),
     Tests = gen_tests(Repo,Args,[]),
-    Code = gen_code(Tests,[]),
+    gen_code(Tests,[]).
+main([Repo]) ->
+    ByteCode = suite(Repo,<<"bytecode.bqn">>),
     io:format("~ts~n",[erlang:iolist_to_binary([
         <<"use log::{debug};\n">>,
         <<"use crate::ebqn::run;\n">>,
         <<"use crate::schema::{Code,new_scalar,Body};\n">>,
-        <<"pub fn bytecode() {\n">>,Code,<<"\n}">>
+        <<"pub fn bytecode() {\n">>,ByteCode,<<"\n}">>
     ])]);
 main(_Args) ->
     io:format("bad arguments~n"),
