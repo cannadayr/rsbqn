@@ -278,7 +278,7 @@ impl BlockInst {
 
 #[derive(Debug,Clone)]
 pub struct A {
-    r: Vec<V>,
+    pub r: Vec<V>,
     pub sh: Vec<V>,
 }
 impl A {
