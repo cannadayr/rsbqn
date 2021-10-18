@@ -59,6 +59,13 @@ has_pct(Line) ->
         nomatch -> false;
         _ -> true
     end.
+cast(L) ->
+    case lists:member($.,L) of
+        true ->
+            erlang:list_to_float(L);
+        false ->
+            float(erlang:list_to_integer(L))
+    end.
 % # comment
 parse_line(Line,Accm,_HasPct)
     when binary_part(Line,0,1) =:= <<"#">>;
@@ -73,7 +80,7 @@ parse_line(Line,Accm,_HasPct)
 % result % expression
 parse_line(Line,Accm,true) ->
     [Head,Tail] = binary:split(Line, <<"%">>, [global]),
-    Expected = float(erlang:list_to_integer(string:trim(erlang:binary_to_list(Head)))),
+    Expected = cast(string:trim(erlang:binary_to_list(Head))),
     {Code,Comment} = parse_code(binary:split(Tail, <<"#">>, [global])),
     [{Expected,Code,Comment}] ++ Accm;
 % expression
@@ -93,13 +100,14 @@ suite(Repo,Name) ->
     gen_code(Tests,[]).
 main([Repo]) ->
     ByteCode = suite(Repo,<<"bytecode.bqn">>),
-    PrimCode = suite(Repo,<<"prim.bqn">>),
+    Simple = suite(Repo,<<"simple.bqn">>),
     io:format("~ts~n",[erlang:iolist_to_binary([
         <<"use log::{debug};\n">>,
         <<"use crate::ebqn::run;\n">>,
         <<"use crate::schema::{Code,new_scalar,Body,A,Decoder};\n">>,
         <<"pub fn bytecode() {\n">>,ByteCode,<<"\n}\n">>,
-        <<"pub fn prim(runtime: A) {\n">>,PrimCode,<<"\n}\n">>
+        <<"pub fn simple(runtime: A) {\n">>,Simple,<<"\n}\n">>
+        %<<"pub fn prim(runtime: A) {\n">>,Prim,<<"\n}\n">>
     ])]);
 main(_Args) ->
     io:format("bad arguments~n"),
