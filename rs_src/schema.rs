@@ -1,3 +1,4 @@
+use std::ops::Deref;
 use std::sync::Mutex;
 use cc_mt::Cc;
 use rustler::{Encoder};
@@ -10,6 +11,9 @@ rustler::atoms!{ok}
 // Traits
 pub trait Calleable {
     fn call(&self,arity: usize,x: Vn,w: Vn) -> Vs;
+}
+pub trait Decoder {
+    fn to_f64(&self) -> f64;
 }
 
 // Value (unboxed)
@@ -31,6 +35,18 @@ impl Encoder for Vu {
             Vu::Fn(_a) => panic!("can't encode fn to BEAM"),
             Vu::Tr2(_tr2) => panic!("can't encode train2 to BEAM"),
             Vu::Tr3(_tr3) => panic!("can't encode train3 to BEAM"),
+        }
+    }
+}
+impl Decoder for Cc<Vu> {
+    fn to_f64(&self) -> f64 {
+        match self.deref() {
+            Vu::Scalar(n) => *n,
+            Vu::BlockInst(_b) => panic!("can't decode blockinst to RUST"),
+            Vu::A(_a) => panic!("can't decode array to RUST"),
+            Vu::Fn(_a) => panic!("can't decode fn to RUST"),
+            Vu::Tr2(_tr2) => panic!("can't decode train2 to RUST"),
+            Vu::Tr3(_tr3) => panic!("can't decode train3 to RUST"),
         }
     }
 }

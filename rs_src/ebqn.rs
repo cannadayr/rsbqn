@@ -204,19 +204,14 @@ fn tests() -> NifResult<Atom> {
     Ok(ok())
 }
 
-pub fn run(code: Cc<Code>) -> f64 {
+pub fn run(code: Cc<Code>) -> V {
     let root = Env::new(None,&code.blocks[0],0,None);
     let (pos,_locals) =
         match code.blocks[0].body {
             Body::Imm(b) => code.bodies[b],
             Body::Defer(_,_) => panic!("cant run deferred block"),
         };
-    let rtn = vm(&root,&code,pos,Vec::new());
-    match &**rtn.to_ref() {
-        Vu::Scalar(n) => *n,
-        Vu::A(a) => panic!("got array w/ shape {:?}",a.sh),
-        _ => panic!("run failed"),
-    }
+    vm(&root,&code,pos,Vec::new()).to_ref().clone()
 }
 
 #[rustler::nif]
