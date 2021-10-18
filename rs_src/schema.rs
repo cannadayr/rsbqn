@@ -18,6 +18,7 @@ pub enum Vu {
     Scalar(f64),
     BlockInst(BlockInst),
     A(A),
+    Fn(fn() -> ()),
     Tr2(Tr2),
     Tr3(Tr3),
 }
@@ -27,6 +28,7 @@ impl Encoder for Vu {
             Vu::Scalar(n) => n.encode(env),
             Vu::BlockInst(_b) => panic!("can't encode blockinst to BEAM"),
             Vu::A(_a) => panic!("can't encode array to BEAM"),
+            Vu::Fn(_a) => panic!("can't encode fn to BEAM"),
             Vu::Tr2(_tr2) => panic!("can't encode train2 to BEAM"),
             Vu::Tr3(_tr3) => panic!("can't encode train3 to BEAM"),
         }
@@ -64,6 +66,7 @@ impl Calleable for Cc<Vu> {
                 vm(&env,&b.def.code,pos,Vec::new())
             },
             Vu::Scalar(_n) => Vs::V(self.clone()),
+            Vu::Fn(_f) => panic!("fn call not impl"),
             Vu::Tr2(Tr2(g,h)) => {
                 let r = h.call(arity,x,w);
                 g.call(1,Some(r.to_ref().clone()),None)

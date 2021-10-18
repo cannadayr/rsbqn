@@ -1,8 +1,9 @@
 use crate::schema::{Env,V,Vu,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Body,A,Ar,Tr2,Tr3,set,ok};
+use crate::prim::{provide};
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
 use cc_mt::Cc;
-use crate::test::{bytecode};
+use crate::test::{bytecode,prim};
 //use std::panic;
 //use log::{debug, trace, error, log_enabled, info, Level};
 
@@ -198,6 +199,8 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
 #[rustler::nif]
 fn tests() -> NifResult<Atom> {
     bytecode();
+    let provide = provide();
+    prim(provide);
     Ok(ok())
 }
 

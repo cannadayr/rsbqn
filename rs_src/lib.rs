@@ -2,6 +2,7 @@ mod schema;
 mod late_init;
 mod trace;
 mod ebqn;
+mod prim;
 mod test;
 use rustler::{Env,Term};
 use syslog::Facility;
