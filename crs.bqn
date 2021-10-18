@@ -50,7 +50,7 @@ LFC ← Long∘Fout∘Comp
 
 RT ← {
   src‿need‿inputs←𝕩Import"pr.bqn"
-  pr←"runtime_0"‿"provide"{(∾𝕨<⊸(<∘Ind⟜F¨)⟜(↕≠)¨𝕩)⊏˜(∾𝕩)⊐∾need}○((-1+1=𝕩)⊸↑)inputs
+  pr←"runtime_0"‿"provide.r"{(∾𝕨<⊸(<∘Ind⟜F¨)⟜(↕≠)¨𝕩)⊏˜(∾𝕩)⊐∾need}○((-1+1=𝕩)⊸↑)inputs
   Long Fout pr need _getComp src
 }
 CArg ← {Num↩π⊸=◶Num‿"Math.PI" ⋄ J (¯5⊸↓∾𝕩˙)⌾⊑ FLines "c.bqn"}
