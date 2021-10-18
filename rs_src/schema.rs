@@ -52,7 +52,7 @@ impl Decoder for Cc<Vu> {
 }
 impl Calleable for Cc<Vu> {
     fn call(&self,arity: usize,x: Vn,w: Vn) -> Vs {
-        match &**self {
+        match self.deref() {
             Vu::BlockInst(b) => {
                 assert!(b.typ == 0);
                 let slots =
