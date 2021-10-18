@@ -33,9 +33,9 @@ gen_line(assert,Code,undefined) ->
 gen_line(assert,Code,Comment) ->
     [<<"\tdebug!(\"test: ">>,unicode:characters_to_binary(erlang:binary_to_list(Comment)),<<"\");">>,<<"panic::catch_unwind(|| { run(">>,Code,<<"); }); // ">>,unicode:characters_to_binary(erlang:binary_to_list(Comment)),<<"\n">>];
 gen_line(Expected,Code,undefined) ->
-    [<<"\tassert_eq!(">>,erlang:float_to_binary(Expected,[{decimals, 1}]),<<",run(">>,Code,<<"));\n">>];
+    [<<"\tassert_eq!(">>,erlang:float_to_binary(Expected,[{decimals, 1}]),<<",run(">>,Code,<<").to_f64());\n">>];
 gen_line(Expected,Code,Comment) ->
-    [<<"\tdebug!(\"test: ">>,unicode:characters_to_binary(erlang:binary_to_list(Comment)),<<"\");">>,<<"assert_eq!(">>,erlang:float_to_binary(Expected,[{decimals, 1}]),<<",run(">>,Code,<<")); // ">>,unicode:characters_to_binary(erlang:binary_to_list(Comment)),<<"\n">>].
+    [<<"\tdebug!(\"test: ">>,unicode:characters_to_binary(erlang:binary_to_list(Comment)),<<"\");">>,<<"assert_eq!(">>,erlang:float_to_binary(Expected,[{decimals, 1}]),<<",run(">>,Code,<<").to_f64()); // ">>,unicode:characters_to_binary(erlang:binary_to_list(Comment)),<<"\n">>].
 gen_code([],Accm) ->
     lists:reverse(Accm);
 gen_code(Todo,Accm) ->
@@ -97,7 +97,7 @@ main([Repo]) ->
     io:format("~ts~n",[erlang:iolist_to_binary([
         <<"use log::{debug};\n">>,
         <<"use crate::ebqn::run;\n">>,
-        <<"use crate::schema::{Code,new_scalar,Body,A};\n">>,
+        <<"use crate::schema::{Code,new_scalar,Body,A,Decoder};\n">>,
         <<"pub fn bytecode() {\n">>,ByteCode,<<"\n}\n">>,
         <<"pub fn prim(runtime: A) {\n">>,PrimCode,<<"\n}\n">>
     ])]);
