@@ -18,7 +18,7 @@ Tuple ← "("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native tuple
 Block ← Tuple # Native block
 Body ← Tuple # Native body
 Code ← "Code::new("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native code
-Imm ← "Body::Imm("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native imm fn
+Imm ← "Body::Imm("∾⊢∾")"˙ # Native imm fn
 Defer ← "Body::Defer("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native deferred fn
 Ind ← {∾𝕨‿"["‿𝕩‿"].clone()"}  # Native list/array indexing
 Cat ← {∾𝕨‿".concat("‿𝕩‿")"}   # Native list/array concatenation (like ∾)
