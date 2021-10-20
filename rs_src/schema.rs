@@ -22,7 +22,7 @@ pub enum Vu {
     Scalar(f64),
     BlockInst(BlockInst),
     A(A),
-    Fn(fn() -> ()),
+    Fn(fn(usize,Vn,Vn) -> Vs),
     Tr2(Tr2),
     Tr3(Tr3),
 }
@@ -82,7 +82,7 @@ impl Calleable for Cc<Vu> {
                 vm(&env,&b.def.code,pos,Vec::new())
             },
             Vu::Scalar(_n) => Vs::V(self.clone()),
-            Vu::Fn(_f) => panic!("fn call not impl"),
+            Vu::Fn(f) => f(arity,x,w),
             Vu::Tr2(Tr2(g,h)) => {
                 let r = h.call(arity,x,w);
                 g.call(1,Some(r.to_ref().clone()),None)
