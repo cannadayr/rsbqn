@@ -34,8 +34,9 @@ Str ← "new_string("""∾Esc∾""")"˜     # A BQN string
 Char ← "new_char('"(∾∾⊣○"')")Esc∘⥊   # A BQN character
 F ← {'-'¨⌾((𝕩='¯')⊸/)𝕩} •Repr # Native format
 Scalar ← =⟜⌊˜◶⟨F,".0"∾˜F⟩ # Formats scalar numbers for rust
-FP ← ∞⊸=◶⟨Scalar,"Infinity"⟩       # Format positive number
-Num ← 0⊸≤◶⟨")"∾˜"new_scalar(-"∾(FP∘|),")"∾˜"new_scalar("∾FP⟩
+FP ← ∞⊸=◶⟨")"∾˜"new_scalar("∾Scalar,"Infinity"⟩       # Format positive number
+FN ← ¯∞⊸=◶⟨")"∾˜"new_scalar("∾Scalar,"NegInfinity"⟩       # Format positive number
+Num ← 0⊸≤◶⟨FN,FP⟩
 FBlock ← Block ⟨F,⊑⟜"false"‿"true",=◶⟨Imm F,Defer (List F¨)¨⟩⟩ {𝕎𝕩}¨ ⊢
 
 glyphs ← Import "glyphs.bqn"
