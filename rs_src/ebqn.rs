@@ -28,6 +28,8 @@ fn call2(m: V,f: V,g: V) -> Vs {
             assert_eq!(2,bl.typ);
             bl.call_block(2,vec![Some(m.clone()),Some(f),Some(g)])
         },
+        Vu::R1(f) => panic!("call2 with r1 type"),
+        Vu::R2(f) => panic!("call2 with r2 type"),
         _ => panic!("call2 with invalid type"),
     }
 }
