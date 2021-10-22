@@ -374,3 +374,11 @@ pub fn none_or_clone(vn: &Vn) -> Vh {
         Some(v) => Vh::V(v.clone()),
     }
 }
+pub fn new_char(n: char) -> V {
+    panic!("not implemented");
+    //Cc::new(Vu::Char(n))
+}
+pub fn new_string(n: &str) -> V {
+    panic!("not implemented");
+    //Cc::new(Vu::Str(n))
+}
