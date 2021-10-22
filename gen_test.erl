@@ -106,6 +106,7 @@ main([Repo]) ->
     Prim = suite(Repo,<<"prim.bqn">>),
     io:format("~ts~n",[erlang:iolist_to_binary([
         <<"use log::{debug};\n">>,
+        <<"use std::{panic};\n">>,
         <<"use crate::ebqn::run;\n">>,
         <<"use crate::schema::{Code,new_scalar,Body,A,Decoder};\n">>,
         <<"pub fn bytecode() {\n">>,ByteCode,<<"}\n\n">>,
