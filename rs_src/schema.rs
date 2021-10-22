@@ -89,9 +89,10 @@ impl Calleable for Cc<Vu> {
             },
             Vu::Tr3(Tr3(f,g,h)) => {
                 let r =
-                    match (&x,&w) {
-                        (_,None) => h.call(arity,Some((*x.as_ref().unwrap()).clone()),None),
-                        (_,_) => h.call(arity,Some((*x.as_ref().unwrap()).clone()),Some((*w.as_ref().unwrap()).clone())),
+                    match arity {
+                        1 => h.call(arity,Some((*x.as_ref().unwrap()).clone()),None),
+                        2 => h.call(arity,Some((*x.as_ref().unwrap()).clone()),Some((*w.as_ref().unwrap()).clone())),
+                        _ => panic!("illegal arity"),
                     };
                 let l = f.call(arity,x,w);
                 g.call(2,Some(r.to_ref().clone()),Some(l.to_ref().clone()))
