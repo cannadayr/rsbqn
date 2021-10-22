@@ -32,7 +32,7 @@ Esc←{
 }⍟(0<≠)
 Str ← "str("""∾Esc∾""")"˜     # A BQN string
 Char ← "'"(∾∾⊣)Esc∘⥊          # A BQN character
-F ← •Repr                     # Native format
+F ← {'-'¨⌾((𝕩='¯')⊸/)𝕩} •Repr # Native format
 Scalar ← =⟜⌊˜◶⟨F,".0"∾˜F⟩ # Formats scalar numbers for rust
 FP ← ∞⊸=◶⟨Scalar,"Infinity"⟩       # Format positive number
 Num ← 0⊸≤◶⟨")"∾˜"new_scalar(-"∾(FP∘|),")"∾˜"new_scalar("∾FP⟩
