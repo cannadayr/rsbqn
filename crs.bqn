@@ -33,8 +33,8 @@ Esc←{
 Str ← "new_string("""∾Esc∾""")"˜     # A BQN string
 Char ← "new_char('"(∾∾⊣○"')")Esc∘⥊   # A BQN character
 F ← {'-'¨⌾((𝕩='¯')⊸/)𝕩} •Repr # Native format
-FP ← ∞⊸=◶⟨")"∾˜"new_scalar("∾F,"Infinity"⟩       # Format positive number
-FN ← ¯∞⊸=◶⟨")"∾˜"new_scalar("∾F,"NegInfinity"⟩       # Format positive number
+FP ← ∞⊸=◶⟨")"∾˜"new_scalar("∾F,"new_scalar(INFINITY)"⟩       # Format positive number
+FN ← ¯∞⊸=◶⟨")"∾˜"new_scalar("∾F,"new_scalar(NEG_INFINITY)"⟩       # Format positive number
 Num ← 0⊸≤◶⟨FN,FP⟩
 FBlock ← Block ⟨F,⊑⟜"false"‿"true",=◶⟨Imm F,Defer (List F¨)¨⟩⟩ {𝕎𝕩}¨ ⊢
 
