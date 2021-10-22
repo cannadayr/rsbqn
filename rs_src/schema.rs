@@ -38,6 +38,16 @@ impl Encoder for Vu {
         }
     }
 }
+impl Decoder for i64 {
+    fn to_f64(&self) -> f64 {
+        *self as f64
+    }
+}
+impl Decoder for f64 {
+    fn to_f64(&self) -> f64 {
+        *self
+    }
+}
 impl Decoder for Cc<Vu> {
     fn to_f64(&self) -> f64 {
         match self.deref() {
@@ -355,8 +365,8 @@ pub fn set(d: bool,is: Vs,vs: Vs) -> V {
         _ => panic!("can only set slots"),
     }
 }
-pub fn new_scalar(n: f64) -> V {
-    Cc::new(Vu::Scalar(n as f64))
+pub fn new_scalar<T: Decoder>(n: T) -> V {
+    Cc::new(Vu::Scalar(n.to_f64()))
 }
 pub fn none_or_clone(vn: &Vn) -> Vh {
     match vn {

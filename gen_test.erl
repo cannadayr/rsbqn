@@ -108,7 +108,7 @@ main([Repo]) ->
         <<"use log::{debug};\n">>,
         <<"use std::{panic};\n">>,
         <<"use crate::ebqn::run;\n">>,
-        <<"use crate::schema::{Code,new_scalar,Body,A,Decoder};\n">>,
+        <<"use crate::schema::{Code,new_scalar,new_char,new_string,Body,A,Decoder};\n">>,
         <<"pub fn bytecode() {\n">>,ByteCode,<<"}\n\n">>,
         <<"pub fn prim(runtime: A) {\n">>,Prim,<<"}\n\n">>
         %<<"pub fn simple(runtime: A) {\n">>,Simple,<<"\n}\n">>
