@@ -28,14 +28,16 @@ cmd_receive(Port, Acc) ->
         {Port, eof}          -> {ok, lists:reverse(Acc)}
     end.
 
+utf8(Str) ->
+    unicode:characters_to_binary(erlang:binary_to_list(Str)).
 gen_line(assert,Code,undefined) ->
-    [<<"\tpanic::catch_unwind(|| { run(">>,Code,<<"); });\n">>];
+    [<<"\tpanic::catch_unwind(|| { run(">>,utf8(Code),<<"); });\n">>];
 gen_line(assert,Code,Comment) ->
-    [<<"\tdebug!(\"test: ">>,unicode:characters_to_binary(erlang:binary_to_list(Comment)),<<"\");">>,<<"panic::catch_unwind(|| { run(">>,Code,<<"); }); // ">>,unicode:characters_to_binary(erlang:binary_to_list(Comment)),<<"\n">>];
+    [<<"\tdebug!(\"test: ">>,unicode:characters_to_binary(erlang:binary_to_list(Comment)),<<"\");">>,<<"panic::catch_unwind(|| { run(">>,utf8(Code),<<"); }); // ">>,unicode:characters_to_binary(erlang:binary_to_list(Comment)),<<"\n">>];
 gen_line(Expected,Code,undefined) ->
-    [<<"\tassert_eq!(">>,erlang:float_to_binary(Expected,[{decimals, 1}]),<<",run(">>,Code,<<").to_f64());\n">>];
+    [<<"\tassert_eq!(">>,erlang:float_to_binary(Expected,[{decimals, 1}]),<<",run(">>,utf8(Code),<<").to_f64());\n">>];
 gen_line(Expected,Code,Comment) ->
-    [<<"\tdebug!(\"test: ">>,unicode:characters_to_binary(erlang:binary_to_list(Comment)),<<"\");">>,<<"assert_eq!(">>,erlang:float_to_binary(Expected,[{decimals, 1}]),<<",run(">>,Code,<<").to_f64()); // ">>,unicode:characters_to_binary(erlang:binary_to_list(Comment)),<<"\n">>].
+    [<<"\tdebug!(\"test: ">>,unicode:characters_to_binary(erlang:binary_to_list(Comment)),<<"\");">>,<<"assert_eq!(">>,erlang:float_to_binary(Expected,[{decimals, 1}]),<<",run(">>,utf8(Code),<<").to_f64()); // ">>,unicode:characters_to_binary(erlang:binary_to_list(Comment)),<<"\n">>].
 gen_code([],Accm) ->
     lists:reverse(Accm);
 gen_code(Todo,Accm) ->
@@ -100,14 +102,15 @@ suite(Repo,Name) ->
     gen_code(Tests,[]).
 main([Repo]) ->
     ByteCode = suite(Repo,<<"bytecode.bqn">>),
-    Simple = suite(Repo,<<"simple.bqn">>),
+    %Simple = suite(Repo,<<"simple.bqn">>),
+    Prim = suite(Repo,<<"prim.bqn">>),
     io:format("~ts~n",[erlang:iolist_to_binary([
         <<"use log::{debug};\n">>,
         <<"use crate::ebqn::run;\n">>,
         <<"use crate::schema::{Code,new_scalar,Body,A,Decoder};\n">>,
-        <<"pub fn bytecode() {\n">>,ByteCode,<<"\n}\n">>,
-        <<"pub fn simple(runtime: A) {\n">>,Simple,<<"\n}\n">>
-        %<<"pub fn prim(runtime: A) {\n">>,Prim,<<"\n}\n">>
+        <<"pub fn bytecode() {\n">>,ByteCode,<<"}\n\n">>,
+        <<"pub fn prim(runtime: A) {\n">>,Prim,<<"}\n\n">>
+        %<<"pub fn simple(runtime: A) {\n">>,Simple,<<"\n}\n">>
     ])]);
 main(_Args) ->
     io:format("bad arguments~n"),
