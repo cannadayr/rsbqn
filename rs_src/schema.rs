@@ -108,7 +108,10 @@ impl Calleable for Cc<Vu> {
             Vu::R1(_f) => panic!("can't call r1"),
             Vu::R2(_f) => panic!("can't call r2"),
             Vu::D1(_m,_f) => panic!("can't call d1"),
-            Vu::D2(_m,_f,_g) => panic!("can't call d2"),
+            Vu::D2(m,f,g) => match m.deref() {
+                Vu::R2(r2) => r2(arity,Some(f.clone()),Some(g.clone()),x,w),
+                _ => panic!("can't call non-r2 value"),
+            },
             Vu::Tr2(Tr2(g,h)) => {
                 let r = h.call(arity,x,w);
                 g.call(1,Some(r.to_ref().clone()),None)
