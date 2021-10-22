@@ -30,8 +30,8 @@ Esc←{
   𝕩 ↩ i ⊏⟜out⌾((i<≠out)⊸/) 𝕩  # Replace
   ∾(i<≠in) /⟜"\"⊸∾¨ 𝕩         # Insert \
 }⍟(0<≠)
-Str ← "str("""∾Esc∾""")"˜     # A BQN string
-Char ← "'"(∾∾⊣)Esc∘⥊          # A BQN character
+Str ← "new_string("""∾Esc∾""")"˜     # A BQN string
+Char ← "new_char('"(∾∾⊣○"')")Esc∘⥊   # A BQN character
 F ← {'-'¨⌾((𝕩='¯')⊸/)𝕩} •Repr # Native format
 Scalar ← =⟜⌊˜◶⟨F,".0"∾˜F⟩ # Formats scalar numbers for rust
 FP ← ∞⊸=◶⟨Scalar,"Infinity"⟩       # Format positive number
