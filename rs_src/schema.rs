@@ -25,6 +25,8 @@ pub enum Vu {
     Fn(fn(usize,Vn,Vn) -> Vs),       // X, W
     R1(fn(usize,Vn,Vn,Vn) -> Vs),    // F, X, W
     R2(fn(usize,Vn,Vn,Vn,Vn) -> Vs), // F, G, X, W
+    D1(V,V),                         // M, F
+    D2(V,V,V),                       // M, F, G
     Tr2(Tr2),
     Tr3(Tr3),
 }
@@ -35,8 +37,10 @@ impl Encoder for Vu {
             Vu::BlockInst(_b) => panic!("can't encode blockinst to BEAM"),
             Vu::A(_a) => panic!("can't encode array to BEAM"),
             Vu::Fn(_a) => panic!("can't encode fn to BEAM"),
-            Vu::R1(_a) => panic!("can't encode r1 to BEAM"),
-            Vu::R2(_a) => panic!("can't encode r2 to BEAM"),
+            Vu::R1(_f) => panic!("can't encode r1 to BEAM"),
+            Vu::R2(_f) => panic!("can't encode r2 to BEAM"),
+            Vu::D1(_m,_f) => panic!("can't encode d1 to BEAM"),
+            Vu::D2(_m,_f,_g) => panic!("can't encode d2 to BEAM"),
             Vu::Tr2(_tr2) => panic!("can't encode train2 to BEAM"),
             Vu::Tr3(_tr3) => panic!("can't encode train3 to BEAM"),
         }
@@ -59,8 +63,10 @@ impl Decoder for Cc<Vu> {
             Vu::BlockInst(_b) => panic!("can't decode blockinst to RUST"),
             Vu::A(_a) => panic!("can't decode array to RUST"),
             Vu::Fn(_a) => panic!("can't decode fn to RUST"),
-            Vu::R1(_a) => panic!("can't decode r1 to RUST"),
-            Vu::R2(_a) => panic!("can't decode r2 to RUST"),
+            Vu::R1(_f) => panic!("can't decode r1 to RUST"),
+            Vu::R2(_f) => panic!("can't decode r2 to RUST"),
+            Vu::D1(_m,_f) => panic!("can't decode d1 to BEAM"),
+            Vu::D2(_m,_f,_g) => panic!("can't decode d2 to BEAM"),
             Vu::Tr2(_tr2) => panic!("can't decode train2 to RUST"),
             Vu::Tr3(_tr3) => panic!("can't decode train3 to RUST"),
         }
@@ -99,8 +105,10 @@ impl Calleable for Cc<Vu> {
             },
             Vu::Scalar(_n) => Vs::V(self.clone()),
             Vu::Fn(f) => f(arity,x,w),
-            Vu::R1(_a) => panic!("can't call r1"),
-            Vu::R2(_a) => panic!("can't call r2"),
+            Vu::R1(_f) => panic!("can't call r1"),
+            Vu::R2(_f) => panic!("can't call r2"),
+            Vu::D1(_m,_f) => panic!("can't call d1"),
+            Vu::D2(_m,_f,_g) => panic!("can't call d2"),
             Vu::Tr2(Tr2(g,h)) => {
                 let r = h.call(arity,x,w);
                 g.call(1,Some(r.to_ref().clone()),None)
