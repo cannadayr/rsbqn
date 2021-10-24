@@ -30,6 +30,14 @@ pub enum V {
     Tr2(Cc<Tr2>),
     Tr3(Cc<Tr3>),
 }
+impl V {
+    pub fn to_array(&self) -> &A {
+        match self {
+            V::A(a) => a,
+            _ => panic!("can't convert to array"),
+        }
+    }
+}
 impl Encoder for V {
     fn encode<'a>(&self, env: rustler::Env<'a>) -> rustler::Term<'a> {
         match self {

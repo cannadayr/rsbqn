@@ -1,5 +1,6 @@
 use crate::schema::{Env,V,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Body,A,Ar,Tr2,Tr3,set,ok,D2};
 use crate::prim::{provide};
+use crate::code::{r0};
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
 use cc_mt::Cc;
@@ -201,8 +202,8 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
 #[rustler::nif]
 fn tests() -> NifResult<Atom> {
     bytecode();
-    let provide = provide();
-    prim(provide);
+    let builtin = provide();
+    prim(r0(builtin).to_array());
     Ok(ok())
 }
 

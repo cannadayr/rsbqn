@@ -111,7 +111,7 @@ main([Repo]) ->
         <<"use crate::ebqn::{run,assert_panic};\n">>,
         <<"use crate::schema::{Code,new_scalar,new_char,new_string,Body,A,Decoder};\n">>,
         <<"pub fn bytecode() {\n">>,ByteCode,<<"}\n\n">>,
-        <<"pub fn prim(runtime: A) {\n">>,Prim,<<"}\n\n">>
+        <<"pub fn prim(runtime: &A) {\n">>,Prim,<<"}\n\n">>
         %<<"pub fn simple(runtime: A) {\n">>,Simple,<<"\n}\n">>
     ])]);
 main(_Args) ->
