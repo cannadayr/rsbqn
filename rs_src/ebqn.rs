@@ -79,20 +79,20 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
     loop {
         let op = code.bc[pos];pos+=1;
         match op {
-            0 => {
+            0 => { // PUSH
                 let x = code.bc[pos];pos+=1;
                 let r = code.objs[x].clone();
                 stack.push(Vs::V(r))
             },
-            1 => {
+            1 => { // DFND
                 let x = code.bc[pos];pos+=1;
                 let r = derv(env.clone(),&code,&code.blocks[x]);
                 stack.push(r);
             },
-            6 => {
+            6 => { // POPS
                 let _ = stack.pop();
             },
-            7 => {
+            7 => { // RETN
                 break match stack.len() {
                     1 => {
                         stack.pop().unwrap()
@@ -102,82 +102,82 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                     }
                 };
             },
-            11 => {
+            11 => { // ARRO
                 let x = code.bc[pos];pos+=1;
                 let hd = stack.len() - x;
                 let tl = stack.split_off(hd);
                 stack.push(list(tl));
             },
-            12 => {
+            12 => { // ARRM
                 let x = code.bc[pos];pos+=1;
                 let hd = stack.len() - x;
                 let tl = stack.split_off(hd);
                 stack.push(listr(tl));
             },
-            16 => {
+            16|18 => { // FN1C|FN10
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
                 let r = call(1,Some(f.to_ref().clone()),Some(x.to_ref().clone()),None);
                 stack.push(r);
             },
-            17 => {
+            17|19 => { // FN2C|FN20
                 let w = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
                 let r = call(2,Some(f.to_ref().clone()),Some(x.to_ref().clone()),Some(w.to_ref().clone()));
                 stack.push(r);
             },
-            20 => {
+            20 => { // TR2D
                 let g = stack.pop().unwrap();
                 let h = stack.pop().unwrap();
                 let t = Vs::V(V::Tr2(Cc::new(Tr2::new(g,h))));
                 stack.push(t);
             },
-            21 => {
+            21 => { // TR3D
                 let f = stack.pop().unwrap();
                 let g = stack.pop().unwrap();
                 let h = stack.pop().unwrap();
                 let t = Vs::V(V::Tr3(Cc::new(Tr3::new(f,g,h))));
                 stack.push(t);
             },
-            26 => {
+            26 => { // MD1C
                 let f = stack.pop().unwrap();
                 let m = stack.pop().unwrap();
                 let r = call1(m.to_ref().clone(),f.to_ref().clone());
                 stack.push(r);
             },
-            27 => {
+            27 => { // MD2C
                 let f = stack.pop().unwrap();
                 let m = stack.pop().unwrap();
                 let g = stack.pop().unwrap();
                 let r = call2(m.to_ref().clone(),f.to_ref().clone(),g.to_ref().clone());
                 stack.push(r);
             },
-            32|34 => {
+            32|34 => { // VARO|VARU
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
                 let t = env.ge(x);
                 stack.push(Vs::V(t.get(w)))
             },
-            33 => {
+            33 => { // VARM
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
                 let t = env.ge(x);
                 stack.push(Vs::Slot(t,w))
             },
-            48 => {
+            48 => { // SETN
                 let i = stack.pop().unwrap();
                 let v = stack.pop().unwrap();
                 let r = set(true,i,v);
                 stack.push(Vs::V(r));
             },
-            49 => {
+            49 => { // SETU
                 let i = stack.pop().unwrap();
                 let v = stack.pop().unwrap();
                 let r = set(false,i,v);
                 stack.push(Vs::V(r));
             },
-            50 => {
+            50 => { // SETM
                 let i = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
@@ -185,7 +185,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let r = set(false,i,v);
                 stack.push(Vs::V(r));
             },
-            51 => {
+            51 => { // SETC
                 let i = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
                 let v = call(1,Some(f.to_ref().clone()),Some(i.get()),None);
