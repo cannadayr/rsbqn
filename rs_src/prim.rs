@@ -1,4 +1,5 @@
 use crate::schema::{A,V,Vn,Vs,Decoder};
+use crate::ebqn::{call};
 use cc_mt::Cc;
 
 /*
@@ -106,8 +107,12 @@ fn fill_by(_arity: usize, _f: Vn, _g: Vn, _x: Vn, _w: Vn) -> Vs {
     panic!("fill_by not implemented");
 }
 // ⊘
-fn cases(_arity: usize, _f: Vn, _g: Vn, _x: Vn, _w: Vn) -> Vs {
-    panic!("cases not implemented");
+fn cases(arity: usize, f: Vn, g: Vn, x: Vn, w: Vn) -> Vs {
+    match arity {
+        1 => call(arity,f,x,None),
+        2 => call(arity,g,x,w),
+        _ => panic!("illegal cases arity"),
+    }
 }
 // ⎊
 fn catches(_arity: usize, _f: Vn, _g: Vn, _x: Vn, _w: Vn) -> Vs {

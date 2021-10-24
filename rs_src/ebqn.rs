@@ -9,7 +9,7 @@ use std::ops::Deref;
 //use std::panic;
 //use log::{debug, trace, error, log_enabled, info, Level};
 
-fn call(arity: usize,a: Vn,x: Vn, w: Vn) -> Vs {
+pub fn call(arity: usize,a: Vn,x: Vn, w: Vn) -> Vs {
     match a {
         Some(v) => v.call(arity,x,w),
         _ => panic!("unimplemented call"),
