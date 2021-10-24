@@ -51,8 +51,12 @@ fn plus(_arity: usize, _x: Vn, _w: Vn) -> Vs {
     panic!("plus not implemented");
 }
 // -
-fn minus(_arity: usize, _x: Vn, _w: Vn) -> Vs {
-    panic!("minus not implemented");
+fn minus(arity: usize, x: Vn, w: Vn) -> Vs {
+    match arity {
+        1 => Vs::V(V::Scalar(-1.0 * x.unwrap().to_f64())),
+        2 => Vs::V(V::Scalar(w.unwrap().to_f64() - x.unwrap().to_f64())),
+        _ => panic!("illegal minus arity"),
+    }
 }
 // ×
 fn times(_arity: usize, _x: Vn, _w: Vn) -> Vs {
