@@ -1,9 +1,10 @@
-use crate::schema::{Env,V,Vu,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Body,A,Ar,Tr2,Tr3,set,ok};
+use crate::schema::{Env,V,Vu,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Body,A,Ar,Tr2,Tr3,set,ok,D2};
 use crate::prim::{provide};
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
 use cc_mt::Cc;
 use crate::test::{bytecode,prim};
+use std::ops::Deref;
 //use std::panic;
 //use log::{debug, trace, error, log_enabled, info, Level};
 
@@ -14,21 +15,21 @@ fn call(arity: usize,a: Vn,x: Vn, w: Vn) -> Vs {
     }
 }
 fn call1(m: V,f: V) -> Vs {
-    match &*m {
-        Vu::BlockInst(bl) => {
-            assert_eq!(1,bl.typ);
+    match m {
+        Vu::BlockInst(ref bl) => {
+            assert_eq!(1,bl.deref().typ);
             bl.call_block(1,vec![Some(m.clone()),Some(f)])
         },
         _ => panic!("call1 with invalid type"),
     }
 }
 fn call2(m: V,f: V,g: V) -> Vs {
-    match &*m {
-        Vu::BlockInst(bl) => {
+    match m {
+        Vu::BlockInst(ref bl) => {
             assert_eq!(2,bl.typ);
             bl.call_block(2,vec![Some(m.clone()),Some(f),Some(g)])
         },
-        Vu::R2(_) => Vs::V(Cc::new(Vu::D2(m,f,g))),
+        Vu::R2(_) => Vs::V(Vu::D2(Cc::new(D2::new(m,f,g)))),
         _ => panic!("call2 with invalid type"),
     }
 }
@@ -48,21 +49,21 @@ fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>) -> Vs {
         },
         (typ,_) => {
             let block_inst = BlockInst::new(env.clone(),typ,(*block).clone(),None);
-            let r = Vs::V(Cc::new(Vu::BlockInst(block_inst)));
+            let r = Vs::V(Vu::BlockInst(Cc::new(block_inst)));
             r
         },
     }
 }
 
 fn list(l: Vec<Vs>) -> Vs {
-    let shape = vec![Cc::new(Vu::Scalar(l.len() as f64))];
+    let shape = vec![l.len() as usize];
     let ravel = l.into_iter().map(|e|
         match e {
             Vs::V(v) => v,
             _ => panic!("illegal slot passed to list"),
         }
     ).collect::<Vec<V>>();
-    Vs::V(Cc::new(Vu::A(A::new(ravel,shape))))
+    Vs::V(Vu::A(Cc::new(A::new(ravel,shape))))
 }
 fn listr(l: Vec<Vs>) -> Vs {
     let ravel = l.into_iter().map(|e|
@@ -128,14 +129,14 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
             20 => {
                 let g = stack.pop().unwrap();
                 let h = stack.pop().unwrap();
-                let t = Vs::V(Cc::new(Vu::Tr2(Tr2::new(g,h))));
+                let t = Vs::V(Vu::Tr2(Cc::new(Tr2::new(g,h))));
                 stack.push(t);
             },
             21 => {
                 let f = stack.pop().unwrap();
                 let g = stack.pop().unwrap();
                 let h = stack.pop().unwrap();
-                let t = Vs::V(Cc::new(Vu::Tr3(Tr3::new(f,g,h))));
+                let t = Vs::V(Vu::Tr3(Cc::new(Tr3::new(f,g,h))));
                 stack.push(t);
             },
             26 => {
