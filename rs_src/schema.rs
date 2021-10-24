@@ -18,7 +18,7 @@ pub trait Decoder {
 
 // Value (unboxed)
 #[derive(Debug,Clone)]
-pub enum Vu {
+pub enum V {
     Scalar(f64),
     BlockInst(Cc<BlockInst>),
     A(Cc<A>),
@@ -30,19 +30,19 @@ pub enum Vu {
     Tr2(Cc<Tr2>),
     Tr3(Cc<Tr3>),
 }
-impl Encoder for Vu {
+impl Encoder for V {
     fn encode<'a>(&self, env: rustler::Env<'a>) -> rustler::Term<'a> {
         match self {
-            Vu::Scalar(n) => n.encode(env),
-            Vu::BlockInst(_b) => panic!("can't encode blockinst to BEAM"),
-            Vu::A(_a) => panic!("can't encode array to BEAM"),
-            Vu::Fn(_a) => panic!("can't encode fn to BEAM"),
-            Vu::R1(_f) => panic!("can't encode r1 to BEAM"),
-            Vu::R2(_f) => panic!("can't encode r2 to BEAM"),
-            Vu::D1(_d1) => panic!("can't encode d1 to BEAM"),
-            Vu::D2(_d2) => panic!("can't encode d2 to BEAM"),
-            Vu::Tr2(_tr2) => panic!("can't encode train2 to BEAM"),
-            Vu::Tr3(_tr3) => panic!("can't encode train3 to BEAM"),
+            V::Scalar(n) => n.encode(env),
+            V::BlockInst(_b) => panic!("can't encode blockinst to BEAM"),
+            V::A(_a) => panic!("can't encode array to BEAM"),
+            V::Fn(_a) => panic!("can't encode fn to BEAM"),
+            V::R1(_f) => panic!("can't encode r1 to BEAM"),
+            V::R2(_f) => panic!("can't encode r2 to BEAM"),
+            V::D1(_d1) => panic!("can't encode d1 to BEAM"),
+            V::D2(_d2) => panic!("can't encode d2 to BEAM"),
+            V::Tr2(_tr2) => panic!("can't encode train2 to BEAM"),
+            V::Tr3(_tr3) => panic!("can't encode train3 to BEAM"),
         }
     }
 }
@@ -56,26 +56,26 @@ impl Decoder for f64 {
         *self
     }
 }
-impl Decoder for Vu {
+impl Decoder for V {
     fn to_f64(&self) -> f64 {
         match self.deref() {
-            Vu::Scalar(n) => *n,
-            Vu::BlockInst(_b) => panic!("can't decode blockinst to RUST"),
-            Vu::A(_a) => panic!("can't decode array to RUST"),
-            Vu::Fn(_a) => panic!("can't decode fn to RUST"),
-            Vu::R1(_f) => panic!("can't decode r1 to RUST"),
-            Vu::R2(_f) => panic!("can't decode r2 to RUST"),
-            Vu::D1(_d1) => panic!("can't decode d1 to BEAM"),
-            Vu::D2(_d2) => panic!("can't decode d2 to BEAM"),
-            Vu::Tr2(_tr2) => panic!("can't decode train2 to RUST"),
-            Vu::Tr3(_tr3) => panic!("can't decode train3 to RUST"),
+            V::Scalar(n) => *n,
+            V::BlockInst(_b) => panic!("can't decode blockinst to RUST"),
+            V::A(_a) => panic!("can't decode array to RUST"),
+            V::Fn(_a) => panic!("can't decode fn to RUST"),
+            V::R1(_f) => panic!("can't decode r1 to RUST"),
+            V::R2(_f) => panic!("can't decode r2 to RUST"),
+            V::D1(_d1) => panic!("can't decode d1 to BEAM"),
+            V::D2(_d2) => panic!("can't decode d2 to BEAM"),
+            V::Tr2(_tr2) => panic!("can't decode train2 to RUST"),
+            V::Tr3(_tr3) => panic!("can't decode train3 to RUST"),
         }
     }
 }
-impl Calleable for Vu {
+impl Calleable for V {
     fn call(&self,arity: usize,x: Vn,w: Vn) -> Vs {
         match self.deref() {
-            Vu::BlockInst(b) => {
+            V::BlockInst(b) => {
                 assert!(b.typ == 0);
                 let slots =
                     match &b.args {
@@ -103,24 +103,24 @@ impl Calleable for Vu {
                     };
                 vm(&env,&b.def.code,pos,Vec::new())
             },
-            Vu::Scalar(_n) => Vs::V(self.clone()),
-            Vu::Fn(f) => f(arity,x,w),
-            Vu::R1(_f) => panic!("can't call r1"),
-            Vu::R2(_f) => panic!("can't call r2"),
-            Vu::D1(_d1) => panic!("can't call d1"),
-            Vu::D2(d2) => {
+            V::Scalar(_n) => Vs::V(self.clone()),
+            V::Fn(f) => f(arity,x,w),
+            V::R1(_f) => panic!("can't call r1"),
+            V::R2(_f) => panic!("can't call r2"),
+            V::D1(_d1) => panic!("can't call d1"),
+            V::D2(d2) => {
                 let D2(m,f,g) = d2.deref();
                 match m {
-                    Vu::R2(r2) => r2(arity,Some(f.clone()),Some(g.clone()),x,w),
+                    V::R2(r2) => r2(arity,Some(f.clone()),Some(g.clone()),x,w),
                     _ => panic!("can only call raw2 mods in derv2"),
                 }
             },
-            Vu::Tr2(tr) => {
+            V::Tr2(tr) => {
                 let Tr2(g,h) = tr.deref();
                 let r = h.call(arity,x,w);
                 g.call(1,Some(r.to_ref().clone()),None)
             },
-            Vu::Tr3(tr) => {
+            V::Tr3(tr) => {
                 let Tr3(f,g,h) = tr.deref();
                 let r =
                     match arity {
@@ -131,16 +131,13 @@ impl Calleable for Vu {
                 let l = f.call(arity,x,w);
                 g.call(2,Some(r.to_ref().clone()),Some(l.to_ref().clone()))
             },
-            Vu::A(_) => Vs::V(self.clone()),
+            V::A(_) => Vs::V(self.clone()),
         }
     }
 }
 
-// Value
-pub type V = Vu;
-
 // Value (Optional)
-pub type Vn = Option<Vu>;
+pub type Vn = Option<V>;
 
 // Value (boxed on the stack)
 #[derive(Debug,Clone)]
@@ -163,7 +160,7 @@ impl Vs {
                 let shape = vec![a.r.len() as usize];
                 let ravel =
                     a.r.iter().map(|e| match e { Vr::Slot(env,id) => env.get(*id), }).collect::<Vec<V>>();
-                Vu::A(Cc::new(A::new(ravel,shape)))
+                V::A(Cc::new(A::new(ravel,shape)))
             },
             _ => panic!("can only resolve slots or ref arrays"),
         }
@@ -312,7 +309,7 @@ impl BlockInst {
     pub fn call_block(&self,arity:usize,args: Vec<Vn>) -> Vs {
         match self.def.imm {
             false => {
-                Vs::V(Vu::BlockInst(Cc::new(BlockInst::new(self.parent.clone(),0,self.def.clone(),Some(args)))))
+                Vs::V(V::BlockInst(Cc::new(BlockInst::new(self.parent.clone(),0,self.def.clone(),Some(args)))))
             },
             true => {
                 let pos = match self.def.body {
@@ -384,7 +381,7 @@ pub fn set(d: bool,is: Vs,vs: Vs) -> V {
         (Vs::Ar(a),Vs::V(v)) => {
             let arr =
                 match &v {
-                    Vu::A(arr) => arr.clone(),
+                    V::A(arr) => arr.clone(),
                     _ => panic!("can only set array of refs if value is an array"),
                 };
             a.r.into_iter().enumerate().for_each(|(i,e)|
@@ -400,7 +397,7 @@ pub fn set(d: bool,is: Vs,vs: Vs) -> V {
     }
 }
 pub fn new_scalar<T: Decoder>(n: T) -> V {
-    Vu::Scalar(n.to_f64())
+    V::Scalar(n.to_f64())
 }
 pub fn none_or_clone(vn: &Vn) -> Vh {
     match vn {
@@ -410,9 +407,9 @@ pub fn none_or_clone(vn: &Vn) -> Vh {
 }
 pub fn new_char(n: char) -> V {
     panic!("not implemented");
-    //Cc::new(Vu::Char(n))
+    //Cc::new(V::Char(n))
 }
 pub fn new_string(n: &str) -> V {
     panic!("not implemented");
-    //Cc::new(Vu::Str(n))
+    //Cc::new(V::Str(n))
 }

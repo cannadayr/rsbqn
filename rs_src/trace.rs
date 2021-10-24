@@ -1,13 +1,13 @@
 use cc_mt::{Trace, Tracer, /*collect_cycles*/};
-use crate::schema::{Vu,Code,Block,EnvUnboxed,Tr2,Tr3,D1,D2,BlockInst,A};
+use crate::schema::{V,Code,Block,EnvUnboxed,Tr2,Tr3,D1,D2,BlockInst,A};
 
-impl Trace for Vu {
+impl Trace for V {
     fn trace(&self, _tracer: &mut Tracer) {
         panic!("clearing V");
     }
 }
 
-impl Trace for &Vu {
+impl Trace for &V {
     fn trace(&self, _tracer: &mut Tracer) {
         panic!("clearing &V");
     }

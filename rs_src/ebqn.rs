@@ -1,4 +1,4 @@
-use crate::schema::{Env,V,Vu,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Body,A,Ar,Tr2,Tr3,set,ok,D2};
+use crate::schema::{Env,V,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Body,A,Ar,Tr2,Tr3,set,ok,D2};
 use crate::prim::{provide};
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
@@ -16,7 +16,7 @@ fn call(arity: usize,a: Vn,x: Vn, w: Vn) -> Vs {
 }
 fn call1(m: V,f: V) -> Vs {
     match m {
-        Vu::BlockInst(ref bl) => {
+        V::BlockInst(ref bl) => {
             assert_eq!(1,bl.deref().typ);
             bl.call_block(1,vec![Some(m.clone()),Some(f)])
         },
@@ -25,11 +25,11 @@ fn call1(m: V,f: V) -> Vs {
 }
 fn call2(m: V,f: V,g: V) -> Vs {
     match m {
-        Vu::BlockInst(ref bl) => {
+        V::BlockInst(ref bl) => {
             assert_eq!(2,bl.typ);
             bl.call_block(2,vec![Some(m.clone()),Some(f),Some(g)])
         },
-        Vu::R2(_) => Vs::V(Vu::D2(Cc::new(D2::new(m,f,g)))),
+        V::R2(_) => Vs::V(V::D2(Cc::new(D2::new(m,f,g)))),
         _ => panic!("call2 with invalid type"),
     }
 }
@@ -49,7 +49,7 @@ fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>) -> Vs {
         },
         (typ,_) => {
             let block_inst = BlockInst::new(env.clone(),typ,(*block).clone(),None);
-            let r = Vs::V(Vu::BlockInst(Cc::new(block_inst)));
+            let r = Vs::V(V::BlockInst(Cc::new(block_inst)));
             r
         },
     }
@@ -63,7 +63,7 @@ fn list(l: Vec<Vs>) -> Vs {
             _ => panic!("illegal slot passed to list"),
         }
     ).collect::<Vec<V>>();
-    Vs::V(Vu::A(Cc::new(A::new(ravel,shape))))
+    Vs::V(V::A(Cc::new(A::new(ravel,shape))))
 }
 fn listr(l: Vec<Vs>) -> Vs {
     let ravel = l.into_iter().map(|e|
@@ -129,14 +129,14 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
             20 => {
                 let g = stack.pop().unwrap();
                 let h = stack.pop().unwrap();
-                let t = Vs::V(Vu::Tr2(Cc::new(Tr2::new(g,h))));
+                let t = Vs::V(V::Tr2(Cc::new(Tr2::new(g,h))));
                 stack.push(t);
             },
             21 => {
                 let f = stack.pop().unwrap();
                 let g = stack.pop().unwrap();
                 let h = stack.pop().unwrap();
-                let t = Vs::V(Vu::Tr3(Cc::new(Tr3::new(f,g,h))));
+                let t = Vs::V(V::Tr3(Cc::new(Tr3::new(f,g,h))));
                 stack.push(t);
             },
             26 => {
@@ -222,7 +222,7 @@ pub fn assert_panic(code: Cc<Code>) {
 }
 
 #[rustler::nif]
-fn init_st() -> NifResult<(Atom,ResourceArc<Env>,Vu)> {
+fn init_st() -> NifResult<(Atom,ResourceArc<Env>,V)> {
     //let code = Code::new(vec![0,0,7],vec![new_scalar(5.0)],vec![(0,true,new_body(Body::Imm(0)))],vec![(0,0)]);
     //let root = Env::new(None,&code.blocks[0],None);
     panic!("cant init anything");
