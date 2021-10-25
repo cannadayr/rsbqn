@@ -17,7 +17,7 @@ pub trait Decoder {
 }
 
 // Value (unboxed)
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,PartialEq)]
 pub enum V {
     Scalar(f64),
     BlockInst(Cc<BlockInst>),
@@ -189,14 +189,14 @@ pub enum Vr {
     Slot(Env,usize),
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,PartialEq)]
 pub enum Body {
     Imm(usize),
     Defer(Vec<usize>,Vec<usize>),
 }
 
 // Code
-#[derive(Default,Debug)]
+#[derive(Default,Debug,PartialEq)]
 pub struct Code {
     pub bc:    Vec<usize>,
     pub objs:  Vec<V>,
@@ -221,7 +221,7 @@ impl Code {
 }
 
 // Block
-#[derive(Debug)]
+#[derive(Debug,PartialEq)]
 pub struct Block {
     pub typ:u8, pub imm:bool, pub body: Body,
     pub code:LateInit<Cc<Code>>,
@@ -334,8 +334,13 @@ impl BlockInst {
         }
     }
 }
+impl PartialEq for BlockInst {
+    fn eq(&self, other: &Self) -> bool {
+        panic!("can't compare BlockInst for equality")
+    }
+}
 
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,PartialEq)]
 pub struct A {
     pub r: Vec<V>,
     pub sh: Vec<usize>,
@@ -357,24 +362,24 @@ impl Ar {
     }
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,PartialEq)]
 pub struct D1(V,V);
 
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,PartialEq)]
 pub struct D2(V,V,V);
 impl D2 {
     pub fn new(m: V, g: V,h: V) -> Self {
         Self(m,g,h)
     }
 }
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,PartialEq)]
 pub struct Tr2(V,V);
 impl Tr2 {
     pub fn new(g: Vs,h: Vs) -> Self {
         Self(g.to_ref().clone(),h.to_ref().clone())
     }
 }
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,PartialEq)]
 pub struct Tr3(V,V,V);
 impl Tr3 {
     pub fn new(f: Vs,g: Vs,h: Vs) -> Self {

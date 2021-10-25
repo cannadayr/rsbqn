@@ -2,7 +2,7 @@ use once_cell::sync::OnceCell;
 
 // https://docs.rs/once_cell/1.8.0/once_cell/#lateinit
 // https://github.com/rust-lang/rfcs/pull/2788
-#[derive(Debug)]
+#[derive(Debug,PartialEq)]
 pub struct LateInit<T> {
     cell: OnceCell<T>,
 }
