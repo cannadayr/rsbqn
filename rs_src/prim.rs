@@ -23,8 +23,14 @@ fn noop2(_arity: usize, _f: Vn, _g: Vn, _x: Vn, _w: Vn) -> Vs {
 */
 
 // Type
-fn typ(_arity: usize, _x: Vn, _w: Vn) -> Vs {
-    panic!("typ not implemented");
+fn typ(arity: usize, x: Vn, _w: Vn) -> Vs {
+    match arity {
+        1 => match x.unwrap() {
+            V::Scalar(n) => Vs::V(V::Scalar(1.0)),
+            _ => panic!("no matching value for typ"),
+        },
+        _ => panic!("typ not implemented"),
+    }
 }
 // Fill
 fn fill(_arity: usize, _x: Vn, _w: Vn) -> Vs {
@@ -79,8 +85,18 @@ fn equals(_arity: usize, _x: Vn, _w: Vn) -> Vs {
     panic!("equals not implemented");
 }
 // ≤
-fn lesseq(_arity: usize, _x: Vn, _w: Vn) -> Vs {
-    panic!("lesseq not implemented");
+fn lesseq(arity: usize, x: Vn, w: Vn) -> Vs {
+    match arity {
+        2 => {
+            let t = typ(1,x,None);
+            let s = typ(1,w,None);
+            match t.to_ref() == s.to_ref() {
+                true => Vs::V(V::Scalar((s.to_ref().to_f64() <= t.to_ref().to_f64()) as i64 as f64)),
+                _ => panic!("lesseq match arm false"),
+            }
+        },
+        _ => panic!("illegal lesseq arity"),
+    }
 }
 // ≢
 fn shape(_arity: usize, _x: Vn, _w: Vn) -> Vs {
