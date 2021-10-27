@@ -65,8 +65,12 @@ fn minus(arity: usize, x: Vn, w: Vn) -> Vs {
     }
 }
 // ×
-fn times(_arity: usize, _x: Vn, _w: Vn) -> Vs {
-    panic!("times not implemented");
+fn times(arity: usize, x: Vn, w: Vn) -> Vs {
+    match arity {
+        1 => Vs::V(V::Scalar(x.unwrap().to_f64().signum())),
+        2 => Vs::V(V::Scalar(w.unwrap().to_f64() * x.unwrap().to_f64())),
+        _ => panic!("illegal times arity"),
+    }
 }
 // ÷
 fn divide(_arity: usize, _x: Vn, _w: Vn) -> Vs {
