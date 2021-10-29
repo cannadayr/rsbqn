@@ -87,45 +87,17 @@ impl Calleable for V {
     fn call(&self,arity:usize,x: Vn,w: Vn) -> Vs {
         match self.deref() {
             V::DervBlockInst(b,mods) => {
-                let mut args =
-                    match arity {
-                        1|2 => vec![Vh::V(self.clone()),none_or_clone(&x),none_or_clone(&w)],
-                        _ => panic!("illegal slot arity"),
-                    };
-                let mut a = mods.iter().map(|b| Vh::V(b.as_ref().unwrap().clone())).collect::<Vec<Vh>>();
-                args.append(&mut a);
+                let mut args = vec![Vh::V(self.clone()),none_or_clone(&x),none_or_clone(&w)];
+                let mut m = mods.iter().map(|b| Vh::V(b.as_ref().unwrap().clone())).collect::<Vec<Vh>>();
+                args.append(&mut m);
                 let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args));
-                let (pos,_locals) =
-                    match &b.def.body {
-                        Body::Imm(body) => b.def.code.bodies[*body],
-                        Body::Defer(mon,dya) => {
-                            match arity {
-                                1 => b.def.code.bodies[mon[0]],
-                                2 => b.def.code.bodies[dya[0]],
-                                _ => panic!("bad call arity"),
-                            }
-                        },
-                    };
+                let pos = body_pos(b,arity);
                 vm(&env,&b.def.code,pos,Vec::new())
             },
             V::BlockInst(b) => {
-                let args =
-                    match arity {
-                        1|2 => vec![Vh::V(self.clone()),none_or_clone(&x),none_or_clone(&w)],
-                        _ => panic!("illegal slot arity"),
-                    };
+                let mut args = vec![Vh::V(self.clone()),none_or_clone(&x),none_or_clone(&w)];
                 let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args));
-                let (pos,_locals) =
-                    match &b.def.body {
-                        Body::Imm(body) => b.def.code.bodies[*body],
-                        Body::Defer(mon,dya) => {
-                            match arity {
-                                1 => b.def.code.bodies[mon[0]],
-                                2 => b.def.code.bodies[dya[0]],
-                                _ => panic!("bad call arity"),
-                            }
-                        },
-                    };
+                let pos = body_pos(b,arity);
                 vm(&env,&b.def.code,pos,Vec::new())
             },
             V::Scalar(_n) => Vs::V(self.clone()),
@@ -432,6 +404,20 @@ pub fn none_or_clone(vn: &Vn) -> Vh {
         None => Vh::None,
         Some(v) => Vh::V(v.clone()),
     }
+}
+pub fn body_pos(b: &Cc<BlockInst>,arity: usize) -> usize {
+    let (pos,_locals) =
+        match &b.def.body {
+            Body::Imm(body) => b.def.code.bodies[*body],
+            Body::Defer(mon,dya) => {
+                match arity {
+                    1 => b.def.code.bodies[mon[0]],
+                    2 => b.def.code.bodies[dya[0]],
+                    _ => panic!("bad call arity"),
+                }
+            },
+        };
+    pos
 }
 pub fn new_char(n: char) -> V {
     panic!("not implemented");
