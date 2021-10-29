@@ -21,6 +21,7 @@ pub trait Decoder {
 pub enum V {
     Scalar(f64),
     BlockInst(Cc<BlockInst>),
+    DervBlockInst(Cc<BlockInst>,Vec<Vn>),
     A(Cc<A>),
     Fn(fn(usize,Vn,Vn) -> Vs),       // X, W
     R1(fn(usize,Vn,Vn,Vn) -> Vs),    // F, X, W
@@ -43,6 +44,7 @@ impl Encoder for V {
         match self {
             V::Scalar(n) => n.encode(env),
             V::BlockInst(_b) => panic!("can't encode blockinst to BEAM"),
+            V::DervBlockInst(_b,_a) => panic!("can't encode dervblockinst to BEAM"),
             V::A(_a) => panic!("can't encode array to BEAM"),
             V::Fn(_a) => panic!("can't encode fn to BEAM"),
             V::R1(_f) => panic!("can't encode r1 to BEAM"),
@@ -69,6 +71,7 @@ impl Decoder for V {
         match self.deref() {
             V::Scalar(n) => *n,
             V::BlockInst(_b) => panic!("can't decode blockinst to RUST"),
+            V::DervBlockInst(_b,_a) => panic!("can't encode dervblockinst to BEAM"),
             V::A(_a) => panic!("can't decode array to RUST"),
             V::Fn(_a) => panic!("can't decode fn to RUST"),
             V::R1(_f) => panic!("can't decode r1 to RUST"),
@@ -81,23 +84,37 @@ impl Decoder for V {
     }
 }
 impl Calleable for V {
-    fn call(&self,arity: usize,x: Vn,w: Vn) -> Vs {
+    fn call(&self,arity:usize,x: Vn,w: Vn) -> Vs {
         match self.deref() {
-            V::BlockInst(b) => {
-                assert!(b.typ == 0);
-                let slots =
-                    match &b.args {
-                        None => {
-                            vec![Vh::V(self.clone()),none_or_clone(&x),none_or_clone(&w)]
-                        },
-                        Some(args) => {
-                            let mut v: Vec<Vh> = vec![Vh::V(self.clone()),none_or_clone(&x),none_or_clone(&w)];
-                            let mut a = args.iter().map(|b| Vh::V(b.as_ref().unwrap().clone())).collect::<Vec<Vh>>();
-                            v.append(&mut a);
-                            v
+            V::DervBlockInst(b,mods) => {
+                let mut args =
+                    match arity {
+                        1|2 => vec![Vh::V(self.clone()),none_or_clone(&x),none_or_clone(&w)],
+                        _ => panic!("illegal slot arity"),
+                    };
+                let mut a = mods.iter().map(|b| Vh::V(b.as_ref().unwrap().clone())).collect::<Vec<Vh>>();
+                args.append(&mut a);
+                let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args));
+                let (pos,_locals) =
+                    match &b.def.body {
+                        Body::Imm(body) => b.def.code.bodies[*body],
+                        Body::Defer(mon,dya) => {
+                            match arity {
+                                1 => b.def.code.bodies[mon[0]],
+                                2 => b.def.code.bodies[dya[0]],
+                                _ => panic!("bad call arity"),
+                            }
                         },
                     };
-                let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(slots));
+                vm(&env,&b.def.code,pos,Vec::new())
+            },
+            V::BlockInst(b) => {
+                let args =
+                    match arity {
+                        1|2 => vec![Vh::V(self.clone()),none_or_clone(&x),none_or_clone(&w)],
+                        _ => panic!("illegal slot arity"),
+                    };
+                let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args));
                 let (pos,_locals) =
                     match &b.def.body {
                         Body::Imm(body) => b.def.code.bodies[*body],
@@ -305,19 +322,17 @@ impl Env {
 
 #[derive(Debug,Clone)]
 pub struct BlockInst {
-    pub typ:   u8,
-    def:   Cc<Block>,
+    pub def:   Cc<Block>,
     parent:Env,
-    args:  Option<Vec<Vn>>,
 }
 impl BlockInst {
-    pub fn new(env: Env,typ: u8, block: Cc<Block>, args: Option<Vec<Vn>>) -> Self {
-        Self {typ: typ, def: block, parent: env, args: args }
+    pub fn new(env: Env,block: Cc<Block>) -> Self {
+        Self {def: block, parent: env }
     }
     pub fn call_block(&self,arity:usize,args: Vec<Vn>) -> Vs {
         match self.def.imm {
             false => {
-                Vs::V(V::BlockInst(Cc::new(BlockInst::new(self.parent.clone(),0,self.def.clone(),Some(args)))))
+                Vs::V(V::DervBlockInst(Cc::new(BlockInst::new(self.parent.clone(),self.def.clone())),args))
             },
             true => {
                 let pos = match self.def.body {

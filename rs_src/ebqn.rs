@@ -18,7 +18,7 @@ pub fn call(arity: usize,a: Vn,x: Vn, w: Vn) -> Vs {
 fn call1(m: V,f: V) -> Vs {
     match m {
         V::BlockInst(ref bl) => {
-            assert_eq!(1,bl.deref().typ);
+            assert_eq!(1,bl.def.typ);
             bl.call_block(1,vec![Some(m.clone()),Some(f)])
         },
         _ => panic!("call1 with invalid type"),
@@ -27,7 +27,7 @@ fn call1(m: V,f: V) -> Vs {
 fn call2(m: V,f: V,g: V) -> Vs {
     match m {
         V::BlockInst(ref bl) => {
-            assert_eq!(2,bl.typ);
+            assert_eq!(2,bl.def.typ);
             bl.call_block(2,vec![Some(m.clone()),Some(f),Some(g)])
         },
         V::R2(_) => Vs::V(V::D2(Cc::new(D2::new(m,f,g)))),
@@ -48,8 +48,8 @@ fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>) -> Vs {
             };
             vm(&child,code,pos,Vec::new())
         },
-        (typ,_) => {
-            let block_inst = BlockInst::new(env.clone(),typ,(*block).clone(),None);
+        (_typ,_imm) => {
+            let block_inst = BlockInst::new(env.clone(),(*block).clone());
             let r = Vs::V(V::BlockInst(Cc::new(block_inst)));
             r
         },
