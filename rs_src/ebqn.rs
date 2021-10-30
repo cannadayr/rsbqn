@@ -1,13 +1,14 @@
 use crate::schema::{Env,V,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Body,A,Ar,Tr2,Tr3,set,ok,D2};
 use crate::prim::{provide};
 use crate::code::{r0};
+use crate::fmt::{fmt_stack};
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
 use cc_mt::Cc;
 use crate::test::{bytecode,prim};
 use std::ops::Deref;
 //use std::panic;
-//use log::{debug, trace, error, log_enabled, info, Level};
+use log::{debug, trace, error, log_enabled, info, Level};
 
 pub fn call(arity: usize,a: Vn,x: Vn, w: Vn) -> Vs {
     match a {
@@ -82,20 +83,29 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
             0 => { // PUSH
                 let x = code.bc[pos];pos+=1;
                 let r = code.objs[x].clone();
-                stack.push(Vs::V(r))
+                debug!("{:<22} >> {}",format!("{:<16} @{}",format!("{} {} {}","PUSH",x,r),pos-2),fmt_stack(&stack)); // 2 args
+                stack.push(Vs::V(r));
+                debug!("{:<22} :  {}","",fmt_stack(&stack));
             },
             1 => { // DFND
                 let x = code.bc[pos];pos+=1;
                 let r = derv(env.clone(),&code,&code.blocks[x]);
+                debug!("{:<22} >> {}",format!("{:<16} @{}",format!("{} {} {}","DFND",x,r),pos-2),fmt_stack(&stack)); // 2 args
                 stack.push(r);
+                debug!("{:<22} :  {}","",fmt_stack(&stack));
             },
             6 => { // POPS
+                debug!("{:<22} >> {}",format!("{:<16} @{}",format!("{}","POPS"),pos-1),fmt_stack(&stack)); // 0 args
                 let _ = stack.pop();
+                debug!("{:<22} :  {}","",fmt_stack(&stack));
             },
             7 => { // RETN
                 break match stack.len() {
                     1 => {
-                        stack.pop().unwrap()
+                        debug!("{:<22} >> {}",format!("{:<16} @{}",format!("{}","RETN"),pos-1),fmt_stack(&stack)); // 0 args
+                        let rtn = stack.pop().unwrap();
+                        debug!("{:<22} :  {}","",fmt_stack(&stack));
+                        rtn
                     },
                     _ => {
                         panic!("stack overflow")
@@ -106,91 +116,118 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let x = code.bc[pos];pos+=1;
                 let hd = stack.len() - x;
                 let tl = stack.split_off(hd);
+                debug!("{:<22} >> {}",format!("{:<16} @{}",format!("{} {}","ARRO",x),pos-2),fmt_stack(&stack)); // 1 args
                 stack.push(list(tl));
+                debug!("{:<22} :  {}","",fmt_stack(&stack));
             },
             12 => { // ARRM
                 let x = code.bc[pos];pos+=1;
                 let hd = stack.len() - x;
                 let tl = stack.split_off(hd);
+                debug!("{:<22} >> {}",format!("{:<16} @{}",format!("{} {}","ARRM",x),pos-2),fmt_stack(&stack)); // 1 args
                 stack.push(listr(tl));
+                debug!("{:<22} :  {}","",fmt_stack(&stack));
             },
-            16|18 => { // FN1C|FN10
+            16|18 => { // FN1C|FN1O
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
                 let r = call(1,Some(f.to_ref().clone()),Some(x.to_ref().clone()),None);
+                debug!("{:<22} >> {}",format!("{:<16} @{}",format!("{} {} {}","FN1C",f,x),pos-1),fmt_stack(&stack)); // 2 args
                 stack.push(r);
+                debug!("{:<22} :  {}","",fmt_stack(&stack));
             },
-            17|19 => { // FN2C|FN20
+            17|19 => { // FN2C|FN2O
                 let w = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
                 let r = call(2,Some(f.to_ref().clone()),Some(x.to_ref().clone()),Some(w.to_ref().clone()));
+                debug!("{:<22} >> {}",format!("{:<16} @{}",format!("{} {} {} {}","FN2C",w,f,x),pos-1),fmt_stack(&stack)); // 3 args
                 stack.push(r);
+                debug!("{:<22} :  {}","",fmt_stack(&stack));
             },
             20 => { // TR2D
                 let g = stack.pop().unwrap();
                 let h = stack.pop().unwrap();
+                debug!("{:<22} >> {}",format!("{:<16} @{}",format!("{} {} {}","TR2D",g,h),pos-1),fmt_stack(&stack)); // 2 args
                 let t = Vs::V(V::Tr2(Cc::new(Tr2::new(g,h))));
                 stack.push(t);
+                debug!("{:<22} :  {}","",fmt_stack(&stack));
             },
             21 => { // TR3D
                 let f = stack.pop().unwrap();
                 let g = stack.pop().unwrap();
                 let h = stack.pop().unwrap();
+                debug!("{:<22} >> {}",format!("{:<16} @{}",format!("{} {} {} {}","TR3D",f,g,h),pos-1),fmt_stack(&stack)); // 3 args
                 let t = Vs::V(V::Tr3(Cc::new(Tr3::new(f,g,h))));
                 stack.push(t);
+                debug!("{:<22} :  {}","",fmt_stack(&stack));
             },
             26 => { // MD1C
                 let f = stack.pop().unwrap();
                 let m = stack.pop().unwrap();
+                debug!("{:<22} >> {}",format!("{:<16} @{}",format!("{} {} {}","MD1C",f,m),pos-1),fmt_stack(&stack)); // 2 args
                 let r = call1(m.to_ref().clone(),f.to_ref().clone());
                 stack.push(r);
+                debug!("{:<22} :  {}","",fmt_stack(&stack));
             },
             27 => { // MD2C
                 let f = stack.pop().unwrap();
                 let m = stack.pop().unwrap();
                 let g = stack.pop().unwrap();
+                debug!("{:<22} >> {}",format!("{:<16} @{}",format!("{} {} {} {}","MD2C",f,m,g),pos-1),fmt_stack(&stack)); // 3 args
                 let r = call2(m.to_ref().clone(),f.to_ref().clone(),g.to_ref().clone());
                 stack.push(r);
+                debug!("{:<22} :  {}","",fmt_stack(&stack));
             },
             32|34 => { // VARO|VARU
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
                 let t = env.ge(x);
-                stack.push(Vs::V(t.get(w)))
+                debug!("{:<22} >> {}",format!("{:<16} @{}",format!("{} {} {}","VARO",x,w),pos-3),fmt_stack(&stack)); // 2 args
+                stack.push(Vs::V(t.get(w)));
+                debug!("{:<22} :  {}","",fmt_stack(&stack));
             },
             33 => { // VARM
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
                 let t = env.ge(x);
-                stack.push(Vs::Slot(t,w))
+                debug!("{:<22} >> {}",format!("{:<16} @{}",format!("{} {} {}","VARM",x,w),pos-3),fmt_stack(&stack)); // 2 args
+                stack.push(Vs::Slot(t,w));
+                debug!("{:<22} :  {}","",fmt_stack(&stack));
             },
             48 => { // SETN
                 let i = stack.pop().unwrap();
                 let v = stack.pop().unwrap();
+                debug!("{:<22} >> {}",format!("{:<16} @{}",format!("{} {} {}","SETN",i,v),pos-1),fmt_stack(&stack)); // 2 args
                 let r = set(true,i,v);
                 stack.push(Vs::V(r));
             },
             49 => { // SETU
                 let i = stack.pop().unwrap();
                 let v = stack.pop().unwrap();
+                debug!("{:<22} >> {}",format!("{:<16} @{}",format!("{} {} {}","SETU",i,v),pos-1),fmt_stack(&stack)); // 2 args
                 let r = set(false,i,v);
                 stack.push(Vs::V(r));
+                debug!("{:<22} :  {}","",fmt_stack(&stack));
             },
             50 => { // SETM
                 let i = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
+                debug!("{:<22} >> {}",format!("{:<16} @{}",format!("{} {} {} {}","SETM",i,f,x),pos-1),fmt_stack(&stack)); // 3 args
                 let v = call(2,Some(f.to_ref().clone()),Some(x.to_ref().clone()),Some(i.get()));
                 let r = set(false,i,v);
                 stack.push(Vs::V(r));
+                debug!("{:<22} :  {}","",fmt_stack(&stack));
             },
             51 => { // SETC
                 let i = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
+                debug!("{:<22} >> {}",format!("{:<16} @{}",format!("{} {} {}","SETC",i,f),pos-1),fmt_stack(&stack)); // 2 args
                 let v = call(1,Some(f.to_ref().clone()),Some(i.get()),None);
                 let r = set(false,i,v);
                 stack.push(Vs::V(r));
+                debug!("{:<22} :  {}","",fmt_stack(&stack));
             },
             _ => {
                 panic!("unreachable op: {}",op);
