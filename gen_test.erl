@@ -31,11 +31,11 @@ cmd_receive(Port, Acc) ->
 utf8(Str) ->
     unicode:characters_to_binary(erlang:binary_to_list(Str)).
 gen_line(assert,Code,undefined) ->
-    [<<"\tassert_panic(">>,utf8(Code),<<");\n">>];
+    [<<"\tdebug!(\"test: undefined\");">>,<<"\tassert_panic(">>,utf8(Code),<<");\n">>];
 gen_line(assert,Code,Comment) ->
     [<<"\tdebug!(\"test: ">>,utf8(Comment),<<"\");">>,<<"assert_panic(">>,utf8(Code),<<"); // ">>,utf8(Comment),<<"\n">>];
 gen_line(Expected,Code,undefined) ->
-    [<<"\tassert_eq!(">>,erlang:float_to_binary(Expected,[{decimals, 1}]),<<",run(">>,utf8(Code),<<").to_f64());\n">>];
+    [<<"\tdebug!(\"test: undefined\");">>,<<"\tassert_eq!(">>,erlang:float_to_binary(Expected,[{decimals, 1}]),<<",run(">>,utf8(Code),<<").to_f64());\n">>];
 gen_line(Expected,Code,Comment) ->
     [<<"\tdebug!(\"test: ">>,utf8(Comment),<<"\");">>,<<"assert_eq!(">>,erlang:float_to_binary(Expected,[{decimals, 1}]),<<",run(">>,utf8(Code),<<").to_f64()); // ">>,utf8(Comment),<<"\n">>].
 gen_code([],Accm) ->
