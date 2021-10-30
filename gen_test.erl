@@ -33,11 +33,11 @@ utf8(Str) ->
 gen_line(assert,Code,undefined) ->
     [<<"\tassert_panic(">>,utf8(Code),<<");\n">>];
 gen_line(assert,Code,Comment) ->
-    [<<"\tdebug!(\"test: ">>,unicode:characters_to_binary(erlang:binary_to_list(Comment)),<<"\");">>,<<"assert_panic(">>,utf8(Code),<<"); // ">>,unicode:characters_to_binary(erlang:binary_to_list(Comment)),<<"\n">>];
+    [<<"\tdebug!(\"test: ">>,utf8(Comment),<<"\");">>,<<"assert_panic(">>,utf8(Code),<<"); // ">>,utf8(Comment),<<"\n">>];
 gen_line(Expected,Code,undefined) ->
     [<<"\tassert_eq!(">>,erlang:float_to_binary(Expected,[{decimals, 1}]),<<",run(">>,utf8(Code),<<").to_f64());\n">>];
 gen_line(Expected,Code,Comment) ->
-    [<<"\tdebug!(\"test: ">>,unicode:characters_to_binary(erlang:binary_to_list(Comment)),<<"\");">>,<<"assert_eq!(">>,erlang:float_to_binary(Expected,[{decimals, 1}]),<<",run(">>,utf8(Code),<<").to_f64()); // ">>,unicode:characters_to_binary(erlang:binary_to_list(Comment)),<<"\n">>].
+    [<<"\tdebug!(\"test: ">>,utf8(Comment),<<"\");">>,<<"assert_eq!(">>,erlang:float_to_binary(Expected,[{decimals, 1}]),<<",run(">>,utf8(Code),<<").to_f64()); // ">>,utf8(Comment),<<"\n">>].
 gen_code([],Accm) ->
     lists:reverse(Accm);
 gen_code(Todo,Accm) ->
@@ -109,7 +109,7 @@ main([Repo]) ->
         <<"use core::f64::{INFINITY,NEG_INFINITY};\n">>,
         %<<"use std::{panic};\n">>,
         <<"use crate::ebqn::{run,assert_panic};\n">>,
-        <<"use crate::schema::{Code,new_scalar,new_char,new_string,Body,A,Decoder};\n">>,
+        <<"use crate::schema::{Code,new_scalar,new_char,new_string,Body,A,Decoder};\n\n">>,
         <<"pub fn bytecode() {\n">>,ByteCode,<<"}\n\n">>,
         <<"pub fn prim(runtime: &A) {\n">>,Prim,<<"}\n\n">>
         %<<"pub fn simple(runtime: A) {\n">>,Simple,<<"\n}\n">>
