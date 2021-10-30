@@ -94,13 +94,9 @@ fn lesseq(arity: usize, x: Vn, w: Vn) -> Vs {
         2 => {
             let t = typ(1,x.clone(),None).to_ref().to_f64();
             let s = typ(1,w.clone(),None).to_ref().to_f64();
-            match t == s {
-                true =>
-                    match s != t {
-                        true  => Vs::V(V::Scalar((s <= t) as i64 as f64)),
-                        false => Vs::V(V::Scalar((w.unwrap().to_f64() <= x.unwrap().to_f64()) as i64 as f64)),
-                    },
-                _ => panic!("lesseq match arm false"),
+            match t != s {
+                true  => Vs::V(V::Scalar((s <= t) as i64 as f64)),
+                false => Vs::V(V::Scalar((w.unwrap().to_f64() <= x.unwrap().to_f64()) as i64 as f64)),
             }
         },
         _ => panic!("illegal lesseq arity"),
