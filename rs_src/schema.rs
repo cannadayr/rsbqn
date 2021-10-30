@@ -22,6 +22,7 @@ pub enum V {
     Scalar(f64),
     BlockInst(Cc<BlockInst>),
     DervBlockInst(Cc<BlockInst>,Vec<Vn>),
+    Nothing,
     A(Cc<A>),
     Fn(fn(usize,Vn,Vn) -> Vs),       // X, W
     R1(fn(usize,Vn,Vn,Vn) -> Vs),    // F, X, W
@@ -45,6 +46,7 @@ impl Encoder for V {
             V::Scalar(n) => n.encode(env),
             V::BlockInst(_b) => panic!("can't encode blockinst to BEAM"),
             V::DervBlockInst(_b,_a) => panic!("can't encode dervblockinst to BEAM"),
+            V::Nothing => panic!("can't encode nothing to BEAM"),
             V::A(_a) => panic!("can't encode array to BEAM"),
             V::Fn(_a) => panic!("can't encode fn to BEAM"),
             V::R1(_f) => panic!("can't encode r1 to BEAM"),
@@ -72,6 +74,7 @@ impl Decoder for V {
             V::Scalar(n) => *n,
             V::BlockInst(_b) => panic!("can't decode blockinst to RUST"),
             V::DervBlockInst(_b,_a) => panic!("can't encode dervblockinst to BEAM"),
+            V::Nothing => panic!("can't decode nothing to BEAM"),
             V::A(_a) => panic!("can't decode array to RUST"),
             V::Fn(_a) => panic!("can't decode fn to RUST"),
             V::R1(_f) => panic!("can't decode r1 to RUST"),
@@ -131,6 +134,7 @@ impl Calleable for V {
                 g.call(2,Some(r.to_ref().clone()),Some(l.to_ref().clone()))
             },
             V::A(_) => Vs::V(self.clone()),
+            V::Nothing => Vs::V(V::Nothing),
         }
     }
 }
@@ -170,7 +174,7 @@ impl Vs {
 #[derive(Debug)]
 pub enum Vh {
     Undefined,
-    None,
+    Nothing,
     V(V),
 }
 
@@ -244,11 +248,11 @@ impl Env {
             match args {
                 None => {
                     let mut v: Vec<Vh> = Vec::with_capacity(locals);
-                    v.resize_with(locals, || Vh::None);
+                    v.resize_with(locals, || Vh::Undefined);
                     v
                 },
                 Some(mut v) => {
-                    v.resize_with(locals, || Vh::None);
+                    v.resize_with(locals, || Vh::Undefined);
                     v
                 },
             };
@@ -262,6 +266,8 @@ impl Env {
                 let vh = &(*guard)[id];
                 match vh {
                     Vh::V(v) => v.clone(),
+                    Vh::Nothing => V::Nothing,
+                    Vh::Undefined => panic!("is undefined"),
                     _ => panic!("can't get unset slot"),
                 }
             },
@@ -273,7 +279,7 @@ impl Env {
                 let mut guard = e.vars.lock().unwrap();
                 let vh = &(*guard)[id];
                 assert_eq!(d,match vh {
-                    Vh::None|Vh::Undefined => true,
+                    Vh::Undefined => true,
                     _ => false,
                 });
                 (*guard)[id] = Vh::V((*v).clone());
@@ -403,7 +409,7 @@ pub fn new_scalar<T: Decoder>(n: T) -> V {
 }
 pub fn none_or_clone(vn: &Vn) -> Vh {
     match vn {
-        None => Vh::None,
+        None => Vh::Nothing,
         Some(v) => Vh::V(v.clone()),
     }
 }

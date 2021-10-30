@@ -5,6 +5,7 @@ mod ebqn;
 mod prim;
 mod test;
 mod code;
+mod fmt;
 use rustler::{Env,Term};
 use syslog::Facility;
 extern crate log_panics;
