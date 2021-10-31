@@ -20,6 +20,7 @@ pub trait Decoder {
 #[derive(Debug,Clone,PartialEq)]
 pub enum V {
     Scalar(f64),
+    Char(char),
     BlockInst(Cc<BlockInst>),
     DervBlockInst(Cc<BlockInst>,Vec<Vn>),
     Nothing,
@@ -44,6 +45,7 @@ impl Encoder for V {
     fn encode<'a>(&self, env: rustler::Env<'a>) -> rustler::Term<'a> {
         match self {
             V::Scalar(n) => n.encode(env),
+            V::Char(c) => panic!("can't encode char to BEAM"),
             V::BlockInst(_b) => panic!("can't encode blockinst to BEAM"),
             V::DervBlockInst(_b,_a) => panic!("can't encode dervblockinst to BEAM"),
             V::Nothing => panic!("can't encode nothing to BEAM"),
@@ -72,6 +74,7 @@ impl Decoder for V {
     fn to_f64(&self) -> f64 {
         match self.deref() {
             V::Scalar(n) => *n,
+            V::Char(c) => panic!("can't decode char to RUST"),
             V::BlockInst(_b) => panic!("can't decode blockinst to RUST"),
             V::DervBlockInst(_b,_a) => panic!("can't encode dervblockinst to BEAM"),
             V::Nothing => panic!("can't decode nothing to BEAM"),
@@ -106,6 +109,7 @@ impl Calleable for V {
                 vm(&env,&b.def.code,pos,Vec::new())
             },
             V::Scalar(_n) => Vs::V(self.clone()),
+            V::Char(_c) => Vs::V(self.clone()),
             V::Fn(f) => f(arity,x,w),
             V::R1(_f) => panic!("can't call r1"),
             V::R2(_f) => panic!("can't call r2"),
@@ -359,6 +363,11 @@ impl Ar {
 
 #[derive(Debug,Clone,PartialEq)]
 pub struct D1(V,V);
+impl D1 {
+    pub fn new(m: V, f: V) -> Self {
+        Self(m,f)
+    }
+}
 
 #[derive(Debug,Clone,PartialEq)]
 pub struct D2(V,V,V);
@@ -428,10 +437,10 @@ pub fn body_pos(b: &Cc<BlockInst>,arity: usize) -> usize {
     pos
 }
 pub fn new_char(n: char) -> V {
-    panic!("not implemented");
-    //Cc::new(V::Char(n))
+    V::Char(n)
 }
 pub fn new_string(n: &str) -> V {
-    panic!("not implemented");
-    //Cc::new(V::Str(n))
+    let ravel = n.to_string().chars().map(|c| V::Char(c)).collect::<Vec<V>>();
+    let shape = vec![ravel.len() as usize];
+    V::A(Cc::new(A::new(ravel,shape)))
 }

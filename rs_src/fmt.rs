@@ -9,6 +9,7 @@ impl Display for V {
     fn fmt(&self, f: &mut Formatter) -> Result {
         match self {
             V::Scalar(n) => write!(f, "{}", *n),
+            V::Char(c) => write!(f, "{}", *c),
             V::BlockInst(_b) => write!(f,"{}","BlockInst"),
             V::DervBlockInst(_b,_a) => write!(f,"{}","DervBlockInst"),
             V::Nothing => write!(f,"{}","Nothing"),

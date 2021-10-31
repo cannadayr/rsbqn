@@ -1,6 +1,6 @@
-use crate::schema::{Env,V,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Body,A,Ar,Tr2,Tr3,set,ok,D2};
+use crate::schema::{Env,V,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Body,A,Ar,Tr2,Tr3,set,ok,D2,D1};
 use crate::prim::{provide};
-use crate::code::{r0};
+use crate::code::{r0,r1};
 use crate::fmt::{fmt_stack};
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
@@ -22,6 +22,7 @@ fn call1(m: V,f: V) -> Vs {
             assert_eq!(1,bl.def.typ);
             bl.call_block(1,vec![Some(m.clone()),Some(f)])
         },
+        V::R1(_) => Vs::V(V::D1(Cc::new(D1::new(m,f)))),
         _ => panic!("call1 with invalid type"),
     }
 }
