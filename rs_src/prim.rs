@@ -107,8 +107,28 @@ fn shape(_arity: usize, _x: Vn, _w: Vn) -> Vs {
     panic!("shape not implemented");
 }
 // ⥊
-fn reshape(_arity: usize, _x: Vn, _w: Vn) -> Vs {
-    panic!("reshape not implemented");
+fn reshape(arity: usize, x: Vn, w: Vn) -> Vs {
+    match arity {
+        1 => {
+            match x.unwrap() {
+                V::A(_a) => panic!("monadic reshape arr"),
+                _ => panic!("monadic reshape no arr"),
+            }
+        },
+        2 => {
+            match (x.unwrap(),w.unwrap()) {
+                (V::A(ax),V::A(aw)) => {
+                    let sh = aw.r.iter().map(|e| match e {
+                        V::Scalar(n) => *n as usize,
+                        _ => panic!("W ravel is not a num"),
+                    }).collect::<Vec<usize>>();
+                    Vs::V(V::A(Cc::new(A::new(ax.r.clone(),sh))))
+                },
+                _ => panic!("dydic reshape no match"),
+            }
+        },
+        _ => panic!("illegal reshape arity"),
+    }
 }
 // ⊑
 fn pick(_arity: usize, _x: Vn, _w: Vn) -> Vs {
