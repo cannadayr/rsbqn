@@ -113,7 +113,13 @@ impl Calleable for V {
             V::Fn(f) => f(arity,x,w),
             V::R1(_f) => panic!("can't call r1"),
             V::R2(_f) => panic!("can't call r2"),
-            V::D1(_d1) => panic!("can't call d1"),
+            V::D1(d1) => {
+                let D1(m,f) = d1.deref();
+                match m {
+                    V::R1(r1) => r1(arity,Some(f.clone()),x,w),
+                    _ => panic!("can only call raw1 mods in derv1"),
+                }
+            },
             V::D2(d2) => {
                 let D2(m,f,g) = d2.deref();
                 match m {
