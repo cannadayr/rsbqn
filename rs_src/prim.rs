@@ -33,8 +33,12 @@ fn typ(arity: usize, x: Vn, _w: Vn) -> Vs {
     }
 }
 // Fill
-fn fill(_arity: usize, _x: Vn, _w: Vn) -> Vs {
-    panic!("fill not implemented");
+fn fill(arity: usize, x: Vn, _w: Vn) -> Vs {
+    match arity {
+        1 => Vs::V(V::Scalar(0.0)),
+        2 => Vs::V(x.unwrap()),
+        _ => panic!("illegal fill arity"),
+    }
 }
 // Log
 fn log(_arity: usize, _x: Vn, _w: Vn) -> Vs {
