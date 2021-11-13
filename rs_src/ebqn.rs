@@ -132,8 +132,12 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
             16|18 => { // FN1C|FN1O
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
-                let r = call(1,Some(f.to_ref().clone()),Some(x.to_ref().clone()),None);
                 debug!("{:<22} << {}",format!("{:<16} @{}",format!("{} {} {}","FN1C",f,x),pos-1),fmt_stack(&stack)); // 2 args
+                let r =
+                    match &x.to_ref() {
+                        V::Nothing => x,
+                        _ => call(1,Some(f.to_ref().clone()),Some(x.to_ref().clone()),None),
+                    };
                 stack.push(r);
                 debug!("{:<22} :  {}","",fmt_stack(&stack));
             },
@@ -141,8 +145,12 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let w = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
-                let r = call(2,Some(f.to_ref().clone()),Some(x.to_ref().clone()),Some(w.to_ref().clone()));
                 debug!("{:<22} << {}",format!("{:<16} @{}",format!("{} {} {} {}","FN2C",w,f,x),pos-1),fmt_stack(&stack)); // 3 args
+                let r =
+                    match &x.to_ref() {
+                        V::Nothing => x,
+                        _ => call(2,Some(f.to_ref().clone()),Some(x.to_ref().clone()),Some(w.to_ref().clone())),
+                    };
                 stack.push(r);
                 debug!("{:<22} :  {}","",fmt_stack(&stack));
             },
@@ -154,12 +162,16 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 stack.push(t);
                 debug!("{:<22} :  {}","",fmt_stack(&stack));
             },
-            21 => { // TR3D
+            21|23 => { // TR3D|TR3O
                 let f = stack.pop().unwrap();
                 let g = stack.pop().unwrap();
                 let h = stack.pop().unwrap();
                 debug!("{:<22} << {}",format!("{:<16} @{}",format!("{} {} {} {}","TR3D",f,g,h),pos-1),fmt_stack(&stack)); // 3 args
-                let t = Vs::V(V::Tr3(Cc::new(Tr3::new(f,g,h))));
+                let t =
+                    match &f.to_ref() {
+                        V::Nothing => Vs::V(V::Tr2(Cc::new(Tr2::new(g,h)))),
+                        _ => Vs::V(V::Tr3(Cc::new(Tr3::new(f,g,h)))),
+                    };
                 stack.push(t);
                 debug!("{:<22} :  {}","",fmt_stack(&stack));
             },
