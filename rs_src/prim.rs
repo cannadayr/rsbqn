@@ -89,8 +89,15 @@ fn floor(_arity: usize, _x: Vn, _w: Vn) -> Vs {
     panic!("floor not implemented");
 }
 // =
-fn equals(_arity: usize, _x: Vn, _w: Vn) -> Vs {
-    panic!("equals not implemented");
+fn equals(arity: usize, x: Vn, w: Vn) -> Vs {
+    match arity {
+        1 => panic!("monadic equals"),
+        2 => match x == w {
+            true => Vs::V(V::Scalar(1.0)),
+            false => Vs::V(V::Scalar(0.0)),
+        },
+        _ => panic!("illegal equals arity"),
+    }
 }
 // ≤
 fn lesseq(arity: usize, x: Vn, w: Vn) -> Vs {
