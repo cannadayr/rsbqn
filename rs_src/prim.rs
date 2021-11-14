@@ -143,8 +143,25 @@ fn windows(_arity: usize, _x: Vn, _w: Vn) -> Vs {
     panic!("windows not implemented");
 }
 // ⌜
-fn table(_arity: usize, _f: Vn, _x: Vn, _w: Vn) -> Vs {
-    panic!("table not implemented");
+fn table(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
+    match arity {
+        1 => panic!("monadic table"),
+        2 => {
+            match (x.unwrap(),w.unwrap()) {
+                (V::A(xa),V::A(wa)) => {
+                    let ravel = (*wa).r.iter().map(|d| {
+                        let ravel = (*xa).r.iter().map(|e| call(arity,f.clone(),Some(e.clone()),Some(d.clone())).to_ref().clone()).collect::<Vec<V>>();
+                        let sh = ravel.len();
+                        V::A(Cc::new(A::new(ravel,vec![sh])))
+                    }).collect::<Vec<V>>();
+                    let sh = ravel.len();
+                    Vs::V(V::A(Cc::new(A::new(ravel,vec![sh]))))
+                },
+                _ => panic!("dyadic table not an array"),
+            }
+        },
+        _ => panic!("illegal table arity"),
+    }
 }
 // `
 fn scan(_arity: usize, _f: Vn, _x: Vn, _w: Vn) -> Vs {
