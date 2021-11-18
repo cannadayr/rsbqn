@@ -41,7 +41,7 @@ FBlock ← Block ⟨F,⊑⟜"false"‿"true",=◶⟨Imm F,Defer (List F¨)¨⟩�
 glyphs ← Import "glyphs.bqn"
 _getComp ← { (4+useInd) ↑ (𝕗 Import "c.bqn"){𝔽} }
 useInd ← "-i"≡⊑args ⋄ args↓˜↩useInd
-Comp ← ((<"runtime.r" Ind F)¨↕62) glyphs _getComp ⊢
+Comp ← ((<"runtime.r" Ind F)¨↕≠∾glyphs) glyphs _getComp ⊢
 J ← ∾∾⟜(@+10)¨
 Fconst ← ≡◶⟨@⊸≤◶{Num𝕩}‿Char, Str, ⊑⟩
 Fout ← (≠↑⟨F,Fconst,FBlock,Body·F¨2⊸↑,List F⟩˙) {List 𝕎¨𝕩}¨ ⊢
