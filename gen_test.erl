@@ -28,16 +28,14 @@ cmd_receive(Port, Acc) ->
         {Port, eof}          -> {ok, lists:reverse(Acc)}
     end.
 
-utf8(Str) ->
-    unicode:characters_to_binary(erlang:binary_to_list(Str)).
 gen_line(assert,Code,undefined) ->
-    [<<"\tdebug!(\"test: undefined\");">>,<<"\tassert_panic(">>,utf8(Code),<<");\n">>];
+    [<<"\tdebug!(\"test: undefined\");">>,<<"\tassert_panic(">>,Code,<<");\n">>];
 gen_line(assert,Code,Comment) ->
-    [<<"\tdebug!(\"test: ">>,utf8(Comment),<<"\");">>,<<"assert_panic(">>,utf8(Code),<<"); // ">>,utf8(Comment),<<"\n">>];
+    [<<"\tdebug!(\"test: ">>,Comment,<<"\");">>,<<"assert_panic(">>,Code,<<"); // ">>,Comment,<<"\n">>];
 gen_line(Expected,Code,undefined) ->
-    [<<"\tdebug!(\"test: undefined\");">>,<<"\tassert_eq!(">>,erlang:float_to_binary(Expected,[{decimals, 1}]),<<",run(">>,utf8(Code),<<").to_f64());\n">>];
+    [<<"\tdebug!(\"test: undefined\");">>,<<"\tassert_eq!(">>,erlang:float_to_binary(Expected,[{decimals, 1}]),<<",run(">>,Code,<<").to_f64());\n">>];
 gen_line(Expected,Code,Comment) ->
-    [<<"\tdebug!(\"test: ">>,utf8(Comment),<<"\");">>,<<"assert_eq!(">>,erlang:float_to_binary(Expected,[{decimals, 1}]),<<",run(">>,utf8(Code),<<").to_f64()); // ">>,utf8(Comment),<<"\n">>].
+    [<<"\tdebug!(\"test: ">>,Comment,<<"\");">>,<<"assert_eq!(">>,erlang:float_to_binary(Expected,[{decimals, 1}]),<<",run(">>,Code,<<").to_f64()); // ">>,Comment,<<"\n">>].
 gen_code([],Accm) ->
     lists:reverse(Accm);
 gen_code(Todo,Accm) ->
@@ -104,7 +102,7 @@ main([Repo]) ->
     ByteCode = suite(Repo,<<"bytecode.bqn">>),
     %Simple = suite(Repo,<<"simple.bqn">>),
     Prim = suite(Repo,<<"prim.bqn">>),
-    io:format("~ts~n",[erlang:iolist_to_binary([
+    file:write_file("rs_src/test.rs",erlang:iolist_to_binary([
         <<"use log::{debug};\n">>,
         <<"use core::f64::{INFINITY,NEG_INFINITY};\n">>,
         %<<"use std::{panic};\n">>,
@@ -113,7 +111,7 @@ main([Repo]) ->
         <<"pub fn bytecode() {\n">>,ByteCode,<<"}\n\n">>,
         <<"pub fn prim(runtime: &A) {\n">>,Prim,<<"}\n\n">>
         %<<"pub fn simple(runtime: A) {\n">>,Simple,<<"\n}\n">>
-    ])]);
+    ]));
 main(_Args) ->
     io:format("bad arguments~n"),
     halt(1).

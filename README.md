@@ -47,7 +47,7 @@ Status
 Build
 -----
 
-    escript gen_test.erl /path/to/mlochbaum/bqn > rs_src/test.rs
+    escript gen_test.erl /path/to/mlochbaum/bqn
     escript gen_code.erl /path/to/mlochbaum/bqn
 
     rebar3 compile
