@@ -156,10 +156,8 @@ fn table(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
         2 => {
             match (x.unwrap(),w.unwrap()) {
                 (V::A(xa),V::A(wa)) => {
-                    let ravel = (*wa).r.iter().map(|d| {
-                        let ravel = (*xa).r.iter().map(|e| call(arity,f.clone(),Some(e.clone()),Some(d.clone())).to_ref().clone()).collect::<Vec<V>>();
-                        let sh = ravel.len();
-                        V::A(Cc::new(A::new(ravel,vec![sh])))
+                    let ravel = (*wa).r.iter().flat_map(|d| {
+                        (*xa).r.iter().map(|e| call(arity,f.clone(),Some(e.clone()),Some(d.clone())).to_ref().clone()).collect::<Vec<V>>()
                     }).collect::<Vec<V>>();
                     let sh = ravel.len();
                     Vs::V(V::A(Cc::new(A::new(ravel,vec![sh]))))
