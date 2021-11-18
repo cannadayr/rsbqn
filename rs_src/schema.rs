@@ -93,7 +93,6 @@ impl Calleable for V {
     fn call(&self,arity:usize,x: Vn,w: Vn) -> Vs {
         match self.deref() {
             V::DervBlockInst(b,mods) => {
-                assert!(b.def.typ == 1);
                 let mut args = vec![Vh::V(self.clone()),none_or_clone(&x),none_or_clone(&w)];
                 let mut m = mods.iter().map(|b| Vh::V(b.as_ref().unwrap().clone())).collect::<Vec<Vh>>();
                 args.append(&mut m);
@@ -102,7 +101,6 @@ impl Calleable for V {
                 vm(&env,&b.def.code,pos,Vec::new())
             },
             V::BlockInst(b) => {
-                assert!(b.def.typ == 0 || b.def.typ == 2);
                 let mut args = vec![Vh::V(self.clone()),none_or_clone(&x),none_or_clone(&w)];
                 let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args));
                 let pos = body_pos(b,arity);
