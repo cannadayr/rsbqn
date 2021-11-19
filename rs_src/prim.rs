@@ -154,8 +154,15 @@ fn pick(arity: usize, x: Vn, w: Vn) -> Vs {
     }
 }
 // ↕
-fn windows(_arity: usize, _x: Vn, _w: Vn) -> Vs {
-    panic!("windows not implemented");
+fn windows(arity: usize, x: Vn, _w: Vn) -> Vs {
+    match arity {
+        1 => match x.unwrap() {
+            V::Scalar(n) => Vs::V(V::A(Cc::new(A::new((0..n as i64-1).map(|v| V::Scalar(v as f64)).collect::<Vec<V>>(),vec![n as usize])))),
+            _ => panic!("x is not a number"),
+        },
+        _ => panic!("illegal windows arity"),
+    }
+
 }
 // ⌜
 fn table(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
