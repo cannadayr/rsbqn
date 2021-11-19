@@ -142,8 +142,16 @@ fn reshape(arity: usize, x: Vn, w: Vn) -> Vs {
     }
 }
 // ⊑
-fn pick(_arity: usize, _x: Vn, _w: Vn) -> Vs {
-    panic!("pick not implemented");
+fn pick(arity: usize, x: Vn, w: Vn) -> Vs {
+    match arity {
+        2 => {
+            match (x.unwrap(),w.unwrap()) {
+                (V::A(a),V::Scalar(i)) => Vs::V(a.r[i.to_f64() as i64 as usize].clone()),
+                _ => panic!("pick - can't index into non array"),
+            }
+        },
+        _ => panic!("illegal pick arity"),
+    }
 }
 // ↕
 fn windows(_arity: usize, _x: Vn, _w: Vn) -> Vs {
