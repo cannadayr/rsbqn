@@ -169,8 +169,42 @@ fn table(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
     }
 }
 // `
-fn scan(_arity: usize, _f: Vn, _x: Vn, _w: Vn) -> Vs {
-    panic!("scan not implemented");
+fn scan(arity: usize, f: Vn, x: Vn, _w: Vn) -> Vs {
+    match arity {
+        1 => {
+            match x.unwrap() {
+                V::A(a) => {
+                    let s = &a.sh;
+                    if (s.len()==0) {
+                        panic!("scan monadic array rank not at least 1");
+                    };
+                    let l = a.r.len();
+                    let mut r = vec![V::Nothing;l];
+                    if (l > 0) {
+                        let mut c = 1;
+                        let mut i = 1;
+                        while i < s.len() {
+                            c *= s[i];
+                            i += 1;
+                        }
+                        i = 0;
+                        while i < c {
+                            r[i] = a.r[i].clone();
+                            i += 1;
+                        }
+                        while i < l {
+                            r[i] = call(2,f.clone(),Some(a.r[i].clone()),Some(a.r[i-c].clone())).to_ref().clone();
+                            i += 1;
+                        }
+                    };
+                    Vs::V(V::A(Cc::new(A::new(r,s.to_vec()))))
+                },
+                _ => panic!("monadic scan x is not an array"),
+            }
+        },
+        2 => panic!("dyadic scan"),
+        _ => panic!("illegal scan arity"),
+    }
 }
 // _fillBy_
 fn fill_by(_arity: usize, _f: Vn, _g: Vn, _x: Vn, _w: Vn) -> Vs {
