@@ -167,7 +167,14 @@ fn windows(arity: usize, x: Vn, _w: Vn) -> Vs {
 // ⌜
 fn table(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
     match arity {
-        1 => panic!("monadic table"),
+        1 => match x.unwrap() {
+            V::A(xa) => {
+                let ravel = (*xa).r.iter().map(|e| call(arity,f.clone(),Some(e.clone()),None).to_ref().clone()).collect::<Vec<V>>();
+                let sh = ravel.len();
+                Vs::V(V::A(Cc::new(A::new(ravel,vec![sh]))))
+            },
+            _ => panic!("monadic table x is not an array"),
+        },
         2 => {
             match (x.unwrap(),w.unwrap()) {
                 (V::A(xa),V::A(wa)) => {
