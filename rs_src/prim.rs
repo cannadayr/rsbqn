@@ -95,8 +95,11 @@ fn floor(_arity: usize, _x: Vn, _w: Vn) -> Vs {
 // =
 fn equals(arity: usize, x: Vn, w: Vn) -> Vs {
     match arity {
-        1 => panic!("monadic equals"),
-        2 => match x == w {
+        1 => match x.unwrap() {
+            V::A(xa) => Vs::V(V::Scalar(xa.sh.len() as i64 as f64)),
+            _ => panic!("monadic equals 𝕩 is not an array"),
+        },
+        2 => match x.unwrap() == w.unwrap() {
             true => Vs::V(V::Scalar(1.0)),
             false => Vs::V(V::Scalar(0.0)),
         },
