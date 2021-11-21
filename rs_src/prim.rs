@@ -77,8 +77,12 @@ fn times(arity: usize, x: Vn, w: Vn) -> Vs {
     }
 }
 // ÷
-fn divide(_arity: usize, _x: Vn, _w: Vn) -> Vs {
-    panic!("divide not implemented");
+fn divide(arity: usize, x: Vn, w: Vn) -> Vs {
+    match arity {
+        1 => Vs::V(V::Scalar(1.0 / x.unwrap().to_f64())),
+        2 => Vs::V(V::Scalar(w.unwrap().to_f64() / x.unwrap().to_f64())),
+        _ => panic!("illegal divide arity"),
+    }
 }
 // ⋆
 fn power(_arity: usize, _x: Vn, _w: Vn) -> Vs {
