@@ -233,8 +233,8 @@ fn scan(arity: usize, f: Vn, x: Vn, _w: Vn) -> Vs {
     }
 }
 // _fillBy_
-fn fill_by(_arity: usize, _f: Vn, _g: Vn, _x: Vn, _w: Vn) -> Vs {
-    panic!("fill_by not implemented");
+fn fill_by(arity: usize, f: Vn, _g: Vn, x: Vn, w: Vn) -> Vs {
+    call(arity,f,x,w)
 }
 // ⊘
 fn cases(arity: usize, f: Vn, g: Vn, x: Vn, w: Vn) -> Vs {
