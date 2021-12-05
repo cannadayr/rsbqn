@@ -182,7 +182,6 @@ impl Vs {
 #[derive(Debug)]
 pub enum Vh {
     Undefined,
-    Nothing,
     V(V),
 }
 
@@ -274,8 +273,7 @@ impl Env {
                 let vh = &(*guard)[id];
                 match vh {
                     Vh::V(v) => v.clone(),
-                    Vh::Nothing => V::Nothing,
-                    Vh::Undefined => panic!("is undefined"),
+                    Vh::Undefined => panic!("heap slot is undefined"),
                     _ => panic!("can't get unset slot"),
                 }
             },
@@ -422,7 +420,7 @@ pub fn new_scalar<T: Decoder>(n: T) -> V {
 }
 pub fn none_or_clone(vn: &Vn) -> Vh {
     match vn {
-        None => Vh::Nothing,
+        None => Vh::V(V::Nothing),
         Some(v) => Vh::V(v.clone()),
     }
 }
