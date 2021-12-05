@@ -2,26 +2,6 @@ use crate::schema::{A,V,Vn,Vs,Decoder};
 use crate::ebqn::{call};
 use cc_mt::Cc;
 
-/*
-pub fn plus(arity:usize, x: Vn,w: Vn) -> Vs {
-    match arity {
-        1 => panic!("no monadic addition"),
-        2 => Vs::V(V::Scalar(x.unwrap().to_f64() + w.unwrap().to_f64())),
-        _ => panic!("illegal arity"),
-    }
-}
-
-fn noop(_arity: usize, _x: Vn, _w: Vn) -> Vs {
-    panic!("noop not implemented");
-}
-fn noop1(_arity: usize, _f: Vn, _x: Vn, _w: Vn) -> Vs {
-    panic!("noop1 not implemented");
-}
-fn noop2(_arity: usize, _f: Vn, _g: Vn, _x: Vn, _w: Vn) -> Vs {
-    panic!("noop2 not implemented");
-}
-*/
-
 // Type
 fn typ(arity: usize, x: Vn, _w: Vn) -> Vs {
     match arity {
@@ -57,8 +37,12 @@ fn assert_fn(_arity: usize, _x: Vn, _w: Vn) -> Vs {
     panic!("assert_fn not implemented");
 }
 // +
-fn plus(_arity: usize, _x: Vn, _w: Vn) -> Vs {
-    panic!("plus not implemented");
+pub fn plus(arity:usize, x: Vn,w: Vn) -> Vs {
+    match arity {
+        1 => Vs::V(x.unwrap()),
+        2 => Vs::V(V::Scalar(x.unwrap().to_f64() + w.unwrap().to_f64())),
+        _ => panic!("illegal plus arity"),
+    }
 }
 // -
 fn minus(arity: usize, x: Vn, w: Vn) -> Vs {
