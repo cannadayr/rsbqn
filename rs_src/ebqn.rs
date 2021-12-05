@@ -146,10 +146,15 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let w = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
+                let arity =
+                    match &w.to_ref() {
+                        V::Nothing => 1,
+                        _ => 2,
+                    };
                 let r =
                     match &x.to_ref() {
                         V::Nothing => x,
-                        _ => call(2,Some(f.to_ref().clone()),Some(x.to_ref().clone()),Some(w.to_ref().clone())),
+                        _ => call(arity,Some(f.to_ref().clone()),Some(x.to_ref().clone()),Some(w.to_ref().clone())),
                     };
                 stack.push(r);
                 dbg_stack_out("FN2C",pos-1,&stack);
