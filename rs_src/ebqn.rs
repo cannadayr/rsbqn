@@ -78,6 +78,7 @@ fn listr(l: Vec<Vs>) -> Vs {
     Vs::Ar(Ar::new(ravel))
 }
 pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
+    debug!("new eval");
     loop {
         let op = code.bc[pos];pos+=1;
         match op {
@@ -105,7 +106,6 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                     1 => {
                         dbg_stack_in("RETN",pos-1,"".to_string(),&stack);
                         let rtn = stack.pop().unwrap();
-                        dbg_stack_out("RETN",pos-1,&stack);
                         rtn
                     },
                     _ => {
@@ -115,9 +115,9 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
             },
             11 => { // ARRO
                 let x = code.bc[pos];pos+=1;
+                dbg_stack_in("ARRO",pos-2,format!("{}",&x),&stack);
                 let hd = stack.len() - x;
                 let tl = stack.split_off(hd);
-                dbg_stack_in("ARRO",pos-2,format!("{}",&x),&stack);
                 stack.push(list(tl));
                 dbg_stack_out("ARRO",pos-2,&stack);
             },
@@ -130,9 +130,9 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 dbg_stack_out("ARRM",pos-2,&stack);
             },
             16|18 => { // FN1C|FN1O
+                dbg_stack_in("FN1C",pos-1,"".to_string(),&stack);
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
-                dbg_stack_in("FN1C",pos-1,format!("{} {}",&f,&x),&stack);
                 let r =
                     match &x.to_ref() {
                         V::Nothing => x,
@@ -142,10 +142,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 dbg_stack_out("FN1C",pos-1,&stack);
             },
             17|19 => { // FN2C|FN2O
+                dbg_stack_in("FN2C",pos-1,"".to_string(),&stack);
                 let w = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
-                dbg_stack_in("FN2C",pos-1,format!("{} {} {}",&w,&f,&x),&stack);
                 let r =
                     match &x.to_ref() {
                         V::Nothing => x,
@@ -163,10 +163,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 dbg_stack_out("TR2D",pos-1,&stack);
             },
             21|23 => { // TR3D|TR3O
+                dbg_stack_in("TR3D",pos-1,"".to_string(),&stack);
                 let f = stack.pop().unwrap();
                 let g = stack.pop().unwrap();
                 let h = stack.pop().unwrap();
-                dbg_stack_in("TR3D",pos-1,format!("{} {} {}",&f,&g,&h),&stack);
                 let t =
                     match &f.to_ref() {
                         V::Nothing => Vs::V(V::Tr2(Cc::new(Tr2::new(g,h)))),
@@ -176,18 +176,18 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 dbg_stack_out("TR3D",pos-1,&stack);
             },
             26 => { // MD1C
+                dbg_stack_in("MD1C",pos-1,"".to_string(),&stack);
                 let f = stack.pop().unwrap();
                 let m = stack.pop().unwrap();
-                dbg_stack_in("MD1C",pos-1,format!("{} {}",&f,&m),&stack);
                 let r = call1(m.to_ref().clone(),f.to_ref().clone());
                 stack.push(r);
                 dbg_stack_out("MD1C",pos-1,&stack);
             },
             27 => { // MD2C
+                dbg_stack_in("MD2C",pos-1,"".to_string(),&stack);
                 let f = stack.pop().unwrap();
                 let m = stack.pop().unwrap();
                 let g = stack.pop().unwrap();
-                dbg_stack_in("MD2C",pos-1,format!("{} {} {}",&f,&m,&g),&stack);
                 let r = call2(m.to_ref().clone(),f.to_ref().clone(),g.to_ref().clone());
                 stack.push(r);
                 dbg_stack_out("MD2C",pos-1,&stack);
@@ -209,35 +209,35 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 dbg_stack_out("VARM",pos-3,&stack);
             },
             48 => { // SETN
+                dbg_stack_in("SETN",pos-1,"".to_string(),&stack);
                 let i = stack.pop().unwrap();
                 let v = stack.pop().unwrap();
-                dbg_stack_in("SETN",pos-1,format!("{} {}",&i,&v),&stack);
                 let r = set(true,i,v);
                 stack.push(Vs::V(r));
                 dbg_stack_out("SETN",pos-1,&stack);
             },
             49 => { // SETU
+                dbg_stack_in("SETU",pos-1,"".to_string(),&stack);
                 let i = stack.pop().unwrap();
                 let v = stack.pop().unwrap();
-                dbg_stack_in("SETU",pos-1,format!("{} {}",&i,&v),&stack);
                 let r = set(false,i,v);
                 stack.push(Vs::V(r));
                 dbg_stack_out("SETU",pos-1,&stack);
             },
             50 => { // SETM
+                dbg_stack_in("SETM",pos-1,"".to_string(),&stack);
                 let i = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
-                dbg_stack_in("SETM",pos-1,format!("{} {} {}",&i,&f,&x),&stack);
                 let v = call(2,Some(f.to_ref().clone()),Some(x.to_ref().clone()),Some(i.get()));
                 let r = set(false,i,v);
                 stack.push(Vs::V(r));
                 dbg_stack_out("SETM",pos-1,&stack);
             },
             51 => { // SETC
+                dbg_stack_in("SETC",pos-1,"".to_string(),&stack);
                 let i = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
-                dbg_stack_in("SETC",pos-1,format!("{} {}",&i,&f),&stack);
                 let v = call(1,Some(f.to_ref().clone()),Some(i.get()),None);
                 let r = set(false,i,v);
                 stack.push(Vs::V(r));

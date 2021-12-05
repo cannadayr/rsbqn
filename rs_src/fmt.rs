@@ -7,7 +7,7 @@ pub fn fmt_stack(stack: &Vec<Vs>) -> String {
 }
 
 pub fn dbg_stack_in(op: &str, pos: usize, args: String, stack: &Vec<Vs>) {
-    debug!("{:<22} in: {}",format!("{:<16} @{}",format!("{} {}",op,args),pos),fmt_stack(&stack));
+    debug!("{:<22}  in: {}",format!("{:<16} @{}",format!("{} {}",op,args),pos),fmt_stack(&stack));
 }
 
 pub fn dbg_stack_out(op: &str, pos: usize, stack: &Vec<Vs>) {
