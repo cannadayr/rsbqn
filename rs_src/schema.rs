@@ -94,7 +94,7 @@ impl Calleable for V {
         match self.deref() {
             V::DervBlockInst(b,mods) => {
                 let mut args = vec![Vh::V(self.clone()),none_or_clone(&x),none_or_clone(&w)];
-                let mut m = mods.iter().map(|b| Vh::V(b.as_ref().unwrap().clone())).collect::<Vec<Vh>>();
+                let mut m = mods.iter().map(|e| Vh::V(e.as_ref().unwrap().clone())).collect::<Vec<Vh>>();
                 args.append(&mut m);
                 let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args));
                 let pos = body_pos(b,arity);
