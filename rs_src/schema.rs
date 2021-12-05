@@ -374,8 +374,8 @@ impl D1 {
 #[derive(Debug,Clone,PartialEq)]
 pub struct D2(V,V,V);
 impl D2 {
-    pub fn new(m: V, g: V,h: V) -> Self {
-        Self(m,g,h)
+    pub fn new(m: V, f: V,g: V) -> Self {
+        Self(m,f,g)
     }
 }
 #[derive(Debug,Clone,PartialEq)]
