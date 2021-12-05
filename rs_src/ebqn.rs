@@ -1,7 +1,7 @@
 use crate::schema::{Env,V,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Body,A,Ar,Tr2,Tr3,set,ok,D2,D1};
 use crate::prim::{provide};
 use crate::code::{r0,r1};
-use crate::fmt::{fmt_stack};
+use crate::fmt::{dbg_stack_out,dbg_stack_in};
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
 use cc_mt::Cc;
@@ -84,28 +84,28 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
             0 => { // PUSH
                 let x = code.bc[pos];pos+=1;
                 let r = code.objs[x].clone();
-                debug!("{:<22} << {}",format!("{:<16} @{}",format!("{} {} {}","PUSH",x,r),pos-2),fmt_stack(&stack)); // 2 args
+                dbg_stack_in("PUSH",pos-2,format!("{} {}",&x,&r),&stack);
                 stack.push(Vs::V(r));
-                debug!("{:<22} :  {}","",fmt_stack(&stack));
+                dbg_stack_out("PUSH",pos-2,&stack);
             },
             1 => { // DFND
                 let x = code.bc[pos];pos+=1;
                 let r = derv(env.clone(),&code,&code.blocks[x]);
-                debug!("{:<22} << {}",format!("{:<16} @{}",format!("{} {} {}","DFND",x,r),pos-2),fmt_stack(&stack)); // 2 args
+                dbg_stack_in("DFND",pos-2,format!("{} {}",&x,&r),&stack);
                 stack.push(r);
-                debug!("{:<22} :  {}","",fmt_stack(&stack));
+                dbg_stack_out("DFND",pos-2,&stack);
             },
             6 => { // POPS
-                debug!("{:<22} << {}",format!("{:<16} @{}",format!("{}","POPS"),pos-1),fmt_stack(&stack)); // 0 args
+                dbg_stack_in("POPS",pos-1,"".to_string(),&stack);
                 let _ = stack.pop();
-                debug!("{:<22} :  {}","",fmt_stack(&stack));
+                dbg_stack_out("POPS",pos-1,&stack);
             },
             7 => { // RETN
                 break match stack.len() {
                     1 => {
-                        debug!("{:<22} << {}",format!("{:<16} @{}",format!("{}","RETN"),pos-1),fmt_stack(&stack)); // 0 args
+                        dbg_stack_in("RETN",pos-1,"".to_string(),&stack);
                         let rtn = stack.pop().unwrap();
-                        debug!("{:<22} :  {}","",fmt_stack(&stack));
+                        dbg_stack_out("RETN",pos-1,&stack);
                         rtn
                     },
                     _ => {
@@ -117,130 +117,131 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let x = code.bc[pos];pos+=1;
                 let hd = stack.len() - x;
                 let tl = stack.split_off(hd);
-                debug!("{:<22} << {}",format!("{:<16} @{}",format!("{} {}","ARRO",x),pos-2),fmt_stack(&stack)); // 1 args
+                dbg_stack_in("ARRO",pos-2,format!("{}",&x),&stack);
                 stack.push(list(tl));
-                debug!("{:<22} :  {}","",fmt_stack(&stack));
+                dbg_stack_out("ARRO",pos-2,&stack);
             },
             12 => { // ARRM
                 let x = code.bc[pos];pos+=1;
                 let hd = stack.len() - x;
                 let tl = stack.split_off(hd);
-                debug!("{:<22} << {}",format!("{:<16} @{}",format!("{} {}","ARRM",x),pos-2),fmt_stack(&stack)); // 1 args
+                dbg_stack_in("ARRM",pos-2,format!("{}",&x),&stack);
                 stack.push(listr(tl));
-                debug!("{:<22} :  {}","",fmt_stack(&stack));
+                dbg_stack_out("ARRM",pos-2,&stack);
             },
             16|18 => { // FN1C|FN1O
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
-                debug!("{:<22} << {}",format!("{:<16} @{}",format!("{} {} {}","FN1C",f,x),pos-1),fmt_stack(&stack)); // 2 args
+                dbg_stack_in("FN1C",pos-1,format!("{} {}",&f,&x),&stack);
                 let r =
                     match &x.to_ref() {
                         V::Nothing => x,
                         _ => call(1,Some(f.to_ref().clone()),Some(x.to_ref().clone()),None),
                     };
                 stack.push(r);
-                debug!("{:<22} :  {}","",fmt_stack(&stack));
+                dbg_stack_out("FN1C",pos-1,&stack);
             },
             17|19 => { // FN2C|FN2O
                 let w = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
-                debug!("{:<22} << {}",format!("{:<16} @{}",format!("{} {} {} {}","FN2C",w,f,x),pos-1),fmt_stack(&stack)); // 3 args
+                dbg_stack_in("FN2C",pos-1,format!("{} {} {}",&w,&f,&x),&stack);
                 let r =
                     match &x.to_ref() {
                         V::Nothing => x,
                         _ => call(2,Some(f.to_ref().clone()),Some(x.to_ref().clone()),Some(w.to_ref().clone())),
                     };
                 stack.push(r);
-                debug!("{:<22} :  {}","",fmt_stack(&stack));
+                dbg_stack_out("FN2C",pos-1,&stack);
             },
             20 => { // TR2D
                 let g = stack.pop().unwrap();
                 let h = stack.pop().unwrap();
-                debug!("{:<22} << {}",format!("{:<16} @{}",format!("{} {} {}","TR2D",g,h),pos-1),fmt_stack(&stack)); // 2 args
+                dbg_stack_in("TR2D",pos-1,format!("{} {}",&g,&h),&stack);
                 let t = Vs::V(V::Tr2(Cc::new(Tr2::new(g,h))));
                 stack.push(t);
-                debug!("{:<22} :  {}","",fmt_stack(&stack));
+                dbg_stack_out("TR2D",pos-1,&stack);
             },
             21|23 => { // TR3D|TR3O
                 let f = stack.pop().unwrap();
                 let g = stack.pop().unwrap();
                 let h = stack.pop().unwrap();
-                debug!("{:<22} << {}",format!("{:<16} @{}",format!("{} {} {} {}","TR3D",f,g,h),pos-1),fmt_stack(&stack)); // 3 args
+                dbg_stack_in("TR3D",pos-1,format!("{} {} {}",&f,&g,&h),&stack);
                 let t =
                     match &f.to_ref() {
                         V::Nothing => Vs::V(V::Tr2(Cc::new(Tr2::new(g,h)))),
                         _ => Vs::V(V::Tr3(Cc::new(Tr3::new(f,g,h)))),
                     };
                 stack.push(t);
-                debug!("{:<22} :  {}","",fmt_stack(&stack));
+                dbg_stack_out("TR3D",pos-1,&stack);
             },
             26 => { // MD1C
                 let f = stack.pop().unwrap();
                 let m = stack.pop().unwrap();
-                debug!("{:<22} << {}",format!("{:<16} @{}",format!("{} {} {}","MD1C",f,m),pos-1),fmt_stack(&stack)); // 2 args
+                dbg_stack_in("MD1C",pos-1,format!("{} {}",&f,&m),&stack);
                 let r = call1(m.to_ref().clone(),f.to_ref().clone());
                 stack.push(r);
-                debug!("{:<22} :  {}","",fmt_stack(&stack));
+                dbg_stack_out("MD1C",pos-1,&stack);
             },
             27 => { // MD2C
                 let f = stack.pop().unwrap();
                 let m = stack.pop().unwrap();
                 let g = stack.pop().unwrap();
-                debug!("{:<22} << {}",format!("{:<16} @{}",format!("{} {} {} {}","MD2C",f,m,g),pos-1),fmt_stack(&stack)); // 3 args
+                dbg_stack_in("MD2C",pos-1,format!("{} {} {}",&f,&m,&g),&stack);
                 let r = call2(m.to_ref().clone(),f.to_ref().clone(),g.to_ref().clone());
                 stack.push(r);
-                debug!("{:<22} :  {}","",fmt_stack(&stack));
+                dbg_stack_out("MD2C",pos-1,&stack);
             },
             32|34 => { // VARO|VARU
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
                 let t = env.ge(x);
-                debug!("{:<22} << {}",format!("{:<16} @{}",format!("{} {} {}","VARO",x,w),pos-3),fmt_stack(&stack)); // 2 args
+                dbg_stack_in("VARO",pos-3,format!("{} {}",&x,&w),&stack);
                 stack.push(Vs::V(t.get(w)));
-                debug!("{:<22} :  {}","",fmt_stack(&stack));
+                dbg_stack_out("VARO",pos-3,&stack);
             },
             33 => { // VARM
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
                 let t = env.ge(x);
-                debug!("{:<22} << {}",format!("{:<16} @{}",format!("{} {} {}","VARM",x,w),pos-3),fmt_stack(&stack)); // 2 args
+                dbg_stack_in("VARM",pos-3,format!("{} {}",&x,&w),&stack);
                 stack.push(Vs::Slot(t,w));
-                debug!("{:<22} :  {}","",fmt_stack(&stack));
+                dbg_stack_out("VARM",pos-3,&stack);
             },
             48 => { // SETN
                 let i = stack.pop().unwrap();
                 let v = stack.pop().unwrap();
-                debug!("{:<22} << {}",format!("{:<16} @{}",format!("{} {} {}","SETN",i,v),pos-1),fmt_stack(&stack)); // 2 args
+                dbg_stack_in("SETN",pos-1,format!("{} {}",&i,&v),&stack);
                 let r = set(true,i,v);
                 stack.push(Vs::V(r));
+                dbg_stack_out("SETN",pos-1,&stack);
             },
             49 => { // SETU
                 let i = stack.pop().unwrap();
                 let v = stack.pop().unwrap();
-                debug!("{:<22} << {}",format!("{:<16} @{}",format!("{} {} {}","SETU",i,v),pos-1),fmt_stack(&stack)); // 2 args
+                dbg_stack_in("SETU",pos-1,format!("{} {}",&i,&v),&stack);
                 let r = set(false,i,v);
                 stack.push(Vs::V(r));
-                debug!("{:<22} :  {}","",fmt_stack(&stack));
+                dbg_stack_out("SETU",pos-1,&stack);
             },
             50 => { // SETM
                 let i = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
-                debug!("{:<22} << {}",format!("{:<16} @{}",format!("{} {} {} {}","SETM",i,f,x),pos-1),fmt_stack(&stack)); // 3 args
+                dbg_stack_in("SETM",pos-1,format!("{} {} {}",&i,&f,&x),&stack);
                 let v = call(2,Some(f.to_ref().clone()),Some(x.to_ref().clone()),Some(i.get()));
                 let r = set(false,i,v);
                 stack.push(Vs::V(r));
-                debug!("{:<22} :  {}","",fmt_stack(&stack));
+                dbg_stack_out("SETM",pos-1,&stack);
             },
             51 => { // SETC
                 let i = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
-                debug!("{:<22} << {}",format!("{:<16} @{}",format!("{} {} {}","SETC",i,f),pos-1),fmt_stack(&stack)); // 2 args
+                dbg_stack_in("SETC",pos-1,format!("{} {}",&i,&f),&stack);
                 let v = call(1,Some(f.to_ref().clone()),Some(i.get()),None);
                 let r = set(false,i,v);
                 stack.push(Vs::V(r));
-                debug!("{:<22} :  {}","",fmt_stack(&stack));
+                dbg_stack_out("SETC",pos-1,&stack);
             },
             _ => {
                 panic!("unreachable op: {}",op);

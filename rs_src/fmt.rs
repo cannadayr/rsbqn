@@ -1,8 +1,17 @@
 use std::fmt::{Display,Formatter,Result};
 use crate::schema::{V,Vs};
+use log::{debug, trace, error, log_enabled, info, Level};
 
 pub fn fmt_stack(stack: &Vec<Vs>) -> String {
-    stack.iter().fold(String::new(), |acc, num| acc + &num.to_string() + "⋄")
+    stack.iter().fold(String::new(), |acc, num| acc + &num.to_string() + ";")
+}
+
+pub fn dbg_stack_in(op: &str, pos: usize, args: String, stack: &Vec<Vs>) {
+    debug!("{:<22} << {}",format!("{:<16} @{}",format!("{} {}",op,args),pos),fmt_stack(&stack));
+}
+
+pub fn dbg_stack_out(op: &str, pos: usize, stack: &Vec<Vs>) {
+    debug!("{:<22} << {}",format!("{:<16} @{}",format!("{}",op),pos),fmt_stack(&stack));
 }
 
 impl Display for V {
