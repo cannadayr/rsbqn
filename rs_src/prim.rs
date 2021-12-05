@@ -177,8 +177,8 @@ fn table(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
         1 => match x.unwrap() {
             V::A(xa) => {
                 let ravel = (*xa).r.iter().map(|e| call(arity,f.clone(),Some(e.clone()),None).to_ref().clone()).collect::<Vec<V>>();
-                let sh = ravel.len();
-                Vs::V(V::A(Cc::new(A::new(ravel,vec![sh]))))
+                let sh = (*xa).sh.clone();
+                Vs::V(V::A(Cc::new(A::new(ravel,sh))))
             },
             _ => panic!("monadic table x is not an array"),
         },
@@ -188,8 +188,8 @@ fn table(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
                     let ravel = (*wa).r.iter().flat_map(|d| {
                         (*xa).r.iter().map(|e| call(arity,f.clone(),Some(e.clone()),Some(d.clone())).to_ref().clone()).collect::<Vec<V>>()
                     }).collect::<Vec<V>>();
-                    let sh = ravel.len();
-                    Vs::V(V::A(Cc::new(A::new(ravel,vec![sh]))))
+                    let sh = (*wa).sh.clone().into_iter().chain((*xa).sh.clone().into_iter()).collect();
+                    Vs::V(V::A(Cc::new(A::new(ravel,sh))))
                 },
                 _ => panic!("dyadic table not an array"),
             }
