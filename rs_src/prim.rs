@@ -148,7 +148,7 @@ fn pick(arity: usize, x: Vn, w: Vn) -> Vs {
 fn windows(arity: usize, x: Vn, _w: Vn) -> Vs {
     match arity {
         1 => match x.unwrap() {
-            V::Scalar(n) => Vs::V(V::A(Cc::new(A::new((0..n as i64-1).map(|v| V::Scalar(v as f64)).collect::<Vec<V>>(),vec![n as usize])))),
+            V::Scalar(n) => Vs::V(V::A(Cc::new(A::new((0..n as i64).map(|v| V::Scalar(v as f64)).collect::<Vec<V>>(),vec![n as usize])))),
             _ => panic!("x is not a number"),
         },
         _ => panic!("illegal windows arity"),
