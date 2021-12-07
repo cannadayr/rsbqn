@@ -206,7 +206,7 @@ fn scan(arity: usize, f: Vn, x: Vn, _w: Vn) -> Vs {
                             i += 1;
                         }
                         while i < l {
-                            r[i] = call(2,f.clone(),Some(a.r[i].clone()),Some(a.r[i-c].clone())).to_ref().clone();
+                            r[i] = call(2,f.clone(),Some(a.r[i].clone()),Some(r[i-c].clone())).to_ref().clone();
                             i += 1;
                         }
                     };
