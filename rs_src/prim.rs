@@ -105,8 +105,18 @@ fn lesseq(arity: usize, x: Vn, w: Vn) -> Vs {
     }
 }
 // ≢
-fn shape(_arity: usize, _x: Vn, _w: Vn) -> Vs {
-    panic!("shape not implemented");
+fn shape(arity: usize, x: Vn, w: Vn) -> Vs {
+    match arity {
+        1 => match x.unwrap() {
+            V::A(xa) => {
+                let ravel = xa.sh.iter().map(|n| V::Scalar(*n as i64 as f64)).collect::<Vec<V>>();
+                let shape = vec![ravel.len()];
+                Vs::V(V::A(Cc::new(A::new(ravel,shape))))
+            },
+            _ => panic!("shape 𝕩 is not an array"),
+        },
+        _ => panic!("illegal shape arity"),
+    }
 }
 // ⥊
 fn reshape(arity: usize, x: Vn, w: Vn) -> Vs {
