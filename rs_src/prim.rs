@@ -105,8 +105,11 @@ fn power(_arity: usize, _x: Vn, _w: Vn) -> Vs {
     panic!("power not implemented");
 }
 // ⌊
-fn floor(_arity: usize, _x: Vn, _w: Vn) -> Vs {
-    panic!("floor not implemented");
+fn floor(arity: usize, x: Vn, _w: Vn) -> Vs {
+    match arity {
+        1|2 => Vs::V(V::Scalar(x.unwrap().to_f64().floor())),
+        _ => panic!("illegal divide arity"),
+    }
 }
 // =
 fn equals(arity: usize, x: Vn, w: Vn) -> Vs {
