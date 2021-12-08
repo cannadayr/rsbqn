@@ -7,7 +7,8 @@ use std::cmp::max;
 fn typ(arity: usize, x: Vn, _w: Vn) -> Vs {
     match arity {
         1 => match x.unwrap() {
-            V::Scalar(n) => Vs::V(V::Scalar(1.0)),
+            V::Scalar(_n) => Vs::V(V::Scalar(1.0)),
+            V::A(_a) => Vs::V(V::Scalar(0.0)),
             _ => panic!("no matching value for typ"),
         },
         _ => panic!("typ not implemented"),
