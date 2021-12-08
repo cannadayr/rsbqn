@@ -24,6 +24,7 @@ fn typ(arity: usize, x: Vn, _w: Vn) -> Vs {
         1 => match x.unwrap() {
             V::Scalar(_n) => Vs::V(V::Scalar(1.0)),
             V::A(_a) => Vs::V(V::Scalar(0.0)),
+            V::Char(_c) => Vs::V(V::Scalar(2.0)),
             _ => panic!("no matching value for typ"),
         },
         _ => panic!("typ not implemented"),
