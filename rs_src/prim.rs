@@ -155,7 +155,7 @@ fn reshape(arity: usize, x: Vn, w: Vn) -> Vs {
     match arity {
         1 => {
             match x.unwrap() {
-                V::A(_a) => panic!("monadic reshape arr"),
+                V::A(xa) => Vs::V(V::A(Cc::new(A::new(xa.r.clone(),vec![xa.r.len()])))),
                 _ => panic!("monadic reshape no arr"),
             }
         },
