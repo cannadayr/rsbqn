@@ -254,14 +254,14 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
 #[rustler::nif]
 fn tests() -> NifResult<Atom> {
     bytecode();
-    debug!("bytecode pass");
+    info!("bytecode pass");
     let builtin = provide();
     let runtime0 = r0(&builtin);
-    debug!("runtime0 pass");
+    info!("runtime0 pass");
     let runtime1 = r1(&builtin,runtime0.to_array());
-    debug!("runtime1 pass");
-    prim(runtime1.to_array());
-    debug!("prim pass");
+    info!("runtime1 pass");
+    prim(runtime1.to_array().r[0].to_array());
+    info!("prim pass");
     Ok(ok())
 }
 

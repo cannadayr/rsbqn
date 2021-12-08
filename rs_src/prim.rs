@@ -2,6 +2,21 @@ use crate::schema::{A,V,Vn,Vs,Decoder};
 use crate::ebqn::{call};
 use cc_mt::Cc;
 use std::cmp::max;
+use log::{debug, trace, error, log_enabled, info, Level};
+
+fn dbg_args(fun: &str, arity: usize, x: &Vn, w: &Vn) {
+    debug!("calling {}/{}",fun,arity);
+    match arity {
+        1 => {
+            debug!("𝕩 = {}",format!("{}",x.clone().unwrap().to_string()));
+        },
+        2 => {
+            debug!("𝕩 = {}",format!("{}",x.clone().unwrap().to_string()));
+            debug!("𝕨 = {}",format!("{}",w.clone().unwrap().to_string()));
+        },
+        _ => ()
+    };
+}
 
 // Type
 fn typ(arity: usize, x: Vn, _w: Vn) -> Vs {

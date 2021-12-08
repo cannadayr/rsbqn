@@ -13,7 +13,7 @@ extern crate log_panics;
 pub fn load(env: Env, _info: Term) -> bool {
     rustler::resource!(schema::Env, env);
     let _r = syslog::init(Facility::LOG_USER,
-                 log::LevelFilter::Debug,
+                 log::LevelFilter::Info,
                  Some("ebqn"));
     log_panics::init();
     true

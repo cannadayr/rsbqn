@@ -29,13 +29,13 @@ cmd_receive(Port, Acc) ->
     end.
 
 gen_line(assert,Code,undefined) ->
-    [<<"\tdebug!(\"test: undefined\");">>,<<"\tassert_panic(">>,Code,<<");\n">>];
+    [<<"\tinfo!(\"test: undefined\");">>,<<"\tassert_panic(">>,Code,<<");\n">>];
 gen_line(assert,Code,Comment) ->
-    [<<"\tdebug!(\"test: ">>,Comment,<<"\");">>,<<"assert_panic(">>,Code,<<"); // ">>,Comment,<<"\n">>];
+    [<<"\tinfo!(\"test: ">>,Comment,<<"\");">>,<<"assert_panic(">>,Code,<<"); // ">>,Comment,<<"\n">>];
 gen_line(Expected,Code,undefined) ->
-    [<<"\tdebug!(\"test: undefined\");">>,<<"\tassert_eq!(">>,erlang:float_to_binary(Expected,[{decimals, 1}]),<<",run(">>,Code,<<").to_f64());\n">>];
+    [<<"\tinfo!(\"test: undefined\");">>,<<"\tassert_eq!(">>,erlang:float_to_binary(Expected,[{decimals, 1}]),<<",run(">>,Code,<<").to_f64());\n">>];
 gen_line(Expected,Code,Comment) ->
-    [<<"\tdebug!(\"test: ">>,Comment,<<"\");">>,<<"assert_eq!(">>,erlang:float_to_binary(Expected,[{decimals, 1}]),<<",run(">>,Code,<<").to_f64()); // ">>,Comment,<<"\n">>].
+    [<<"\tinfo!(\"test: ">>,Comment,<<"\");">>,<<"assert_eq!(">>,erlang:float_to_binary(Expected,[{decimals, 1}]),<<",run(">>,Code,<<").to_f64()); // ">>,Comment,<<"\n">>].
 gen_code([],Accm) ->
     lists:reverse(Accm);
 gen_code(Todo,Accm) ->
@@ -103,7 +103,7 @@ main([Repo]) ->
     %Simple = suite(Repo,<<"simple.bqn">>),
     Prim = suite(Repo,<<"prim.bqn">>),
     file:write_file("rs_src/test.rs",erlang:iolist_to_binary([
-        <<"use log::{debug};\n">>,
+        <<"use log::{info};\n">>,
         <<"use core::f64::{INFINITY,NEG_INFINITY};\n">>,
         %<<"use std::{panic};\n">>,
         <<"use crate::ebqn::{run,assert_panic};\n">>,

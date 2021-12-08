@@ -6,6 +6,10 @@ pub fn fmt_stack(stack: &Vec<Vs>) -> String {
     stack.iter().fold(String::new(), |acc, num| acc + &num.to_string() + ";")
 }
 
+pub fn fmt_array(a: &Vec<V>) -> String {
+    a.iter().fold(String::new(), |acc, num| acc + &num.to_string() + ",")
+}
+
 pub fn dbg_stack_in(op: &str, pos: usize, args: String, stack: &Vec<Vs>) {
     debug!("{:<22}  in: {}",format!("{:<16} @{}",format!("{} {}",op,args),pos),fmt_stack(&stack));
 }
@@ -22,7 +26,7 @@ impl Display for V {
             V::BlockInst(_b) => write!(f,"{}","BlockInst"),
             V::DervBlockInst(_b,_a) => write!(f,"{}","DervBlockInst"),
             V::Nothing => write!(f,"{}","Nothing"),
-            V::A(_a) => write!(f,"{}","A"),
+            V::A(a) => write!(f,"[{}]",fmt_array(&a.r)),
             V::Fn(_a) => write!(f,"{}","Fn"),
             V::R1(_f) => write!(f,"{}","R1"),
             V::R2(_f) => write!(f,"{}","R2"),
