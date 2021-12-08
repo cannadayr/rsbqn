@@ -55,8 +55,18 @@ fn group_ord(_arity: usize, _x: Vn, _w: Vn) -> Vs {
     panic!("group_ord not implemented");
 }
 // !
-fn assert_fn(_arity: usize, _x: Vn, _w: Vn) -> Vs {
-    panic!("assert_fn not implemented");
+fn assert_fn(arity: usize, x: Vn, w: Vn) -> Vs {
+    match arity {
+        1 => match x.unwrap().to_f64() {
+            1.0 => Vs::V(V::Scalar(1.0)),
+            _ => panic!("assert failed"),
+        },
+        2 => match x.unwrap().to_f64() {
+            1.0 => Vs::V(V::Scalar(1.0)),
+            _ => panic!("{}",w.unwrap()),
+        },
+        _ => panic!("illegal assert arity"),
+    }
 }
 // +
 pub fn plus(arity:usize, x: Vn,w: Vn) -> Vs {
