@@ -1,6 +1,7 @@
 use crate::schema::{A,V,Vn,Vs,Decoder};
 use crate::ebqn::{call};
 use cc_mt::Cc;
+use std::cmp::max;
 
 // Type
 fn typ(arity: usize, x: Vn, _w: Vn) -> Vs {
@@ -25,8 +26,29 @@ fn log(_arity: usize, _x: Vn, _w: Vn) -> Vs {
     panic!("log not implemented");
 }
 // GroupLen
-fn group_len(_arity: usize, _x: Vn, _w: Vn) -> Vs {
-    panic!("group_len not implemented");
+fn group_len(arity: usize, x: Vn, _w: Vn) -> Vs {
+    match arity {
+        1 => {
+            match x.unwrap() {
+                V::A(xa) => {
+                    let l = xa.r.iter().fold(-1.0, |acc, i| i.to_f64().max(acc));
+                    let s = l as usize + 1;
+                    let mut r = vec![V::Scalar(0.0);s.clone()];
+                    let mut i = 0;
+                    while i < xa.r.len() {
+                        let e = xa.r[i].to_f64();
+                        if (e >= 0.0) {
+                            r[e as usize] = V::Scalar(r[e as usize].to_f64() + 1.0)
+                        }
+                        i += 1;
+                    }
+                    Vs::V(V::A(Cc::new(A::new(r,vec![s]))))
+                },
+                _ => panic!("group_len 𝕩 is not an array"),
+            }
+        },
+        _ => panic!("illegal group_len arity"),
+    }
 }
 // GroupOrd
 fn group_ord(_arity: usize, _x: Vn, _w: Vn) -> Vs {
