@@ -89,7 +89,12 @@ fn assert_fn(arity: usize, x: Vn, w: Vn) -> Vs {
 pub fn plus(arity:usize, x: Vn,w: Vn) -> Vs {
     match arity {
         1 => Vs::V(x.unwrap()),
-        2 => Vs::V(V::Scalar(x.unwrap().to_f64() + w.unwrap().to_f64())),
+        2 => match (x.unwrap(),w.unwrap()) {
+                (V::Char(xc),V::Scalar(ws)) => Vs::V(V::Char(((xc as u8) + (ws as u8)) as char)),
+                (V::Scalar(xs),V::Char(wc)) => Vs::V(V::Char(((wc as u8) + (xs as u8)) as char)),
+                (V::Scalar(xs),V::Scalar(ws)) => Vs::V(V::Scalar(xs.to_f64() + ws.to_f64())),
+                _ => panic!("dyadic plus pattern not found"),
+        },
         _ => panic!("illegal plus arity"),
     }
 }
