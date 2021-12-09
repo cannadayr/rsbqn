@@ -28,19 +28,19 @@ cmd_receive(Port, Acc) ->
         {Port, eof}          -> {ok, lists:reverse(Acc)}
     end.
 
-gen_line(assert,Code,undefined) ->
-    [<<"\tinfo!(\"test: undefined\");">>,<<"\tassert_panic(">>,Code,<<");\n">>];
-gen_line(assert,Code,Comment) ->
-    [<<"\tinfo!(\"test: ">>,Comment,<<"\");">>,<<"assert_panic(">>,Code,<<"); // ">>,Comment,<<"\n">>];
-gen_line(Expected,Code,undefined) ->
-    [<<"\tinfo!(\"test: undefined\");">>,<<"\tassert_eq!(">>,erlang:float_to_binary(Expected,[{decimals, 1}]),<<",run(">>,Code,<<").to_f64());\n">>];
-gen_line(Expected,Code,Comment) ->
-    [<<"\tinfo!(\"test: ">>,Comment,<<"\");">>,<<"assert_eq!(">>,erlang:float_to_binary(Expected,[{decimals, 1}]),<<",run(">>,Code,<<").to_f64()); // ">>,Comment,<<"\n">>].
+gen_line(assert,ByteCode,Code,undefined) ->
+    [<<"\t{let desc = r#\"test: ">>,Code,<<"\"#;info!(\"{}\",desc);">>,<<"let code = ">>,ByteCode,<<";let wrapper = AssertUnwindSafe(code);panic::catch_unwind( || { run(wrapper.clone()) });}\n">>];
+gen_line(assert,ByteCode,Code,Comment) ->
+    [<<"\t{let desc = r#\"test: ">>,Comment,<<"\"#;info!(\"{}\",desc);">>,<<"let code = ">>,ByteCode,<<";let wrapper = AssertUnwindSafe(code);panic::catch_unwind( || { run(wrapper.clone()) });} // ">>,Code,<<"\n">>];
+gen_line(Expected,ByteCode,Code,undefined) ->
+    [<<"\t{let desc = r#\"test: ">>,Code,<<"\"#;info!(\"{}\",desc);">>,<<"assert_eq!(">>,erlang:float_to_binary(Expected,[{decimals, 1}]),<<",run(">>,ByteCode,<<").to_f64());}\n">>];
+gen_line(Expected,ByteCode,Code,Comment) ->
+    [<<"\t{let desc = r#\"test: ">>,Comment,<<"\"#;info!(\"{}\",desc);">>,<<"assert_eq!(">>,erlang:float_to_binary(Expected,[{decimals, 1}]),<<",run(">>,ByteCode,<<").to_f64());} // ">>,Code,<<"\n">>].
 gen_code([],Accm) ->
     lists:reverse(Accm);
 gen_code(Todo,Accm) ->
-    {Expected,Code,Comment} = hd(Todo),
-    Line = gen_line(Expected,Code,Comment),
+    {Expected,ByteCode,Code,Comment} = hd(Todo),
+    Line = gen_line(Expected,ByteCode,Code,Comment),
     gen_code(tl(Todo),[Line] ++ Accm).
 gen_tests(_Repo,[],Accm) ->
     lists:reverse(Accm);
@@ -49,7 +49,7 @@ gen_tests(Repo,Args,Accm) ->
     {ok,CurDir} = file:get_cwd(),
     {Cmd,CmdArgs} = { erlang:binary_to_list(filename:join([CurDir, <<"crs.bqn">>])),[Repo,io_lib:format("~ts",[Code])] },
     {ok,Result} = cmd(Cmd,CmdArgs),
-    gen_tests(Repo,tl(Args),[{Expected,string:trim(Result),Comment}]++Accm).
+    gen_tests(Repo,tl(Args),[{Expected,string:trim(Result),Code,Comment}]++Accm).
 parse_code([Code]) ->
     {Code,undefined};
 parse_code([Code,Comment]) ->
@@ -106,7 +106,8 @@ main([Repo]) ->
         <<"use log::{info};\n">>,
         <<"use core::f64::{INFINITY,NEG_INFINITY};\n">>,
         %<<"use std::{panic};\n">>,
-        <<"use crate::ebqn::{run,assert_panic};\n">>,
+        <<"use crate::ebqn::{run};\n">>,
+        <<"use std::panic::{self, AssertUnwindSafe};\n">>,
         <<"use crate::schema::{Code,new_scalar,new_char,new_string,Body,A,Decoder};\n\n">>,
         <<"pub fn bytecode() {\n">>,ByteCode,<<"}\n\n">>,
         <<"pub fn prim(runtime: &A) {\n">>,Prim,<<"}\n\n">>
