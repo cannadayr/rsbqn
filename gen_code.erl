@@ -46,7 +46,7 @@ main([Repo]) ->
     file:write_file("rs_src/code.rs",erlang:iolist_to_binary([
         <<"use log::{debug};\n">>,
         <<"use core::f64::{INFINITY,NEG_INFINITY};\n">>,
-        <<"use crate::ebqn::{run,assert_panic};\n">>,
+        <<"use crate::ebqn::run;\n">>,
         <<"use crate::schema::{Code,new_scalar,new_char,new_string,Body,A,Decoder,V};\n">>,
         <<"pub fn r0(provide: &A) -> V {\nrun(Code::new(">>,utf8(R0),<<"))\n}\n\n">>,
         <<"pub fn r1(provide: &A,runtime_0: &A) -> V {\nrun(Code::new(">>,utf8(R1),<<"))\n}\n\n">>

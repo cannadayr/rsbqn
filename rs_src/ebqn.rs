@@ -275,11 +275,6 @@ pub fn run(code: Cc<Code>) -> V {
     vm(&root,&code,pos,Vec::new()).to_ref().clone()
 }
 
-#[should_panic]
-pub fn assert_panic(code: Cc<Code>) {
-    let _ = run(code);
-}
-
 #[rustler::nif]
 fn init_st() -> NifResult<(Atom,ResourceArc<Env>,V)> {
     //let code = Code::new(vec![0,0,7],vec![new_scalar(5.0)],vec![(0,true,new_body(Body::Imm(0)))],vec![(0,0)]);
