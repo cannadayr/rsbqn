@@ -337,7 +337,7 @@ impl BlockInst {
 }
 impl PartialEq for BlockInst {
     fn eq(&self, other: &Self) -> bool {
-        panic!("can't compare BlockInst for equality")
+        Cc::ptr_eq(&self.def,&other.def) && Cc::ptr_eq(&self.parent.0,&other.parent.0)
     }
 }
 
