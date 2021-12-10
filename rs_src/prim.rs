@@ -25,6 +25,8 @@ fn typ(arity: usize, x: Vn, _w: Vn) -> Vs {
             V::Scalar(_n) => Vs::V(V::Scalar(1.0)),
             V::A(_a) => Vs::V(V::Scalar(0.0)),
             V::Char(_c) => Vs::V(V::Scalar(2.0)),
+            V::DervBlockInst(_b,_a) => Vs::V(V::Scalar(3.0)),
+            V::BlockInst(b) => Vs::V(V::Scalar(b.def.typ as f64 + 3.0)),
             _ => panic!("no matching value for typ"),
         },
         _ => panic!("typ not implemented"),
