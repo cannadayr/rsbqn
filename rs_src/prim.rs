@@ -113,7 +113,10 @@ pub fn plus(arity:usize, x: Vn,w: Vn) -> Vs {
 // -
 fn minus(arity: usize, x: Vn, w: Vn) -> Vs {
     match arity {
-        1 => Vs::V(V::Scalar(-1.0 * x.unwrap().to_f64())),
+        1 => match x.unwrap() {
+            V::Scalar(xs) => Vs::V(V::Scalar(-1.0 * xs)),
+            _ => panic!("monadic minus expected number"),
+        },
         // a proper u32 to char conversions requires the unstable feature 'assoc_char_funcs'
         // https://github.com/rust-lang/rust/issues/71763
         // use u8's for now
@@ -125,28 +128,50 @@ fn minus(arity: usize, x: Vn, w: Vn) -> Vs {
             _ => panic!("dyadic minus pattern not found"),
         },
         _ => panic!("illegal minus arity"),
-    }
+    };
+    //debug!("minus returning {}",r);
+    r
 }
 // ×
 fn times(arity: usize, x: Vn, w: Vn) -> Vs {
+    dbg_args("times",arity,&x,&w);
+    let r =
     match arity {
-        2 => Vs::V(V::Scalar(w.unwrap().to_f64() * x.unwrap().to_f64())),
+        2 => match (x.unwrap(),w.unwrap()) {
+            (V::Scalar(xs),V::Scalar(ws)) => Vs::V(V::Scalar(ws * xs)),
+            _ => panic!("dyadic times illegal arguments"),
+        },
         _ => panic!("illegal times arity"),
-    }
+    };
+    //debug!("times returning {}",r);
+    r
 }
 // ÷
 fn divide(arity: usize, x: Vn, w: Vn) -> Vs {
+    dbg_args("divide",arity,&x,&w);
     match arity {
-        1 => Vs::V(V::Scalar(1.0 / x.unwrap().to_f64())),
-        2 => Vs::V(V::Scalar(w.unwrap().to_f64() / x.unwrap().to_f64())),
+        1 => match x.unwrap() {
+            V::Scalar(xs) => Vs::V(V::Scalar(1.0 / xs)),
+            _ => panic!("monadic divide expected number"),
+        },
+        2 => match (x.unwrap(),w.unwrap()) {
+            (V::Scalar(xs),V::Scalar(ws)) => Vs::V(V::Scalar(ws / xs)),
+            _ => panic!("dyadic divide expected number"),
+        },
         _ => panic!("illegal divide arity"),
     }
 }
 // ⋆
 fn power(arity: usize, x: Vn, w: Vn) -> Vs {
     match arity {
-        1 => Vs::V(V::Scalar(x.unwrap().to_f64().exp())),
-        2 => Vs::V(V::Scalar(w.unwrap().to_f64().powf(x.unwrap().to_f64()))),
+        1 => match x.unwrap() {
+            V::Scalar(xs) => Vs::V(V::Scalar(xs.exp())),
+            _ => panic!("monadic power expected number"),
+        },
+        2 => match (x.unwrap(),w.unwrap()) {
+            (V::Scalar(xs),V::Scalar(ws)) => Vs::V(V::Scalar(ws.powf(xs))),
+            _ => panic!("dyadic power expected numbers"),
+        },
         _ => panic!("illegal power arity"),
     }
 }
