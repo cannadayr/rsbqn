@@ -29,9 +29,9 @@ cmd_receive(Port, Acc) ->
     end.
 
 gen_line(assert,ByteCode,Code,undefined) ->
-    [<<"\t{let desc = r#\"test: ">>,Code,<<"\"#;info!(\"{}\",desc);">>,<<"let code = ">>,ByteCode,<<";let wrapper = AssertUnwindSafe(code);panic::catch_unwind( || { run(wrapper.clone()) });}\n">>];
+    [<<"\t{let desc = r#\"test: ">>,Code,<<"\"#;info!(\"{}\",desc);">>,<<"let code = ">>,ByteCode,<<";let wrapper = AssertUnwindSafe(code);panic::catch_unwind( move || { run(wrapper.clone()) }).unwrap_err();}\n">>];
 gen_line(assert,ByteCode,Code,Comment) ->
-    [<<"\t{let desc = r#\"test: ">>,Comment,<<"\"#;info!(\"{}\",desc);">>,<<"let code = ">>,ByteCode,<<";let wrapper = AssertUnwindSafe(code);panic::catch_unwind( || { run(wrapper.clone()) });} // ">>,Code,<<"\n">>];
+    [<<"\t{let desc = r#\"test: ">>,Comment,<<"\"#;info!(\"{}\",desc);">>,<<"let code = ">>,ByteCode,<<";let wrapper = AssertUnwindSafe(code);panic::catch_unwind( move || { run(wrapper.clone()) }).unwrap_err();} // ">>,Code,<<"\n">>];
 gen_line(Expected,ByteCode,Code,undefined) ->
     [<<"\t{let desc = r#\"test: ">>,Code,<<"\"#;info!(\"{}\",desc);">>,<<"assert_eq!(">>,erlang:float_to_binary(Expected,[{decimals, 1}]),<<",run(">>,ByteCode,<<").to_f64());}\n">>];
 gen_line(Expected,ByteCode,Code,Comment) ->
