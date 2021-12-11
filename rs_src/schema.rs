@@ -74,7 +74,10 @@ impl Decoder for V {
     fn to_f64(&self) -> f64 {
         match self.deref() {
             V::Scalar(n) => *n,
-            V::Char(c) => panic!("can't decode char to RUST"),
+            // a proper u32 to char conversions requires the unstable feature 'assoc_char_funcs'
+            // https://github.com/rust-lang/rust/issues/71763
+            // use u8's for now
+            V::Char(c) => *c as u8 as f64,
             V::BlockInst(_b) => panic!("can't decode blockinst to RUST"),
             V::DervBlockInst(_b,_a) => panic!("can't encode dervblockinst to BEAM"),
             V::Nothing => panic!("can't decode nothing to BEAM"),
