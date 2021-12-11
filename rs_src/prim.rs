@@ -162,6 +162,7 @@ fn equals(arity: usize, x: Vn, w: Vn) -> Vs {
     match arity {
         1 => match x.unwrap() {
             V::A(xa) => Vs::V(V::Scalar(xa.sh.len() as i64 as f64)),
+            V::Char(xc) => Vs::V(V::Scalar(0.0)),
             _ => panic!("monadic equals 𝕩 is not an array"),
         },
         2 => match x.unwrap() == w.unwrap() {
