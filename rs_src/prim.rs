@@ -75,8 +75,25 @@ fn group_len(arity: usize, x: Vn, _w: Vn) -> Vs {
     }
 }
 // GroupOrd
-fn group_ord(_arity: usize, _x: Vn, _w: Vn) -> Vs {
-    panic!("group_ord not implemented");
+fn group_ord(arity: usize, x: Vn, w: Vn) -> Vs {
+    match arity {
+        2 => {
+            match (&x.unwrap(),&w.unwrap()) {
+                (V::A(xa),V::A(wa)) => {
+                    let (mut s,l) = wa.r.iter().fold((vec![],0.0), |(mut si,li), v| { si.push(li); (si,li as f64 + v.to_f64()) });
+                    let mut r = vec![V::Nothing;l as usize];
+                    xa.r.iter().enumerate().for_each(|(i,e)| if e.to_f64() >= 0.0  {
+                        r[s[e.to_f64() as usize] as usize] = V::Scalar(i as f64);
+                        s[e.to_f64() as usize] += 1.0;
+                    });
+                    let shape = vec![r.len().clone()];
+                    Vs::V(V::A(Cc::new(A::new(r.clone(),shape))))
+                },
+                _ => panic!("dyadic group_ord x is not an array"),
+            }
+        },
+        _ => panic!("illegal group_ord arity"),
+    }
 }
 // !
 fn assert_fn(arity: usize, x: Vn, w: Vn) -> Vs {
