@@ -302,7 +302,7 @@ fn table(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
     }
 }
 // `
-fn scan(arity: usize, f: Vn, x: Vn, _w: Vn) -> Vs {
+fn scan(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
     match arity {
         1 => {
             match x.unwrap() {
@@ -335,7 +335,47 @@ fn scan(arity: usize, f: Vn, x: Vn, _w: Vn) -> Vs {
                 _ => panic!("monadic scan x is not an array"),
             }
         },
-        2 => panic!("dyadic scan"),
+        2 => {
+            let (wr,wa) = match w.unwrap() {
+                V::A(wa) => (wa.sh.len(),wa),
+                // TODO `wa` doesn't actually need to be a ref counted array
+                V::Scalar(ws) => (0,Cc::new(A::new(vec![V::Scalar(ws)],vec![1]))),
+                _ => panic!("dyadic scan w is invalid type"),
+            };
+            match x.unwrap() {
+                V::A(xa) => {
+                    let s = &xa.sh;
+                    if (s.len()==0) {
+                        panic!("scan dyadic array rank not at least 1");
+                    };
+                    if 1+wr != s.len() {
+                        panic!("scan dyadic array rank don't match");
+                    }
+                    // TODO add test 'shape of 𝕨 must be cell shape of 𝕩' here
+                    let l = xa.r.len();
+                    let mut r = vec![V::Nothing;l];
+                    if (l > 0) {
+                        let mut c = 1;
+                        let mut i = 1;
+                        while i < s.len() {
+                            c *= s[i];
+                            i += 1;
+                        }
+                        i = 0;
+                        while i < c {
+                            r[i] = call(2,f.clone(),Some(xa.r[i].clone()),Some(wa.r[i].clone())).to_ref().clone();
+                            i += 1;
+                        }
+                        while i < l {
+                            r[i] = call(2,f.clone(),Some(xa.r[i].clone()),Some(r[i-c].clone())).to_ref().clone();
+                            i += 1;
+                        }
+                    };
+                    Vs::V(V::A(Cc::new(A::new(r,s.to_vec()))))
+                },
+                _ => panic!("dyadic scan x or w is not an array"),
+            }
+        },
         _ => panic!("illegal scan arity"),
     }
 }
