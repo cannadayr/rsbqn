@@ -66,7 +66,26 @@ fn group_len(arity: usize, x: Vn, _w: Vn) -> Vs {
                         }
                         i += 1;
                     }
-                    Vs::V(V::A(Cc::new(A::new(r,vec![s]))))
+                    Vs::V(V::A(Cc::new(A::new(r.clone(),vec![r.len() as usize]))))
+                },
+                _ => panic!("group_len 𝕩 is not an array"),
+            }
+        },
+        2 => {
+            match (x.unwrap(),w.unwrap()) {
+                (V::A(xa),V::Scalar(ws)) => {
+                    let l = xa.r.iter().fold(ws-1.0, |acc, i| i.to_f64().max(acc));
+                    let s = l + 1.0;
+                    let mut r = vec![V::Scalar(0.0);s.clone() as usize];
+                    let mut i = 0;
+                    while i < xa.r.len() {
+                        let e = xa.r[i].to_f64();
+                        if (e >= 0.0) {
+                            r[e as usize] = V::Scalar(r[e as usize].to_f64() + 1.0)
+                        }
+                        i += 1;
+                    }
+                    Vs::V(V::A(Cc::new(A::new(r.clone(),vec![r.len() as usize]))))
                 },
                 _ => panic!("group_len 𝕩 is not an array"),
             }
