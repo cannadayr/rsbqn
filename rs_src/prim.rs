@@ -3,6 +3,7 @@ use crate::ebqn::{call};
 use cc_mt::Cc;
 use std::cmp::max;
 use log::{debug, trace, error, log_enabled, info, Level};
+use std::iter::FromIterator;
 
 fn dbg_args(fun: &str, arity: usize, x: &Vn, w: &Vn) {
     debug!("calling {}/{}",fun,arity);
@@ -133,7 +134,13 @@ fn assert_fn(arity: usize, x: Vn, w: Vn) -> Vs {
         },
         2 => match x.unwrap().to_f64() {
             1.0 => Vs::V(V::Scalar(1.0)),
-            _ => panic!("{}",w.unwrap()),
+            _ => {
+                let msg = w.unwrap().to_array().r.iter().map(|e| match e {
+                    V::Char(c) => *c,
+                    _ => panic!("panic is not a string"),
+                }).collect::<Vec<char>>();
+                panic!("{}",String::from_iter(&msg));
+            },
         },
         _ => panic!("illegal assert arity"),
     }
