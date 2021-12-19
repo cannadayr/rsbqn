@@ -251,8 +251,8 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
     }
 }
 
-#[rustler::nif]
-fn tests() -> NifResult<Atom> {
+#[test]
+fn test() -> bool {
     bytecode();
     info!("bytecode pass");
     let builtin = provide();
@@ -262,7 +262,7 @@ fn tests() -> NifResult<Atom> {
     info!("runtime1 pass");
     prim(runtime1.to_array().r[0].to_array());
     info!("prim pass");
-    Ok(ok())
+    Ok(true)
 }
 
 pub fn run(code: Cc<Code>) -> V {
