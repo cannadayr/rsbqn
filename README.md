@@ -50,5 +50,5 @@ Build
     escript gen_test.erl /path/to/mlochbaum/bqn
     escript gen_code.erl /path/to/mlochbaum/bqn
 
-    cargo test -- --nocapture
+    RUST_LOG=info cargo test -- --nocapture
 

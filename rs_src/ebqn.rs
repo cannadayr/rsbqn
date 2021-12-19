@@ -2,6 +2,7 @@ use crate::schema::{Env,V,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Body,A,Ar,Tr2,
 use crate::prim::{provide};
 use crate::code::{r0,r1};
 use crate::fmt::{dbg_stack_out,dbg_stack_in};
+use crate::init_log;
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
 use cc_mt::Cc;
@@ -254,6 +255,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
 
 #[test]
 fn test() -> Result<(),Box<std::error::Error>> {
+    init_log();
     bytecode();
     info!("bytecode pass");
     let builtin = provide();

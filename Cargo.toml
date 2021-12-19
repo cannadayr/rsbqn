@@ -16,5 +16,6 @@ rustler = "0.22.0"
 once_cell = "1.8.0"
 cc_mt = { git = "https://github.com/cannadayr/cc-mt", rev = "bce4a5de" }
 log = "0.4.14"
-syslog = "^4.0"
+#syslog = "^4.0"
 log-panics = "2.0.0"
+env_logger = "0.9.0"

@@ -7,14 +7,19 @@ mod test;
 mod code;
 mod fmt;
 use rustler::{Env,Term};
-use syslog::Facility;
+//use syslog::Facility;
 extern crate log_panics;
+
+// https://docs.rs/env_logger/0.7.1/env_logger/#capturing-logs-in-tests
+pub fn init_log() {
+    let _ = env_logger::builder().is_test(true).try_init();
+}
 
 pub fn load(env: Env, _info: Term) -> bool {
     rustler::resource!(schema::Env, env);
-    let _r = syslog::init(Facility::LOG_USER,
-                 log::LevelFilter::Info,
-                 Some("ebqn"));
+    //let _r = syslog::init(Facility::LOG_USER,
+    //             log::LevelFilter::Info,
+    //             Some("ebqn"));
     log_panics::init();
     true
 }
