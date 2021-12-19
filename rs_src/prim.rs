@@ -56,8 +56,8 @@ fn group_len(arity: usize, x: Vn, _w: Vn) -> Vs {
             match x.unwrap() {
                 V::A(xa) => {
                     let l = xa.r.iter().fold(-1.0, |acc, i| i.to_f64().max(acc));
-                    let s = l as usize + 1;
-                    let mut r = vec![V::Scalar(0.0);s.clone()];
+                    let s = l + 1.0;
+                    let mut r = vec![V::Scalar(0.0);s.clone() as usize];
                     let mut i = 0;
                     while i < xa.r.len() {
                         let e = xa.r[i].to_f64();
