@@ -60,7 +60,7 @@ fn log(arity: usize, x: Vn, w: Vn) -> Vs {
     }
 }
 // GroupLen
-fn group_len(arity: usize, x: Vn, _w: Vn) -> Vs {
+fn group_len(arity: usize, x: Vn, w: Vn) -> Vs {
     match arity {
         1 => {
             match x.unwrap() {
@@ -174,23 +174,18 @@ fn minus(arity: usize, x: Vn, w: Vn) -> Vs {
             _ => panic!("dyadic minus pattern not found"),
         },
         _ => panic!("illegal minus arity"),
-    };
-    //debug!("minus returning {}",r);
-    r
+    }
 }
 // ×
 fn times(arity: usize, x: Vn, w: Vn) -> Vs {
     dbg_args("times",arity,&x,&w);
-    let r =
     match arity {
         2 => match (x.unwrap(),w.unwrap()) {
             (V::Scalar(xs),V::Scalar(ws)) => Vs::V(V::Scalar(ws * xs)),
             _ => panic!("dyadic times illegal arguments"),
         },
         _ => panic!("illegal times arity"),
-    };
-    //debug!("times returning {}",r);
-    r
+    }
 }
 // ÷
 fn divide(arity: usize, x: Vn, w: Vn) -> Vs {
