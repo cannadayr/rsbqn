@@ -100,7 +100,7 @@ suite(Repo,Name) ->
     gen_code(Tests,[]).
 main([Repo]) ->
     ByteCode = suite(Repo,<<"bytecode.bqn">>),
-    %Simple = suite(Repo,<<"simple.bqn">>),
+    Simple = suite(Repo,<<"simple.bqn">>),
     Prim = suite(Repo,<<"prim.bqn">>),
     file:write_file("rs_src/test.rs",erlang:iolist_to_binary([
         <<"use log::{info};\n">>,
@@ -110,8 +110,8 @@ main([Repo]) ->
         <<"use std::panic::{self, AssertUnwindSafe};\n">>,
         <<"use crate::schema::{Code,new_scalar,new_char,new_string,Body,A,Decoder};\n\n">>,
         <<"pub fn bytecode() {\n">>,ByteCode,<<"}\n\n">>,
+        <<"pub fn simple(runtime: &A) {\n">>,Simple,<<"\n}\n">>,
         <<"pub fn prim(runtime: &A) {\n">>,Prim,<<"}\n\n">>
-        %<<"pub fn simple(runtime: A) {\n">>,Simple,<<"\n}\n">>
     ]));
 main(_Args) ->
     io:format("bad arguments~n"),

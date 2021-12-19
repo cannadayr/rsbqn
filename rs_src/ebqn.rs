@@ -6,7 +6,7 @@ use crate::init_log;
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
 use cc_mt::Cc;
-use crate::test::{bytecode,prim};
+use crate::test::{bytecode,simple,prim};
 use std::ops::Deref;
 use std::error::Error;
 //use std::panic;
@@ -263,6 +263,8 @@ fn test() -> Result<(),Box<std::error::Error>> {
     info!("runtime0 pass");
     let runtime1 = r1(&builtin,runtime0.to_array());
     info!("runtime1 pass");
+    simple(runtime1.to_array().r[0].to_array());
+    info!("simple pass");
     prim(runtime1.to_array().r[0].to_array());
     info!("prim pass");
     Ok(())
