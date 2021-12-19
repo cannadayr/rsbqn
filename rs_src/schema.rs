@@ -43,6 +43,7 @@ impl V {
     pub fn is_fn(&self) -> bool {
         match self {
             V::BlockInst(_b) => true,
+            V::DervBlockInst(_b,_a) => true,
             V::Tr2(_tr2) => true,
             V::Tr3(_tr3) => true,
             _ => false,
