@@ -7,6 +7,7 @@ use rustler::resource::ResourceArc;
 use cc_mt::Cc;
 use crate::test::{bytecode,prim};
 use std::ops::Deref;
+use std::error::Error;
 //use std::panic;
 use log::{debug, trace, error, log_enabled, info, Level};
 
@@ -252,7 +253,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
 }
 
 #[test]
-fn test() -> bool {
+fn test() -> Result<(),Box<std::error::Error>> {
     bytecode();
     info!("bytecode pass");
     let builtin = provide();
@@ -262,7 +263,7 @@ fn test() -> bool {
     info!("runtime1 pass");
     prim(runtime1.to_array().r[0].to_array());
     info!("prim pass");
-    Ok(true)
+    Ok(())
 }
 
 pub fn run(code: Cc<Code>) -> V {
