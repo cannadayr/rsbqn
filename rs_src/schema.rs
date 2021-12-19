@@ -40,6 +40,14 @@ impl V {
             _ => panic!("can't convert to array"),
         }
     }
+    pub fn is_fn(&self) -> bool {
+        match self {
+            V::BlockInst(_b) => true,
+            V::Tr2(_tr2) => true,
+            V::Tr3(_tr3) => true,
+            _ => false,
+        }
+    }
 }
 impl Encoder for V {
     fn encode<'a>(&self, env: rustler::Env<'a>) -> rustler::Term<'a> {
