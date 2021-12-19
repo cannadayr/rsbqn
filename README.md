@@ -36,7 +36,7 @@ Status
 |identity|not working|
 |literal|not working|
 |namespace|not working|
-|prim|not working|
+|prim|tests passing|
 |simple|not working|
 |syntax|not working|
 |token|not working|
