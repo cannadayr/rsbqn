@@ -46,8 +46,18 @@ fn fill(arity: usize, x: Vn, _w: Vn) -> Vs {
     }
 }
 // Log
-fn log(_arity: usize, _x: Vn, _w: Vn) -> Vs {
-    panic!("log not implemented");
+fn log(arity: usize, x: Vn, w: Vn) -> Vs {
+    match arity {
+        1 => match x.unwrap() {
+            V::Scalar(xs) => Vs::V(V::Scalar(xs.ln())),
+            _ => panic!("monadic log expected number"),
+        },
+        2 => match (x.unwrap(),w.unwrap()) {
+            (V::Scalar(xs),V::Scalar(ws)) => Vs::V(V::Scalar(xs.ln() / ws.ln())),
+            _ => panic!("dyadic log expected numbers"),
+        },
+        _ => panic!("illegal power arity"),
+    }
 }
 // GroupLen
 fn group_len(arity: usize, x: Vn, _w: Vn) -> Vs {
