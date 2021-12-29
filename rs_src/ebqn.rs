@@ -253,20 +253,34 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
     }
 }
 
+fn set_prim(id: usize,e: &V) {
+    let ref mut prim = match e {
+        V::DervBlockInst(_b,_a,n) => n,
+        _ => panic!("illegal set_prim"),
+    };
+    *prim = &Some(id);
+}
+fn set_prims(runtime: &V) {
+    (&runtime.to_array().r[0].to_array().r).into_iter().enumerate().for_each(|(i,e)| set_prim(i,e) );
+}
+
 #[test]
 fn test() -> Result<(),Box<std::error::Error>> {
     init_log();
     bytecode();
-    info!("bytecode pass");
+    info!("bytecode loaded");
     let builtin = provide();
     let runtime0 = r0(&builtin);
-    info!("runtime0 pass");
+    info!("runtime0 loaded");
     let runtime1 = r1(&builtin,runtime0.to_array());
-    info!("runtime1 pass");
-    simple(runtime1.to_array().r[0].to_array());
-    info!("simple pass");
-    prim(runtime1.to_array().r[0].to_array());
-    info!("prim pass");
+    info!("runtime1 loaded");
+    set_prims(&runtime1);
+    //runtime1.to_array().r[0].to_array()
+    // Tests
+    //simple(runtime1.to_array().r[0].to_array());
+    //info!("simple pass");
+    //prim(runtime1.to_array().r[0].to_array());
+    //info!("prim pass");
     Ok(())
 }
 

@@ -24,7 +24,7 @@ impl Display for V {
             V::Scalar(n) => write!(f, "{}", *n),
             V::Char(c) => write!(f, "{}", *c),
             V::BlockInst(_b) => write!(f,"{}","BlockInst"),
-            V::DervBlockInst(_b,_a) => write!(f,"{}","DervBlockInst"),
+            V::DervBlockInst(_b,_a,_prim) => write!(f,"{}","DervBlockInst"),
             V::Nothing => write!(f,"{}","Nothing"),
             V::A(a) => write!(f,"[{}]",fmt_array(&a.r)),
             V::Fn(_a) => write!(f,"{}","Fn"),

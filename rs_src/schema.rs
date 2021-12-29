@@ -22,7 +22,7 @@ pub enum V {
     Scalar(f64),
     Char(char),
     BlockInst(Cc<BlockInst>),
-    DervBlockInst(Cc<BlockInst>,Vec<Vn>),
+    DervBlockInst(Cc<BlockInst>,Vec<Vn>,Option<usize>),
     Nothing,
     A(Cc<A>),
     Fn(fn(usize,Vn,Vn) -> Vs),       // X, W
@@ -43,7 +43,7 @@ impl V {
     pub fn is_fn(&self) -> bool {
         match self {
             V::BlockInst(_b) => true,
-            V::DervBlockInst(_b,_a) => true,
+            V::DervBlockInst(_b,_a,_prim) => true,
             V::Tr2(_tr2) => true,
             V::Tr3(_tr3) => true,
             _ => false,
@@ -56,7 +56,7 @@ impl Encoder for V {
             V::Scalar(n) => n.encode(env),
             V::Char(c) => panic!("can't encode char to BEAM"),
             V::BlockInst(_b) => panic!("can't encode blockinst to BEAM"),
-            V::DervBlockInst(_b,_a) => panic!("can't encode dervblockinst to BEAM"),
+            V::DervBlockInst(_b,_a,_prim) => panic!("can't encode dervblockinst to BEAM"),
             V::Nothing => panic!("can't encode nothing to BEAM"),
             V::A(_a) => panic!("can't encode array to BEAM"),
             V::Fn(_a) => panic!("can't encode fn to BEAM"),
@@ -88,7 +88,7 @@ impl Decoder for V {
             // use u8's for now
             V::Char(c) => *c as u8 as f64,
             V::BlockInst(_b) => panic!("can't decode blockinst to RUST"),
-            V::DervBlockInst(_b,_a) => panic!("can't encode dervblockinst to BEAM"),
+            V::DervBlockInst(_b,_a,_prim) => panic!("can't encode dervblockinst to BEAM"),
             V::Nothing => panic!("can't decode nothing to BEAM"),
             V::A(_a) => panic!("can't decode array to RUST"),
             V::Fn(_a) => panic!("can't decode fn to RUST"),
@@ -104,7 +104,7 @@ impl Decoder for V {
 impl Calleable for V {
     fn call(&self,arity:usize,x: Vn,w: Vn) -> Vs {
         match self.deref() {
-            V::DervBlockInst(b,mods) => {
+            V::DervBlockInst(b,mods,_prim) => {
                 let mut args = vec![Vh::V(self.clone()),none_or_clone(&x),none_or_clone(&w)];
                 let mut m = mods.iter().map(|e| Vh::V(e.as_ref().unwrap().clone())).collect::<Vec<Vh>>();
                 args.append(&mut m);
@@ -330,7 +330,7 @@ impl BlockInst {
     pub fn call_block(&self,arity:usize,args: Vec<Vn>) -> Vs {
         match self.def.imm {
             false => {
-                Vs::V(V::DervBlockInst(Cc::new(BlockInst::new(self.parent.clone(),self.def.clone())),args))
+                Vs::V(V::DervBlockInst(Cc::new(BlockInst::new(self.parent.clone(),self.def.clone())),args,None))
             },
             true => {
                 let pos = match self.def.body {
