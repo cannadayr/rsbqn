@@ -27,12 +27,12 @@ fn typ(arity: usize, x: Vn, _w: Vn) -> Vs {
             V::A(_a) => Vs::V(V::Scalar(0.0)),
             V::Char(_c) => Vs::V(V::Scalar(2.0)),
             V::DervBlockInst(_b,_a,_prim) => Vs::V(V::Scalar(3.0)),
-            V::D2(_d2) => Vs::V(V::Scalar(3.0)),
-            V::Tr3(_tr3) => Vs::V(V::Scalar(3.0)),
-            V::Fn(_fn) => Vs::V(V::Scalar(3.0)),
-            V::R1(_r1) => Vs::V(V::Scalar(4.0)),
-            V::R2(_r2) => Vs::V(V::Scalar(5.0)),
-            V::BlockInst(b) => Vs::V(V::Scalar(b.def.typ as f64 + 3.0)),
+            V::D2(_d2,_prim) => Vs::V(V::Scalar(3.0)),
+            V::Tr3(_tr3,_prim) => Vs::V(V::Scalar(3.0)),
+            V::Fn(_fn,_prim) => Vs::V(V::Scalar(3.0)),
+            V::R1(_r1,_prim) => Vs::V(V::Scalar(4.0)),
+            V::R2(_r2,_prim) => Vs::V(V::Scalar(5.0)),
+            V::BlockInst(b,_prim) => Vs::V(V::Scalar(b.def.typ as f64 + 3.0)),
             _ => panic!("no matching value for typ"),
         },
         _ => panic!("typ not implemented"),
@@ -238,7 +238,7 @@ fn equals(arity: usize, x: Vn, w: Vn) -> Vs {
             V::Char(_xc) => Vs::V(V::Scalar(0.0)),
             V::Scalar(_xs) => Vs::V(V::Scalar(0.0)),
             V::DervBlockInst(_b,_a,_prim) => Vs::V(V::Scalar(0.0)),
-            V::D2(_d2) => Vs::V(V::Scalar(0.0)),
+            V::D2(_d2,_prim) => Vs::V(V::Scalar(0.0)),
             _ => panic!("monadic equals 𝕩 is not a valid value"),
         },
         2 => match x.unwrap() == w.unwrap() {
@@ -447,29 +447,71 @@ fn catches(_arity: usize, _f: Vn, _g: Vn, _x: Vn, _w: Vn) -> Vs {
     panic!("catches not implemented");
 }
 
+pub fn decompose(arity:usize, x: Vn,w: Vn) -> Vs {
+    match arity {
+        1 => match x.unwrap() {
+            V::Scalar(n) => panic!("can't decompose scalar"),
+            V::Char(c) => panic!("can't decompose char"),
+            V::BlockInst(_b,_prim) => panic!("can't decompose blockinst"),
+            V::DervBlockInst(_b,_a,_prim) => panic!("can't decompose dervblockinst"),
+            V::Nothing => panic!("can't decompose nothing"),
+            V::A(_a) => panic!("can't decompose array"),
+            V::Fn(_a,_prim) => panic!("can't decompose fn"),
+            V::R1(_f,_prim) => panic!("can't decompose r1"),
+            V::R2(_f,_prim) => panic!("can't decompose r2"),
+            V::D1(_d1,_prim) => panic!("can't decompose d1"),
+            V::D2(_d2,_prim) => panic!("can't decompose d2"),
+            V::Tr2(_tr2,_prim) => panic!("can't decompose train2"),
+            V::Tr3(_tr3,_prim) => panic!("can't decompose train3"),
+        },
+        _ => panic!("illegal plus arity"),
+    }
+}
+
+pub fn prim_ind(arity:usize, x: Vn,w: Vn) -> Vs {
+    match arity {
+        1 => match x.unwrap() {
+            V::Scalar(n) => panic!("can't prim_ind scalar"),
+            V::Char(c) => panic!("can't prim_ind char"),
+            V::BlockInst(_b,_prim) => panic!("can't prim_ind blockinst"),
+            V::DervBlockInst(_b,_a,_prim) => panic!("can't prim_ind dervblockinst"),
+            V::Nothing => panic!("can't prim_ind nothing"),
+            V::A(_a) => panic!("can't prim_ind array"),
+            V::Fn(_a,_prim) => panic!("can't prim_ind fn"),
+            V::R1(_f,_prim) => panic!("can't prim_ind r1"),
+            V::R2(_f,_prim) => panic!("can't prim_ind r2"),
+            V::D1(_d1,_prim) => panic!("can't prim_ind d1"),
+            V::D2(_d2,_prim) => panic!("can't prim_ind d2"),
+            V::Tr2(_tr2,_prim) => panic!("can't prim_ind train2"),
+            V::Tr3(_tr3,_prim) => panic!("can't prim_ind train3"),
+        },
+        _ => panic!("illegal plus arity"),
+    }
+}
+
 pub fn provide() -> A {
-    let fns = vec![V::Fn(typ),
-                   V::Fn(fill),
-                   V::Fn(log),
-                   V::Fn(group_len),
-                   V::Fn(group_ord),
-                   V::Fn(assert_fn),
-                   V::Fn(plus),
-                   V::Fn(minus),
-                   V::Fn(times),
-                   V::Fn(divide),
-                   V::Fn(power),
-                   V::Fn(floor),
-                   V::Fn(equals),
-                   V::Fn(lesseq),
-                   V::Fn(shape),
-                   V::Fn(reshape),
-                   V::Fn(pick),
-                   V::Fn(windows),
-                   V::R1(table),
-                   V::R1(scan),
-                   V::R2(fill_by),
-                   V::R2(cases),
-                   V::R2(catches)];
+    let fns = vec![V::Fn(typ,None),
+                   V::Fn(fill,None),
+                   V::Fn(log,None),
+                   V::Fn(group_len,None),
+                   V::Fn(group_ord,None),
+                   V::Fn(assert_fn,None),
+                   V::Fn(plus,None),
+                   V::Fn(minus,None),
+                   V::Fn(times,None),
+                   V::Fn(divide,None),
+                   V::Fn(power,None),
+                   V::Fn(floor,None),
+                   V::Fn(equals,None),
+                   V::Fn(lesseq,None),
+                   V::Fn(shape,None),
+                   V::Fn(reshape,None),
+                   V::Fn(pick,None),
+                   V::Fn(windows,None),
+                   V::R1(table,None),
+                   V::R1(scan,None),
+                   V::R2(fill_by,None),
+                   V::R2(cases,None),
+                   V::R2(catches,None)];
     A::new(fns,vec![23])
 }

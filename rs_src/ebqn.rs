@@ -1,5 +1,5 @@
 use crate::schema::{Env,V,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Body,A,Ar,Tr2,Tr3,set,ok,D2,D1};
-use crate::prim::{provide};
+use crate::prim::{provide,decompose,prim_ind};
 use crate::code::{r0,r1};
 use crate::fmt::{dbg_stack_out,dbg_stack_in};
 use crate::init_log;
@@ -11,6 +11,7 @@ use std::ops::Deref;
 use std::error::Error;
 //use std::panic;
 use log::{debug, trace, error, log_enabled, info, Level};
+use itertools::Itertools;
 
 pub fn call(arity: usize,a: Vn,x: Vn, w: Vn) -> Vs {
     match a {
@@ -20,21 +21,21 @@ pub fn call(arity: usize,a: Vn,x: Vn, w: Vn) -> Vs {
 }
 fn call1(m: V,f: V) -> Vs {
     match m {
-        V::BlockInst(ref bl) => {
+        V::BlockInst(ref bl,_prim) => {
             assert_eq!(1,bl.def.typ);
             bl.call_block(1,vec![Some(m.clone()),Some(f)])
         },
-        V::R1(_) => Vs::V(V::D1(Cc::new(D1::new(m,f)))),
+        V::R1(_,_prim) => Vs::V(V::D1(Cc::new(D1::new(m,f)),None)),
         _ => panic!("call1 with invalid type"),
     }
 }
 fn call2(m: V,f: V,g: V) -> Vs {
     match m {
-        V::BlockInst(ref bl) => {
+        V::BlockInst(ref bl,_prim) => {
             assert_eq!(2,bl.def.typ);
             bl.call_block(2,vec![Some(m.clone()),Some(f),Some(g)])
         },
-        V::R2(_) => Vs::V(V::D2(Cc::new(D2::new(m,f,g)))),
+        V::R2(_,_prim) => Vs::V(V::D2(Cc::new(D2::new(m,f,g)),None)),
         _ => panic!("call2 with invalid type"),
     }
 }
@@ -54,7 +55,7 @@ fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>) -> Vs {
         },
         (_typ,_imm) => {
             let block_inst = BlockInst::new(env.clone(),(*block).clone());
-            let r = Vs::V(V::BlockInst(Cc::new(block_inst)));
+            let r = Vs::V(V::BlockInst(Cc::new(block_inst),None));
             r
         },
     }
@@ -161,7 +162,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let g = stack.pop().unwrap();
                 let h = stack.pop().unwrap();
                 dbg_stack_in("TR2D",pos-1,format!("{} {}",&g,&h),&stack);
-                let t = Vs::V(V::Tr2(Cc::new(Tr2::new(g,h))));
+                let t = Vs::V(V::Tr2(Cc::new(Tr2::new(g,h)),None));
                 stack.push(t);
                 dbg_stack_out("TR2D",pos-1,&stack);
             },
@@ -172,8 +173,8 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let h = stack.pop().unwrap();
                 let t =
                     match &f.to_ref() {
-                        V::Nothing => Vs::V(V::Tr2(Cc::new(Tr2::new(g,h)))),
-                        _ => Vs::V(V::Tr3(Cc::new(Tr3::new(f,g,h)))),
+                        V::Nothing => Vs::V(V::Tr2(Cc::new(Tr2::new(g,h)),None)),
+                        _ => Vs::V(V::Tr3(Cc::new(Tr3::new(f,g,h)),None)),
                     };
                 stack.push(t);
                 dbg_stack_out("TR3D",pos-1,&stack);
@@ -253,34 +254,34 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
     }
 }
 
-fn set_prim(id: usize,e: &V) {
-    let ref mut prim = match e {
-        V::DervBlockInst(_b,_a,n) => n,
-        _ => panic!("illegal set_prim"),
-    };
-    *prim = &Some(id);
-}
-fn set_prims(runtime: &V) {
-    (&runtime.to_array().r[0].to_array().r).into_iter().enumerate().for_each(|(i,e)| set_prim(i,e) );
-}
-
 #[test]
 fn test() -> Result<(),Box<std::error::Error>> {
     init_log();
-    bytecode();
-    info!("bytecode loaded");
+    //bytecode();
+    //info!("bytecode loaded");
     let builtin = provide();
     let runtime0 = r0(&builtin);
     info!("runtime0 loaded");
-    let runtime1 = r1(&builtin,runtime0.to_array());
-    info!("runtime1 loaded");
-    set_prims(&runtime1);
-    //runtime1.to_array().r[0].to_array()
-    // Tests
-    //simple(runtime1.to_array().r[0].to_array());
-    //info!("simple pass");
-    //prim(runtime1.to_array().r[0].to_array());
-    //info!("prim pass");
+    let full_runtime = r1(&builtin,runtime0.as_a().unwrap()).into_a().unwrap().try_unwrap().unwrap();
+    let (runtime_w,set_prims,set_inv_w) = full_runtime.r.iter().collect_tuple().unwrap();
+    // iterate thru this and create a new runtime array with set primitive indices
+    let runtime = A::new((*runtime_w).as_a().unwrap().r.iter().enumerate().map(|(i,e)| match e {
+        V::DervBlockInst(b,a,_prim) => V::DervBlockInst(b.clone(),a.clone(),Some(i)),
+        V::BlockInst(b,_prim) => V::BlockInst(b.clone(),Some(i)),
+        V::Fn(a,_prim) => V::Fn(a.clone(),Some(i)),
+        V::R1(r1,_prim) => V::R1(r1.clone(),Some(i)),
+        V::R2(r2,_prim) => V::R2(r2.clone(),Some(i)),
+        V::D1(d1,_prim) => V::D1(d1.clone(),Some(i)),
+        V::D2(d2,_prim) => V::D2(d2.clone(),Some(i)),
+        V::Tr2(tr2,_prim) => V::Tr2(tr2.clone(),Some(i)),
+        V::Tr3(tr3,_prim) => V::Tr3(tr3.clone(),Some(i)),
+        _ => panic!("illegal setprim"),
+    }).collect::<Vec<V>>(),vec![64]);
+    let set_inv = (*set_inv_w).as_block_inst().unwrap();
+    info!("runtime loaded");
+    let prim_fns = V::A(Cc::new(A::new(vec![V::Fn(decompose,None),V::Fn(prim_ind,None)],vec![2])));
+    let _ = call(1,Some(set_prims.clone()),Some(prim_fns),None);
+    info!("indices loaded");
     Ok(())
 }
 
@@ -291,7 +292,7 @@ pub fn run(code: Cc<Code>) -> V {
             Body::Imm(b) => code.bodies[b],
             Body::Defer(_,_) => panic!("cant run deferred block"),
         };
-    vm(&root,&code,pos,Vec::new()).to_ref().clone()
+    vm(&root,&code,pos,Vec::new()).into_v().unwrap()
 }
 
 #[rustler::nif]

@@ -5,6 +5,7 @@ use rustler::{Encoder};
 use crate::ebqn::vm;
 use crate::late_init::LateInit;
 //use log::{debug, trace, error, log_enabled, info, Level};
+use enum_as_inner::EnumAsInner;
 
 rustler::atoms!{ok}
 
@@ -17,21 +18,21 @@ pub trait Decoder {
 }
 
 // Value (unboxed)
-#[derive(Debug,Clone,PartialEq)]
+#[derive(Debug,Clone,PartialEq,EnumAsInner)]
 pub enum V {
     Scalar(f64),
     Char(char),
-    BlockInst(Cc<BlockInst>),
+    BlockInst(Cc<BlockInst>,Option<usize>),
     DervBlockInst(Cc<BlockInst>,Vec<Vn>,Option<usize>),
     Nothing,
     A(Cc<A>),
-    Fn(fn(usize,Vn,Vn) -> Vs),       // X, W
-    R1(fn(usize,Vn,Vn,Vn) -> Vs),    // F, X, W
-    R2(fn(usize,Vn,Vn,Vn,Vn) -> Vs), // F, G, X, W
-    D1(Cc<D1>),                      // M, F
-    D2(Cc<D2>),                      // M, F, G
-    Tr2(Cc<Tr2>),
-    Tr3(Cc<Tr3>),
+    Fn(fn(usize,Vn,Vn) -> Vs,Option<usize>),       // X, W
+    R1(fn(usize,Vn,Vn,Vn) -> Vs,Option<usize>),    // F, X, W
+    R2(fn(usize,Vn,Vn,Vn,Vn) -> Vs,Option<usize>), // F, G, X, W
+    D1(Cc<D1>,Option<usize>),                      // M, F
+    D2(Cc<D2>,Option<usize>),                      // M, F, G
+    Tr2(Cc<Tr2>,Option<usize>),
+    Tr3(Cc<Tr3>,Option<usize>),
 }
 impl V {
     pub fn to_array(&self) -> &A {
@@ -42,10 +43,10 @@ impl V {
     }
     pub fn is_fn(&self) -> bool {
         match self {
-            V::BlockInst(_b) => true,
+            V::BlockInst(_b,_prim) => true,
             V::DervBlockInst(_b,_a,_prim) => true,
-            V::Tr2(_tr2) => true,
-            V::Tr3(_tr3) => true,
+            V::Tr2(_tr2,_prim) => true,
+            V::Tr3(_tr3,_prim) => true,
             _ => false,
         }
     }
@@ -55,17 +56,17 @@ impl Encoder for V {
         match self {
             V::Scalar(n) => n.encode(env),
             V::Char(c) => panic!("can't encode char to BEAM"),
-            V::BlockInst(_b) => panic!("can't encode blockinst to BEAM"),
+            V::BlockInst(_b,_prim) => panic!("can't encode blockinst to BEAM"),
             V::DervBlockInst(_b,_a,_prim) => panic!("can't encode dervblockinst to BEAM"),
             V::Nothing => panic!("can't encode nothing to BEAM"),
             V::A(_a) => panic!("can't encode array to BEAM"),
-            V::Fn(_a) => panic!("can't encode fn to BEAM"),
-            V::R1(_f) => panic!("can't encode r1 to BEAM"),
-            V::R2(_f) => panic!("can't encode r2 to BEAM"),
-            V::D1(_d1) => panic!("can't encode d1 to BEAM"),
-            V::D2(_d2) => panic!("can't encode d2 to BEAM"),
-            V::Tr2(_tr2) => panic!("can't encode train2 to BEAM"),
-            V::Tr3(_tr3) => panic!("can't encode train3 to BEAM"),
+            V::Fn(_a,_prim) => panic!("can't encode fn to BEAM"),
+            V::R1(_f,_prim) => panic!("can't encode r1 to BEAM"),
+            V::R2(_f,_prim) => panic!("can't encode r2 to BEAM"),
+            V::D1(_d1,_prim) => panic!("can't encode d1 to BEAM"),
+            V::D2(_d2,_prim) => panic!("can't encode d2 to BEAM"),
+            V::Tr2(_tr2,_prim) => panic!("can't encode train2 to BEAM"),
+            V::Tr3(_tr3,_prim) => panic!("can't encode train3 to BEAM"),
         }
     }
 }
@@ -87,17 +88,17 @@ impl Decoder for V {
             // https://github.com/rust-lang/rust/issues/71763
             // use u8's for now
             V::Char(c) => *c as u8 as f64,
-            V::BlockInst(_b) => panic!("can't decode blockinst to RUST"),
+            V::BlockInst(_b,_prim) => panic!("can't decode blockinst to RUST"),
             V::DervBlockInst(_b,_a,_prim) => panic!("can't encode dervblockinst to BEAM"),
             V::Nothing => panic!("can't decode nothing to BEAM"),
             V::A(_a) => panic!("can't decode array to RUST"),
-            V::Fn(_a) => panic!("can't decode fn to RUST"),
-            V::R1(_f) => panic!("can't decode r1 to RUST"),
-            V::R2(_f) => panic!("can't decode r2 to RUST"),
-            V::D1(_d1) => panic!("can't decode d1 to BEAM"),
-            V::D2(_d2) => panic!("can't decode d2 to BEAM"),
-            V::Tr2(_tr2) => panic!("can't decode train2 to RUST"),
-            V::Tr3(_tr3) => panic!("can't decode train3 to RUST"),
+            V::Fn(_a,_prim) => panic!("can't decode fn to RUST"),
+            V::R1(_f,_prim) => panic!("can't decode r1 to RUST"),
+            V::R2(_f,_prim) => panic!("can't decode r2 to RUST"),
+            V::D1(_d1,_prim) => panic!("can't decode d1 to BEAM"),
+            V::D2(_d2,_prim) => panic!("can't decode d2 to BEAM"),
+            V::Tr2(_tr2,_prim) => panic!("can't decode train2 to RUST"),
+            V::Tr3(_tr3,_prim) => panic!("can't decode train3 to RUST"),
         }
     }
 }
@@ -112,7 +113,7 @@ impl Calleable for V {
                 let pos = body_pos(b,arity);
                 vm(&env,&b.def.code,pos,Vec::new())
             },
-            V::BlockInst(b) => {
+            V::BlockInst(b,_prim) => {
                 let mut args = vec![Vh::V(self.clone()),none_or_clone(&x),none_or_clone(&w)];
                 let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args));
                 let pos = body_pos(b,arity);
@@ -120,29 +121,29 @@ impl Calleable for V {
             },
             V::Scalar(_n) => Vs::V(self.clone()),
             V::Char(_c) => Vs::V(self.clone()),
-            V::Fn(f) => f(arity,x,w),
-            V::R1(_f) => panic!("can't call r1"),
-            V::R2(_f) => panic!("can't call r2"),
-            V::D1(d1) => {
+            V::Fn(f,_prim) => f(arity,x,w),
+            V::R1(_f,_prim) => panic!("can't call r1"),
+            V::R2(_f,_prim) => panic!("can't call r2"),
+            V::D1(d1,_prim) => {
                 let D1(m,f) = d1.deref();
                 match m {
-                    V::R1(r1) => r1(arity,Some(f.clone()),x,w),
+                    V::R1(r1,_prim) => r1(arity,Some(f.clone()),x,w),
                     _ => panic!("can only call raw1 mods in derv1"),
                 }
             },
-            V::D2(d2) => {
+            V::D2(d2,_prim) => {
                 let D2(m,f,g) = d2.deref();
                 match m {
-                    V::R2(r2) => r2(arity,Some(f.clone()),Some(g.clone()),x,w),
+                    V::R2(r2,_prim) => r2(arity,Some(f.clone()),Some(g.clone()),x,w),
                     _ => panic!("can only call raw2 mods in derv2"),
                 }
             },
-            V::Tr2(tr) => {
+            V::Tr2(tr,_prim) => {
                 let Tr2(g,h) = tr.deref();
                 let r = h.call(arity,x,w);
                 g.call(1,Some(r.to_ref().clone()),None)
             },
-            V::Tr3(tr) => {
+            V::Tr3(tr,_prim) => {
                 let Tr3(f,g,h) = tr.deref();
                 let r =
                     match arity {
@@ -163,7 +164,7 @@ impl Calleable for V {
 pub type Vn = Option<V>;
 
 // Value (boxed on the stack)
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,EnumAsInner)]
 pub enum Vs {
     V(V),
     Slot(Env,usize),

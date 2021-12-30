@@ -23,17 +23,17 @@ impl Display for V {
         match self {
             V::Scalar(n) => write!(f, "{}", *n),
             V::Char(c) => write!(f, "{}", *c),
-            V::BlockInst(_b) => write!(f,"{}","BlockInst"),
+            V::BlockInst(_b,_prim) => write!(f,"{}","BlockInst"),
             V::DervBlockInst(_b,_a,_prim) => write!(f,"{}","DervBlockInst"),
             V::Nothing => write!(f,"{}","Nothing"),
             V::A(a) => write!(f,"[{}]",fmt_array(&a.r)),
-            V::Fn(_a) => write!(f,"{}","Fn"),
-            V::R1(_f) => write!(f,"{}","R1"),
-            V::R2(_f) => write!(f,"{}","R2"),
-            V::D1(_d1) => write!(f,"{}","D1"),
-            V::D2(_d2) => write!(f,"{}","D2"),
-            V::Tr2(_tr2) => write!(f,"{}","Tr2"),
-            V::Tr3(_tr3) => write!(f,"{}","Tr3"),
+            V::Fn(_a,_prim) => write!(f,"{}","Fn"),
+            V::R1(_f,_prim) => write!(f,"{}","R1"),
+            V::R2(_f,_prim) => write!(f,"{}","R2"),
+            V::D1(_d1,_prim) => write!(f,"{}","D1"),
+            V::D2(_d2,_prim) => write!(f,"{}","D2"),
+            V::Tr2(_tr2,_prim) => write!(f,"{}","Tr2"),
+            V::Tr3(_tr3,_prim) => write!(f,"{}","Tr3"),
         }
     }
 }
