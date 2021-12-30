@@ -1,6 +1,6 @@
 use crate::schema::{Env,V,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Body,A,Ar,Tr2,Tr3,set,ok,D2,D1};
 use crate::prim::{provide,decompose,prim_ind};
-use crate::code::{r0,r1};
+use crate::code::{r0,r1,c};
 use crate::fmt::{dbg_stack_out,dbg_stack_in};
 use crate::init_log;
 use rustler::{Atom,NifResult};
@@ -280,8 +280,10 @@ fn test() -> Result<(),Box<std::error::Error>> {
     let set_inv = (*set_inv_w).as_block_inst().unwrap();
     info!("runtime loaded");
     let prim_fns = V::A(Cc::new(A::new(vec![V::Fn(decompose,None),V::Fn(prim_ind,None)],vec![2])));
-    let _ = call(1,Some(set_prims.clone()),Some(prim_fns),None);
-    info!("indices loaded");
+    call(1,Some(set_prims.clone()),Some(prim_fns),None);
+    info!("primitives loaded");
+    let compiler = c(&runtime);
+    info!("compiler loaded");
     Ok(())
 }
 

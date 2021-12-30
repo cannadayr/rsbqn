@@ -31,25 +31,23 @@ cmd_receive(Port, Acc) ->
 utf8(Str) ->
     unicode:characters_to_binary(Str).
 
-r0(Repo) ->
+test(Repo,Test) ->
     {ok,Cwd} = file:get_cwd(),
-    {Cmd,Args} = { erlang:binary_to_list(filename:join([Cwd, <<"crs.bqn">>])),[Repo,<<"r0">>] },
-    cmd(Cmd,Args).
-r1(Repo) ->
-    {ok,Cwd} = file:get_cwd(),
-    {Cmd,Args} = { erlang:binary_to_list(filename:join([Cwd, <<"crs.bqn">>])),[Repo,<<"r1">>] },
+    {Cmd,Args} = { erlang:binary_to_list(filename:join([Cwd, <<"crs.bqn">>])),[Repo,Test] },
     cmd(Cmd,Args).
     
 main([Repo]) ->
-    {ok,R0} = r0(Repo),
-    {ok,R1} = r1(Repo),
+    {ok,R0} = test(Repo,<<"r0">>),
+    {ok,R1} = test(Repo,<<"r1">>),
+    {ok,C}  = test(Repo,<<"c">>),
     file:write_file("rs_src/code.rs",erlang:iolist_to_binary([
         <<"use log::{debug};\n">>,
         <<"use core::f64::{INFINITY,NEG_INFINITY};\n">>,
         <<"use crate::ebqn::run;\n">>,
         <<"use crate::schema::{Code,new_scalar,new_char,new_string,Body,A,Decoder,V};\n">>,
         <<"pub fn r0(provide: &A) -> V {\nrun(Code::new(">>,utf8(R0),<<"))\n}\n\n">>,
-        <<"pub fn r1(provide: &A,runtime_0: &A) -> V {\nrun(Code::new(">>,utf8(R1),<<"))\n}\n\n">>
+        <<"pub fn r1(provide: &A,runtime_0: &A) -> V {\nrun(Code::new(">>,utf8(R1),<<"))\n}\n\n">>,
+        <<"pub fn c(runtime: &A) -> V {\nrun(Code::new(">>,utf8(C),<<"))\n}\n\n">>
     ]));
 main(_Args) ->
     io:format("bad arguments~n"),
