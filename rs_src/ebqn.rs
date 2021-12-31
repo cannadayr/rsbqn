@@ -1,4 +1,4 @@
-use crate::schema::{Env,V,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Body,A,Ar,Tr2,Tr3,set,ok,D2,D1};
+use crate::schema::{Env,V,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Body,A,Ar,Tr2,Tr3,set,ok,D2,D1,new_string};
 use crate::prim::{provide,decompose,prim_ind};
 use crate::code::{r0,r1,c};
 use crate::fmt::{dbg_stack_out,dbg_stack_in};
@@ -6,12 +6,13 @@ use crate::init_log;
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
 use cc_mt::Cc;
-use crate::test::{bytecode,simple,prim,undo,under,identity};
+use crate::test::{bytecode,simple,prim,undo,under,identity,literal};
 use std::ops::Deref;
 use std::error::Error;
 //use std::panic;
 use log::{debug, trace, error, log_enabled, info, Level};
 use itertools::Itertools;
+use num_traits::FromPrimitive;
 
 pub fn call(arity: usize,a: Vn,x: Vn, w: Vn) -> Vs {
     match a {
@@ -286,20 +287,45 @@ fn test() -> Result<(),Box<std::error::Error>> {
     info!("primitives loaded");
 
     // tests
-    bytecode();
-    info!("bytecode tests passed");
-    simple(&runtime);
-    info!("simple tests passed");
-    prim(&runtime);
-    info!("prim tests passed");
-    undo(&runtime);
-    info!("undo tests passed");
-    under(&runtime);
-    info!("under tests passed");
-    identity(&runtime);
-    info!("identity tests passed");
+    //bytecode();
+    //info!("bytecode tests passed");
+    //simple(&runtime);
+    //info!("simple tests passed");
+    //prim(&runtime);
+    //info!("prim tests passed");
+    //undo(&runtime);
+    //info!("undo tests passed");
+    //under(&runtime);
+    //info!("under tests passed");
+    //identity(&runtime);
+    //info!("identity tests passed");
+    //literal(&runtime);
+    //info!("literal tests passed");
+
     let compiler = c(&runtime);
     info!("compiler loaded");
+
+    let src = new_string("{×´1+↕𝕩}");
+    let prog = call(2,Some(compiler),Some(src),Some(V::A(Cc::new(runtime)))).into_v().unwrap().into_a().unwrap();
+    let (bytecode,objects,blocks,bodies,_indices,_tokenization) = prog.r.iter().collect_tuple().unwrap();
+    let func = Code::new(
+        bytecode.as_a().unwrap().r.iter().map(|e| usize::from_f64(e.clone().into_scalar().unwrap()).unwrap() ).collect::<Vec<usize>>(),
+        objects.as_a().unwrap().r.iter().map(|e| e.clone() ).collect::<Vec<V>>(),
+        blocks.as_a().unwrap().r.iter().map(|e|
+            match e.clone().into_a().unwrap().r.iter().collect_tuple() {
+                Some((V::Scalar(typ),V::Scalar(imm),V::Scalar(body))) => (u8::from_f64(*typ).unwrap(),if (1.0 == *imm) { true } else { false },Body::Imm(usize::from_f64(*body).unwrap())),
+                _ => panic!("couldn't load compiled block"),
+            }
+        ).collect::<Vec<(u8, bool, Body)>>(),
+        bodies.as_a().unwrap().r.iter().map(|e|
+            match e.clone().into_a().unwrap().r.iter().collect_tuple() {
+                Some((V::Scalar(pos),V::Scalar(local),_name_id,_export_mask)) => (usize::from_f64(*pos).unwrap(),usize::from_f64(*local).unwrap()),
+                _ => panic!("couldn't load compiled body"),
+            }
+        ).collect::<Vec<(usize,usize)>>()
+    );
+    let result = call(1,Some(run(func)),Some(V::Scalar(10.0)),None);
+    info!("result = {}",&result);
     Ok(())
 }
 
