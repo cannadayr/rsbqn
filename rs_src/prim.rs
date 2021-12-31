@@ -134,6 +134,8 @@ fn group_ord(arity: usize, x: Vn, w: Vn) -> Vs {
 }
 // !
 fn assert_fn(arity: usize, x: Vn, w: Vn) -> Vs {
+    //dbg_args("assert_fn",arity,&x,&w);
+    let r =
     match arity {
         1 => match x.unwrap().as_scalar() {
             Some(1.0) => Vs::V(V::Scalar(1.0)),
@@ -150,10 +152,14 @@ fn assert_fn(arity: usize, x: Vn, w: Vn) -> Vs {
             },
         },
         _ => panic!("illegal assert arity"),
-    }
+    };
+    //dbg_rtn("assert_fn",arity,&r);
+    r
 }
 // +
 pub fn plus(arity:usize, x: Vn,w: Vn) -> Vs {
+    //dbg_args("plus",arity,&x,&w);
+    let r =
     match arity {
         1 => Vs::V(x.unwrap()),
         2 => match (x.unwrap(),w.unwrap()) {
@@ -165,10 +171,14 @@ pub fn plus(arity:usize, x: Vn,w: Vn) -> Vs {
                 _ => panic!("dyadic plus pattern not found"),
         },
         _ => panic!("illegal plus arity"),
-    }
+    };
+    //dbg_rtn("plus",arity,&r);
+    r
 }
 // -
 fn minus(arity: usize, x: Vn, w: Vn) -> Vs {
+    //dbg_args("minus",arity,&x,&w);
+    let r =
     match arity {
         1 => match x.unwrap() {
             V::Scalar(xs) => Vs::V(V::Scalar(-1.0 * xs)),
@@ -182,7 +192,9 @@ fn minus(arity: usize, x: Vn, w: Vn) -> Vs {
             _ => panic!("dyadic minus pattern not found"),
         },
         _ => panic!("illegal minus arity"),
-    }
+    };
+    //dbg_rtn("minus",arity,&r);
+    r
 }
 // ×
 fn times(arity: usize, x: Vn, w: Vn) -> Vs {

@@ -322,6 +322,7 @@ fn test() -> Result<(),Box<std::error::Error>> {
             }
         ).collect::<Vec<(usize,usize)>>()
     );
+    info!("func loaded");
     let result = call(1,Some(run(func)),Some(V::Scalar(10.0)),None);
     info!("result = {}",&result);
     Ok(())
