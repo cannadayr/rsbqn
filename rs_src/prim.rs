@@ -1,4 +1,4 @@
-use crate::schema::{A,V,Vn,Vs,Decoder};
+use crate::schema::{A,V,Vn,Vs,Decoder,D1,D2,Tr2,Tr3};
 use crate::ebqn::{call};
 use cc_mt::Cc;
 use std::cmp::max;
@@ -29,7 +29,9 @@ fn typ(arity: usize, x: Vn, _w: Vn) -> Vs {
             V::A(_a) => Vs::V(V::Scalar(0.0)),
             V::Char(_c) => Vs::V(V::Scalar(2.0)),
             V::DervBlockInst(_b,_a,_prim) => Vs::V(V::Scalar(3.0)),
+            V::D1(_d1,_prim) => Vs::V(V::Scalar(3.0)),
             V::D2(_d2,_prim) => Vs::V(V::Scalar(3.0)),
+            V::Tr2(_tr3,_prim) => Vs::V(V::Scalar(3.0)),
             V::Tr3(_tr3,_prim) => Vs::V(V::Scalar(3.0)),
             V::Fn(_fn,_prim) => Vs::V(V::Scalar(3.0)),
             V::R1(_r1,_prim) => Vs::V(V::Scalar(4.0)),
