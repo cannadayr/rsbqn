@@ -4,6 +4,7 @@ use cc_mt::Cc;
 use std::cmp::max;
 use log::{debug, trace, error, log_enabled, info, Level};
 use std::iter::FromIterator;
+use std::ops::Deref;
 use itertools::Itertools;
 
 fn dbg_args(fun: &str, arity: usize, x: &Vn, w: &Vn) {
@@ -469,7 +470,15 @@ pub fn decompose(arity:usize, x: Vn,w: Vn) -> Vs {
     let r =
     match arity {
         1 => {
-            if ! (&x).as_ref().unwrap().clone().is_fn() { // atoms
+            if ( // atoms
+                match (&x).as_ref().unwrap() {
+                    V::Scalar(_n) => true,
+                    V::Char(_c) => true,
+                    V::Nothing => true,
+                    V::A(_a) => true,
+                    _ => false
+                }
+            ) {
                 Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(-1.0),(&x).as_ref().unwrap().clone()],vec![2]))))
             }
             else if ( // primitives
@@ -513,7 +522,25 @@ pub fn decompose(arity:usize, x: Vn,w: Vn) -> Vs {
                 }
             }
             else { // everything else
-                Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(1.0),(&x).as_ref().unwrap().clone()],vec![2]))))
+                match (&x).as_ref().unwrap() {
+                    V::D1(d1,None) => {
+                        let D1(m,f) = (*d1).deref();
+                        Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(4.0),f.clone(),m.clone()],vec![3]))))
+                    },
+                    V::D2(d2,None) => {
+                        let D2(m,f,g) = (*d2).deref();
+                        Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(5.0),f.clone(),m.clone(),g.clone()],vec![4]))))
+                    },
+                    V::Tr2(tr2,None) => {
+                        let Tr2(g,h) = (*tr2).deref();
+                        Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(2.0),g.clone(),h.clone()],vec![3]))))
+                    },
+                    V::Tr3(tr3,None) => {
+                        let Tr3(f,g,h) = (*tr3).deref();
+                        Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(3.0),f.clone(),g.clone(),h.clone()],vec![4]))))
+                    },
+                    _ => Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(1.0),(&x).as_ref().unwrap().clone()],vec![2])))),
+                }
             }
         },
         _ => panic!("illegal decompose arity"),
