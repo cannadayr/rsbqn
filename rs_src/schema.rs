@@ -6,6 +6,7 @@ use crate::ebqn::vm;
 use crate::late_init::LateInit;
 //use log::{debug, trace, error, log_enabled, info, Level};
 use enum_as_inner::EnumAsInner;
+use num_traits::{cast::FromPrimitive};
 
 rustler::atoms!{ok}
 
@@ -84,10 +85,7 @@ impl Decoder for V {
     fn to_f64(&self) -> f64 {
         match self.deref() {
             V::Scalar(n) => *n,
-            // a proper u32 to char conversions requires the unstable feature 'assoc_char_funcs'
-            // https://github.com/rust-lang/rust/issues/71763
-            // use u8's for now
-            V::Char(c) => *c as u8 as f64,
+            V::Char(c) => f64::from(u32::from(*c)),
             V::BlockInst(_b,_prim) => panic!("can't decode blockinst to RUST"),
             V::DervBlockInst(_b,_a,_prim) => panic!("can't encode dervblockinst to BEAM"),
             V::Nothing => panic!("can't decode nothing to BEAM"),

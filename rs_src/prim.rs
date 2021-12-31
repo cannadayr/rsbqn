@@ -156,14 +156,11 @@ fn assert_fn(arity: usize, x: Vn, w: Vn) -> Vs {
 pub fn plus(arity:usize, x: Vn,w: Vn) -> Vs {
     match arity {
         1 => Vs::V(x.unwrap()),
-        // a proper u32 to char conversions requires the unstable feature 'assoc_char_funcs'
-        // https://github.com/rust-lang/rust/issues/71763
-        // use u8's for now
         2 => match (x.unwrap(),w.unwrap()) {
-                (V::Char(xc),V::Scalar(ws)) if ws >= 0.0 => Vs::V(V::Char(char::from_u32(xc.to_digit(10).unwrap() + u32::from_f64(ws).unwrap()).unwrap())),
-                (V::Scalar(xs),V::Char(wc)) if xs >= 0.0 => Vs::V(V::Char(char::from_u32(wc.to_digit(10).unwrap() + u32::from_f64(xs).unwrap()).unwrap())),
-                (V::Char(xc),V::Scalar(ws)) if ws <  0.0 => Vs::V(V::Char(char::from_u32(xc.to_digit(10).unwrap() - u32::from_f64(ws.abs()).unwrap()).unwrap())),
-                (V::Scalar(xs),V::Char(wc)) if xs <  0.0 => Vs::V(V::Char(char::from_u32(wc.to_digit(10).unwrap() - u32::from_f64(xs.abs()).unwrap()).unwrap())),
+                (V::Char(xc),V::Scalar(ws)) if ws >= 0.0 => Vs::V(V::Char(char::from_u32(u32::from(xc) + u32::from_f64(ws).unwrap()).unwrap())),
+                (V::Scalar(xs),V::Char(wc)) if xs >= 0.0 => Vs::V(V::Char(char::from_u32(u32::from(wc) + u32::from_f64(xs).unwrap()).unwrap())),
+                (V::Char(xc),V::Scalar(ws)) if ws <  0.0 => Vs::V(V::Char(char::from_u32(u32::from(xc) - u32::from_f64(ws.abs()).unwrap()).unwrap())),
+                (V::Scalar(xs),V::Char(wc)) if xs <  0.0 => Vs::V(V::Char(char::from_u32(u32::from(wc) - u32::from_f64(xs.abs()).unwrap()).unwrap())),
                 (V::Scalar(xs),V::Scalar(ws)) => Vs::V(V::Scalar(xs + ws)),
                 _ => panic!("dyadic plus pattern not found"),
         },
@@ -177,14 +174,11 @@ fn minus(arity: usize, x: Vn, w: Vn) -> Vs {
             V::Scalar(xs) => Vs::V(V::Scalar(-1.0 * xs)),
             _ => panic!("monadic minus expected number"),
         },
-        // a proper u32 to char conversions requires the unstable feature 'assoc_char_funcs'
-        // https://github.com/rust-lang/rust/issues/71763
-        // use u8's for now
         2 => match (x.unwrap(),w.unwrap()) {
-            (V::Scalar(xs),V::Char(wc)) => Vs::V(V::Char(((wc as u8) - (xs as u8)) as char)),
-            (V::Char(xc),V::Char(wc)) if (xc as u8) > (wc as u8) => Vs::V(V::Scalar(-1.0*((xc as u8) - (wc as u8)) as f64)),
-            (V::Char(xc),V::Char(wc)) => Vs::V(V::Scalar(((wc as u8) - (xc as u8)) as f64)),
-            (V::Scalar(xs),V::Scalar(ws)) => Vs::V(V::Scalar(ws.to_f64() - xs.to_f64())),
+            (V::Scalar(xs),V::Char(wc)) => Vs::V(V::Char(char::from_u32(u32::from(wc) - u32::from_f64(xs).unwrap()).unwrap())),
+            (V::Char(xc),V::Char(wc)) if u32::from(xc) > u32::from(wc) => Vs::V(V::Scalar(-1.0*f64::from(u32::from(xc) - u32::from(wc)))),
+            (V::Char(xc),V::Char(wc)) => Vs::V(V::Scalar(f64::from(u32::from(wc) - u32::from(xc)))),
+            (V::Scalar(xs),V::Scalar(ws)) => Vs::V(V::Scalar(ws - xs)),
             _ => panic!("dyadic minus pattern not found"),
         },
         _ => panic!("illegal minus arity"),
