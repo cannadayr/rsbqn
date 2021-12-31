@@ -130,12 +130,12 @@ fn group_ord(arity: usize, x: Vn, w: Vn) -> Vs {
 // !
 fn assert_fn(arity: usize, x: Vn, w: Vn) -> Vs {
     match arity {
-        1 => match x.unwrap().to_f64() {
-            1.0 => Vs::V(V::Scalar(1.0)),
+        1 => match x.unwrap().as_scalar() {
+            Some(1.0) => Vs::V(V::Scalar(1.0)),
             _ => panic!("assert failed"),
         },
-        2 => match x.unwrap().to_f64() {
-            1.0 => Vs::V(V::Scalar(1.0)),
+        2 => match x.unwrap().as_scalar() {
+            Some(1.0) => Vs::V(V::Scalar(1.0)),
             _ => {
                 let msg = w.unwrap().to_array().r.iter().map(|e| match e {
                     V::Char(c) => *c,
