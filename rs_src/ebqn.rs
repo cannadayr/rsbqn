@@ -6,7 +6,7 @@ use crate::init_log;
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
 use cc_mt::Cc;
-use crate::test::{bytecode,simple,prim,under};
+use crate::test::{bytecode,simple,prim,undo,under};
 use std::ops::Deref;
 use std::error::Error;
 //use std::panic;
@@ -288,6 +288,8 @@ fn test() -> Result<(),Box<std::error::Error>> {
     info!("simple tests passed");
     prim(&runtime);
     info!("prim tests passed");
+    undo(&runtime);
+    info!("undo tests passed");
     under(&runtime);
     info!("under tests passed");
     //let compiler = c(&runtime);

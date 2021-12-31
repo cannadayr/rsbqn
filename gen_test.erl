@@ -102,6 +102,7 @@ main([Repo]) ->
     ByteCode = suite(Repo,<<"bytecode.bqn">>),
     Simple = suite(Repo,<<"simple.bqn">>),
     Prim = suite(Repo,<<"prim.bqn">>),
+    Undo = suite(Repo,<<"undo.bqn">>),
     Under = suite(Repo,<<"under.bqn">>),
     file:write_file("rs_src/test.rs",erlang:iolist_to_binary([
         <<"use log::{info};\n">>,
@@ -113,6 +114,7 @@ main([Repo]) ->
         <<"pub fn bytecode() {\n">>,ByteCode,<<"}\n\n">>,
         <<"pub fn simple(runtime: &A) {\n">>,Simple,<<"\n}\n">>,
         <<"pub fn prim(runtime: &A) {\n">>,Prim,<<"}\n\n">>,
+        <<"pub fn undo(runtime: &A) {\n">>,Undo,<<"}\n\n">>,
         <<"pub fn under(runtime: &A) {\n">>,Under,<<"}\n\n">>
     ]));
 main(_Args) ->
