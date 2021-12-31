@@ -189,7 +189,7 @@ fn minus(arity: usize, x: Vn, w: Vn) -> Vs {
 }
 // ×
 fn times(arity: usize, x: Vn, w: Vn) -> Vs {
-    dbg_args("times",arity,&x,&w);
+    //dbg_args("times",arity,&x,&w);
     match arity {
         2 => match (x.unwrap(),w.unwrap()) {
             (V::Scalar(xs),V::Scalar(ws)) => Vs::V(V::Scalar(ws * xs)),
@@ -200,7 +200,7 @@ fn times(arity: usize, x: Vn, w: Vn) -> Vs {
 }
 // ÷
 fn divide(arity: usize, x: Vn, w: Vn) -> Vs {
-    dbg_args("divide",arity,&x,&w);
+    //dbg_args("divide",arity,&x,&w);
     match arity {
         1 => match x.unwrap() {
             V::Scalar(xs) => Vs::V(V::Scalar(1.0 / xs)),
@@ -236,6 +236,8 @@ fn floor(arity: usize, x: Vn, _w: Vn) -> Vs {
 }
 // =
 fn equals(arity: usize, x: Vn, w: Vn) -> Vs {
+    //dbg_args("equals",arity,&x,&w);
+    let r =
     match arity {
         1 => match x.unwrap() {
             V::A(xa) => Vs::V(V::Scalar(xa.sh.len() as i64 as f64)),
@@ -250,10 +252,14 @@ fn equals(arity: usize, x: Vn, w: Vn) -> Vs {
             false => Vs::V(V::Scalar(0.0)),
         },
         _ => panic!("illegal equals arity"),
-    }
+    };
+    //dbg_rtn("equals",arity,&r);
+    r
 }
 // ≤
 fn lesseq(arity: usize, x: Vn, w: Vn) -> Vs {
+    //dbg_args("lesseq",arity,&x,&w);
+    let r =
     match arity {
         2 => {
             let t = typ(1,x.clone(),None).to_ref().to_f64();
@@ -267,7 +273,9 @@ fn lesseq(arity: usize, x: Vn, w: Vn) -> Vs {
             }
         },
         _ => panic!("illegal lesseq arity"),
-    }
+    };
+    //dbg_rtn("lesseq",arity,&r);
+    r
 }
 // ≢
 fn shape(arity: usize, x: Vn, w: Vn) -> Vs {
@@ -309,6 +317,8 @@ fn reshape(arity: usize, x: Vn, w: Vn) -> Vs {
 }
 // ⊑
 fn pick(arity: usize, x: Vn, w: Vn) -> Vs {
+    //dbg_args("pick",arity,&x,&w);
+    let r =
     match arity {
         2 => {
             match (x.unwrap(),w.unwrap()) {
@@ -317,7 +327,9 @@ fn pick(arity: usize, x: Vn, w: Vn) -> Vs {
             }
         },
         _ => panic!("illegal pick arity"),
-    }
+    };
+    //dbg_rtn("pick",arity,&r);
+    r
 }
 // ↕
 fn windows(arity: usize, x: Vn, _w: Vn) -> Vs {
@@ -452,6 +464,8 @@ fn catches(_arity: usize, _f: Vn, _g: Vn, _x: Vn, _w: Vn) -> Vs {
 }
 
 pub fn decompose(arity:usize, x: Vn,w: Vn) -> Vs {
+    //dbg_args("decompose",arity,&x,&w);
+    let r =
     match arity {
         1 => {
             if ! (&x).as_ref().unwrap().clone().is_fn() { // atoms
@@ -502,7 +516,9 @@ pub fn decompose(arity:usize, x: Vn,w: Vn) -> Vs {
             }
         },
         _ => panic!("illegal decompose arity"),
-    }
+    };
+    //dbg_rtn("decompose",arity,&r);
+    r
 }
 
 pub fn prim_ind(arity:usize, x: Vn,w: Vn) -> Vs {
