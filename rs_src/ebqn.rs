@@ -6,7 +6,7 @@ use crate::init_log;
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
 use cc_mt::Cc;
-use crate::test::{bytecode,simple,prim};
+use crate::test::{bytecode,simple,prim,under};
 use std::ops::Deref;
 use std::error::Error;
 //use std::panic;
@@ -257,8 +257,6 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
 #[test]
 fn test() -> Result<(),Box<std::error::Error>> {
     init_log();
-    //bytecode();
-    //info!("bytecode loaded");
     let builtin = provide();
     let runtime0 = r0(&builtin);
     info!("runtime0 loaded");
@@ -282,8 +280,18 @@ fn test() -> Result<(),Box<std::error::Error>> {
     let prim_fns = V::A(Cc::new(A::new(vec![V::Fn(decompose,None),V::Fn(prim_ind,None)],vec![2])));
     call(1,Some(set_prims.clone()),Some(prim_fns),None);
     info!("primitives loaded");
-    let compiler = c(&runtime);
-    info!("compiler loaded");
+
+    // tests
+    bytecode();
+    info!("bytecode tests passed");
+    simple(&runtime);
+    info!("simple tests passed");
+    prim(&runtime);
+    info!("prim tests passed");
+    under(&runtime);
+    info!("under tests passed");
+    //let compiler = c(&runtime);
+    //info!("compiler loaded");
     Ok(())
 }
 
