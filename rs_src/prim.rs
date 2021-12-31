@@ -6,17 +6,18 @@ use log::{debug, trace, error, log_enabled, info, Level};
 use std::iter::FromIterator;
 
 fn dbg_args(fun: &str, arity: usize, x: &Vn, w: &Vn) {
-    debug!("calling {}/{}",fun,arity);
     match arity {
         1 => {
-            debug!("𝕩 = {}",format!("{}",x.clone().unwrap().to_string()));
+            info!("calling {}/{}: 𝕩 = {}",fun,arity,format!("{}",x.clone().unwrap().to_string()));
         },
         2 => {
-            debug!("𝕩 = {}",format!("{}",x.clone().unwrap().to_string()));
-            debug!("𝕨 = {}",format!("{}",w.clone().unwrap().to_string()));
+            info!("calling {}/{}: 𝕩 = {};𝕨 = {}",fun,arity,format!("{}",x.clone().unwrap().to_string()),format!("{}",w.clone().unwrap().to_string()));
         },
         _ => ()
     };
+}
+fn dbg_rtn(fun: &str,arity: usize, r: &Vs) {
+    info!("rtn     {}/{}: rtn = {}",fun,arity,r);
 }
 
 // Type
