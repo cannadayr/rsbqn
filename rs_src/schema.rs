@@ -377,7 +377,7 @@ impl Ar {
 }
 
 #[derive(Debug,Clone,PartialEq)]
-pub struct D1(V,V);
+pub struct D1(pub V,pub V);
 impl D1 {
     pub fn new(m: V, f: V) -> Self {
         Self(m,f)
@@ -392,14 +392,14 @@ impl D2 {
     }
 }
 #[derive(Debug,Clone,PartialEq)]
-pub struct Tr2(V,V);
+pub struct Tr2(pub V,pub V);
 impl Tr2 {
     pub fn new(g: Vs,h: Vs) -> Self {
         Self(g.to_ref().clone(),h.to_ref().clone())
     }
 }
 #[derive(Debug,Clone,PartialEq)]
-pub struct Tr3(V,V,V);
+pub struct Tr3(pub V,pub V,pub V);
 impl Tr3 {
     pub fn new(f: Vs,g: Vs,h: Vs) -> Self {
         Self((*f.to_ref()).clone(),(*g.to_ref()).clone(),(*h.to_ref()).clone())
