@@ -385,7 +385,7 @@ impl D1 {
 }
 
 #[derive(Debug,Clone,PartialEq)]
-pub struct D2(V,V,V);
+pub struct D2(pub V,pub V,pub V);
 impl D2 {
     pub fn new(m: V, f: V,g: V) -> Self {
         Self(m,f,g)

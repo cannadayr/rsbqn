@@ -4,6 +4,7 @@ use cc_mt::Cc;
 use std::cmp::max;
 use log::{debug, trace, error, log_enabled, info, Level};
 use std::iter::FromIterator;
+use itertools::Itertools;
 
 fn dbg_args(fun: &str, arity: usize, x: &Vn, w: &Vn) {
     match arity {
@@ -450,38 +451,71 @@ fn catches(_arity: usize, _f: Vn, _g: Vn, _x: Vn, _w: Vn) -> Vs {
 
 pub fn decompose(arity:usize, x: Vn,w: Vn) -> Vs {
     match arity {
-        1 => match x.unwrap() {
-            V::Scalar(n) => panic!("can't decompose scalar"),
-            V::Char(c) => panic!("can't decompose char"),
-            V::Nothing => panic!("can't decompose nothing"),
-            V::A(_a) => panic!("can't decompose array"),
-            V::BlockInst(_b,_prim) => panic!("can't decompose blockinst"),
-            V::DervBlockInst(_b,_a,_prim) => panic!("can't decompose dervblockinst"),
-            V::Fn(_a,_prim) => panic!("can't decompose fn"),
-            V::R1(_f,_prim) => panic!("can't decompose r1"),
-            V::R2(_f,_prim) => panic!("can't decompose r2"),
-            V::D1(_d1,_prim) => panic!("can't decompose d1"),
-            V::D2(_d2,_prim) => panic!("can't decompose d2"),
-            V::Tr2(_tr2,_prim) => panic!("can't decompose train2"),
-            V::Tr3(_tr3,_prim) => panic!("can't decompose train3"),
+        1 => {
+            if ! (&x).as_ref().unwrap().clone().is_fn() { // atoms
+                Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(-1.0),(&x).as_ref().unwrap().clone()],vec![2]))))
+            }
+            else if ( // primitives
+                match (&x).as_ref().unwrap() {
+                    V::BlockInst(_b,Some(_prim)) => true,
+                    V::DervBlockInst(_b,_a,Some(_prim)) => true,
+                    V::Fn(_a,Some(_prim)) => true,
+                    V::R1(_f,Some(_prim)) => true,
+                    V::R2(_f,Some(_prim)) => true,
+                    V::D1(_d1,Some(_prim)) => true,
+                    V::D2(_d2,Some(_prim)) => true,
+                    V::Tr2(_tr2,Some(_prim)) => true,
+                    V::Tr3(_tr3,Some(_prim)) => true,
+                    _ => false,
+                }
+            ) {
+                Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(0.0),(&x).as_ref().unwrap().clone()],vec![2]))))
+            }
+            else if ( // repr
+                match (&x).as_ref().unwrap() {
+                    V::DervBlockInst(b,a,None) => true,
+                    _ => false,
+                }
+            ) {
+                match (&x).as_ref().unwrap() {
+                    V::DervBlockInst(b,a,None) => {
+                        let t = 3 + b.def.typ;
+                        match t {
+                            4 => {
+                                let (f,g) = a.iter().collect_tuple().unwrap();
+                                Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(4.0),g.as_ref().unwrap().clone(),f.as_ref().unwrap().clone()],vec![3]))))
+                            },
+                            5 => {
+                                let (f,g,h) = a.iter().collect_tuple().unwrap();
+                                Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(5.0),g.as_ref().unwrap().clone(),f.as_ref().unwrap().clone(),h.as_ref().unwrap().clone()],vec![4]))))
+                            },
+                            _ => panic!("DervBlockInst illegal decompose"),
+                        }
+                    },
+                    _ => panic!("decompose other"),
+                }
+            }
+            else { // everything else
+                Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(1.0),(&x).as_ref().unwrap().clone()],vec![2]))))
+            }
         },
-        _ => panic!("illegal plus arity"),
+        _ => panic!("illegal decompose arity"),
     }
 }
 
 pub fn prim_ind(arity:usize, x: Vn,w: Vn) -> Vs {
     match arity {
         1 => match x.unwrap() {
-            V::BlockInst(_b,prim) => Vs::V(V::Scalar(prim.unwrap() as f64)),
-            V::DervBlockInst(_b,_a,prim) => Vs::V(V::Scalar(prim.unwrap() as f64)),
-            V::Fn(_a,prim) => Vs::V(V::Scalar(prim.unwrap() as f64)),
-            V::R1(_f,prim) => Vs::V(V::Scalar(prim.unwrap() as f64)),
-            V::R2(_f,prim) => Vs::V(V::Scalar(prim.unwrap() as f64)),
-            V::D1(_d1,prim) => Vs::V(V::Scalar(prim.unwrap() as f64)),
-            V::D2(_d2,prim) => Vs::V(V::Scalar(prim.unwrap() as f64)),
-            V::Tr2(_tr2,prim) => Vs::V(V::Scalar(prim.unwrap() as f64)),
-            V::Tr3(_tr3,prim) => Vs::V(V::Scalar(prim.unwrap() as f64)),
-            _ => panic!("no prim_ind found"),
+            V::BlockInst(_b,Some(prim)) => Vs::V(V::Scalar(prim as f64)),
+            V::DervBlockInst(_b,_a,Some(prim)) => Vs::V(V::Scalar(prim as f64)),
+            V::Fn(_a,Some(prim)) => Vs::V(V::Scalar(prim as f64)),
+            V::R1(_f,Some(prim)) => Vs::V(V::Scalar(prim as f64)),
+            V::R2(_f,Some(prim)) => Vs::V(V::Scalar(prim as f64)),
+            V::D1(_d1,Some(prim)) => Vs::V(V::Scalar(prim as f64)),
+            V::D2(_d2,Some(prim)) => Vs::V(V::Scalar(prim as f64)),
+            V::Tr2(_tr2,Some(prim)) => Vs::V(V::Scalar(prim as f64)),
+            V::Tr3(_tr3,Some(prim)) => Vs::V(V::Scalar(prim as f64)),
+            _ => Vs::V(V::Scalar(64 as f64)),
         },
         _ => panic!("illegal plus arity"),
     }
