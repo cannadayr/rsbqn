@@ -263,18 +263,22 @@ fn test() -> Result<(),Box<std::error::Error>> {
     let full_runtime = r1(&builtin,runtime0.as_a().unwrap()).into_a().unwrap().try_unwrap().unwrap();
     let (runtime_w,set_prims,set_inv_w) = full_runtime.r.iter().collect_tuple().unwrap();
     // iterate thru this and create a new runtime array with set primitive indices
-    let runtime = A::new((*runtime_w).as_a().unwrap().r.iter().enumerate().map(|(i,e)| match e {
-        V::DervBlockInst(b,a,_prim) => V::DervBlockInst(b.clone(),a.clone(),Some(i)),
-        V::BlockInst(b,_prim) => V::BlockInst(b.clone(),Some(i)),
-        V::Fn(a,_prim) => V::Fn(a.clone(),Some(i)),
-        V::R1(r1,_prim) => V::R1(r1.clone(),Some(i)),
-        V::R2(r2,_prim) => V::R2(r2.clone(),Some(i)),
-        V::D1(d1,_prim) => V::D1(d1.clone(),Some(i)),
-        V::D2(d2,_prim) => V::D2(d2.clone(),Some(i)),
-        V::Tr2(tr2,_prim) => V::Tr2(tr2.clone(),Some(i)),
-        V::Tr3(tr3,_prim) => V::Tr3(tr3.clone(),Some(i)),
-        _ => panic!("illegal setprim"),
-    }).collect::<Vec<V>>(),vec![64]);
+    let runtime_ravel =
+        (*runtime_w).as_a().unwrap().r.iter().enumerate().map(|(i,e)| match e {
+            V::DervBlockInst(b,a,_prim) => V::DervBlockInst(b.clone(),a.clone(),Some(i)),
+            V::BlockInst(b,_prim) => V::BlockInst(b.clone(),Some(i)),
+            V::Fn(a,_prim) => V::Fn(a.clone(),Some(i)),
+            V::R1(r1,_prim) => V::R1(r1.clone(),Some(i)),
+            V::R2(r2,_prim) => V::R2(r2.clone(),Some(i)),
+            V::D1(d1,_prim) => V::D1(d1.clone(),Some(i)),
+            V::D2(d2,_prim) => V::D2(d2.clone(),Some(i)),
+            V::Tr2(tr2,_prim) => V::Tr2(tr2.clone(),Some(i)),
+            V::Tr3(tr3,_prim) => V::Tr3(tr3.clone(),Some(i)),
+            _ => panic!("illegal setprim"),
+        }).collect::<Vec<V>>();
+    let runtime_shape = &runtime_ravel.len();
+    info!("set_prims on runtime of size {}",runtime_shape);
+    let runtime = A::new(runtime_ravel,vec![*runtime_shape]);
     let set_inv = (*set_inv_w).as_block_inst().unwrap();
     info!("runtime loaded");
     let prim_fns = V::A(Cc::new(A::new(vec![V::Fn(decompose,None),V::Fn(prim_ind,None)],vec![2])));
