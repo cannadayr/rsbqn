@@ -105,6 +105,7 @@ main([Repo]) ->
     Undo = suite(Repo,<<"undo.bqn">>),
     Under = suite(Repo,<<"under.bqn">>),
     Identity = suite(Repo,<<"identity.bqn">>),
+    %Literal = suite(Repo,<<"literal.bqn">>),
     file:write_file("rs_src/test.rs",erlang:iolist_to_binary([
         <<"use log::{info};\n">>,
         <<"use core::f64::{INFINITY,NEG_INFINITY};\n">>,
@@ -118,6 +119,7 @@ main([Repo]) ->
         <<"pub fn undo(runtime: &A) {\n">>,Undo,<<"}\n\n">>,
         <<"pub fn under(runtime: &A) {\n">>,Under,<<"}\n\n">>,
         <<"pub fn identity(runtime: &A) {\n">>,Identity,<<"}\n\n">>
+        %<<"pub fn literal(runtime: &A) {\n">>,Literal,<<"}\n\n">>
     ]));
 main(_Args) ->
     io:format("bad arguments~n"),

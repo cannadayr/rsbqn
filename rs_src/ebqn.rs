@@ -6,7 +6,7 @@ use crate::init_log;
 use rustler::{Atom,NifResult};
 use rustler::resource::ResourceArc;
 use cc_mt::Cc;
-use crate::test::{bytecode,simple,prim,undo,under,identity,literal};
+use crate::test::{bytecode,simple,prim,undo,under,identity};
 use std::ops::Deref;
 use std::error::Error;
 //use std::panic;
@@ -299,8 +299,6 @@ fn test() -> Result<(),Box<std::error::Error>> {
     //info!("under tests passed");
     //identity(&runtime);
     //info!("identity tests passed");
-    //literal(&runtime);
-    //info!("literal tests passed");
 
     let compiler = c(&runtime);
     info!("compiler loaded");
