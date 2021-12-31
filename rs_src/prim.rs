@@ -322,7 +322,8 @@ fn pick(arity: usize, x: Vn, w: Vn) -> Vs {
     match arity {
         2 => {
             match (x.unwrap(),w.unwrap()) {
-                (V::A(a),V::Scalar(i)) => Vs::V(a.r[i.to_f64() as i64 as usize].clone()),
+                (V::A(a),V::Scalar(i)) if i >= 0.0 => Vs::V(a.r[i as i64 as usize].clone()),
+                (V::A(a),V::Scalar(i)) if i <  0.0 => Vs::V(a.r[((a.r.len() as f64) + i) as i64 as usize].clone()),
                 _ => panic!("pick - can't index into non array"),
             }
         },
