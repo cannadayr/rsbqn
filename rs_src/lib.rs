@@ -1,10 +1,10 @@
-mod schema;
+pub mod schema;
 mod late_init;
 mod trace;
-mod ebqn;
+pub mod ebqn;
 mod prim;
 mod test;
-mod code;
+pub mod code;
 mod fmt;
 use rustler::{Env,Term};
 //use syslog::Facility;

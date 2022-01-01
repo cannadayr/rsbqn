@@ -255,9 +255,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
     }
 }
 
-#[test]
-fn test() -> Result<(),Box<dyn std::error::Error>> {
-    init_log();
+pub fn runtime() -> A {
     let builtin = provide();
     let runtime0 = r0(&builtin);
     info!("runtime0 loaded");
@@ -283,27 +281,11 @@ fn test() -> Result<(),Box<dyn std::error::Error>> {
     //let _set_inv = (*set_inv_w).as_block_inst().unwrap();
     info!("runtime loaded");
     let prim_fns = V::A(Cc::new(A::new(vec![V::Fn(decompose,None),V::Fn(prim_ind,None)],vec![2])));
-    call(1,Some(set_prims.clone()),Some(prim_fns),None);
-    info!("primitives loaded");
+    let _ = call(1,Some(set_prims.clone()),Some(prim_fns),None);
+    runtime
+}
 
-    // tests
-    //bytecode();
-    //info!("bytecode tests passed");
-    //simple(&runtime);
-    //info!("simple tests passed");
-    //prim(&runtime);
-    //info!("prim tests passed");
-    //undo(&runtime);
-    //info!("undo tests passed");
-    //under(&runtime);
-    //info!("under tests passed");
-    //identity(&runtime);
-    //info!("identity tests passed");
-
-    let compiler = c(&runtime);
-    info!("compiler loaded");
-
-    let src = new_string("{×´1+↕𝕩}");
+pub fn prog(compiler: V,src: V,runtime: A) -> Cc<Code> {
     let prog = call(2,Some(compiler),Some(src),Some(V::A(Cc::new(runtime)))).into_v().unwrap().into_a().unwrap();
     let (bytecode,objects,blocks,bodies,_indices,_tokenization) = prog.r.iter().collect_tuple().unwrap();
     let func = Code::new(
@@ -322,9 +304,28 @@ fn test() -> Result<(),Box<dyn std::error::Error>> {
             }
         ).collect::<Vec<(usize,usize)>>()
     );
-    info!("func loaded");
-    let result = call(1,Some(run(func)),Some(V::Scalar(10.0)),None);
-    info!("result = {}",&result);
+    func
+}
+
+#[test]
+fn test() -> Result<(),Box<dyn std::error::Error>> {
+    init_log();
+    let runtime = runtime();
+
+    // tests
+    bytecode();
+    info!("bytecode tests passed");
+    simple(&runtime);
+    info!("simple tests passed");
+    prim(&runtime);
+    info!("prim tests passed");
+    undo(&runtime);
+    info!("undo tests passed");
+    under(&runtime);
+    info!("under tests passed");
+    identity(&runtime);
+    info!("identity tests passed");
+
     Ok(())
 }
 
