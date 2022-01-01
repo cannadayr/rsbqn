@@ -256,13 +256,13 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
 }
 
 #[test]
-fn test() -> Result<(),Box<std::error::Error>> {
+fn test() -> Result<(),Box<dyn std::error::Error>> {
     init_log();
     let builtin = provide();
     let runtime0 = r0(&builtin);
     info!("runtime0 loaded");
     let full_runtime = r1(&builtin,runtime0.as_a().unwrap()).into_a().unwrap().try_unwrap().unwrap();
-    let (runtime_w,set_prims,set_inv_w) = full_runtime.r.iter().collect_tuple().unwrap();
+    let (runtime_w,set_prims,_set_inv_w) = full_runtime.r.iter().collect_tuple().unwrap();
     // iterate thru this and create a new runtime array with set primitive indices
     let runtime_ravel =
         (*runtime_w).as_a().unwrap().r.iter().enumerate().map(|(i,e)| match e {
@@ -280,7 +280,7 @@ fn test() -> Result<(),Box<std::error::Error>> {
     let runtime_shape = &runtime_ravel.len();
     info!("set_prims on runtime of size {}",runtime_shape);
     let runtime = A::new(runtime_ravel,vec![*runtime_shape]);
-    let set_inv = (*set_inv_w).as_block_inst().unwrap();
+    //let _set_inv = (*set_inv_w).as_block_inst().unwrap();
     info!("runtime loaded");
     let prim_fns = V::A(Cc::new(A::new(vec![V::Fn(decompose,None),V::Fn(prim_ind,None)],vec![2])));
     call(1,Some(set_prims.clone()),Some(prim_fns),None);
@@ -311,7 +311,7 @@ fn test() -> Result<(),Box<std::error::Error>> {
         objects.as_a().unwrap().r.iter().map(|e| e.clone() ).collect::<Vec<V>>(),
         blocks.as_a().unwrap().r.iter().map(|e|
             match e.clone().into_a().unwrap().r.iter().collect_tuple() {
-                Some((V::Scalar(typ),V::Scalar(imm),V::Scalar(body))) => (u8::from_f64(*typ).unwrap(),if (1.0 == *imm) { true } else { false },Body::Imm(usize::from_f64(*body).unwrap())),
+                Some((V::Scalar(typ),V::Scalar(imm),V::Scalar(body))) => (u8::from_f64(*typ).unwrap(),if 1.0 == *imm { true } else { false },Body::Imm(usize::from_f64(*body).unwrap())),
                 _ => panic!("couldn't load compiled block"),
             }
         ).collect::<Vec<(u8, bool, Body)>>(),

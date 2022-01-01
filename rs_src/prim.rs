@@ -79,7 +79,7 @@ fn group_len(arity: usize, x: Vn, w: Vn) -> Vs {
                     let mut i = 0;
                     while i < xa.r.len() {
                         let e = xa.r[i].to_f64();
-                        if (e >= 0.0) {
+                        if e >= 0.0 {
                             r[e as usize] = V::Scalar(r[e as usize].to_f64() + 1.0)
                         }
                         i += 1;
@@ -98,7 +98,7 @@ fn group_len(arity: usize, x: Vn, w: Vn) -> Vs {
                     let mut i = 0;
                     while i < xa.r.len() {
                         let e = xa.r[i].to_f64();
-                        if (e >= 0.0) {
+                        if e >= 0.0 {
                             r[e as usize] = V::Scalar(r[e as usize].to_f64() + 1.0)
                         }
                         i += 1;
@@ -138,11 +138,11 @@ fn assert_fn(arity: usize, x: Vn, w: Vn) -> Vs {
     let r =
     match arity {
         1 => match x.unwrap().as_scalar() {
-            Some(1.0) => Vs::V(V::Scalar(1.0)),
+            Some(n) if *n == 1.0 => Vs::V(V::Scalar(1.0)),
             _ => panic!("assert failed"),
         },
         2 => match x.unwrap().as_scalar() {
-            Some(1.0) => Vs::V(V::Scalar(1.0)),
+            Some(n) if *n == 1.0 => Vs::V(V::Scalar(1.0)),
             _ => {
                 let msg = w.unwrap().to_array().r.iter().map(|e| match e {
                     V::Char(c) => *c,
@@ -287,7 +287,7 @@ fn lesseq(arity: usize, x: Vn, w: Vn) -> Vs {
     r
 }
 // ≢
-fn shape(arity: usize, x: Vn, w: Vn) -> Vs {
+fn shape(arity: usize, x: Vn, _w: Vn) -> Vs {
     match arity {
         1 => match x.unwrap() {
             V::A(xa) => {
@@ -385,12 +385,12 @@ fn scan(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
             match x.unwrap() {
                 V::A(a) => {
                     let s = &a.sh;
-                    if (s.len()==0) {
+                    if s.len()==0 {
                         panic!("scan monadic array rank not at least 1");
                     };
                     let l = a.r.len();
                     let mut r = vec![V::Nothing;l];
-                    if (l > 0) {
+                    if l > 0 {
                         let mut c = 1;
                         let mut i = 1;
                         while i < s.len() {
@@ -422,7 +422,7 @@ fn scan(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
             match x.unwrap() {
                 V::A(xa) => {
                     let s = &xa.sh;
-                    if (s.len()==0) {
+                    if s.len()==0 {
                         panic!("scan dyadic array rank not at least 1");
                     };
                     if 1+wr != s.len() {
@@ -431,7 +431,7 @@ fn scan(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
                     // TODO add test 'shape of 𝕨 must be cell shape of 𝕩' here
                     let l = xa.r.len();
                     let mut r = vec![V::Nothing;l];
-                    if (l > 0) {
+                    if l > 0 {
                         let mut c = 1;
                         let mut i = 1;
                         while i < s.len() {
@@ -473,12 +473,12 @@ fn catches(_arity: usize, _f: Vn, _g: Vn, _x: Vn, _w: Vn) -> Vs {
     panic!("catches not implemented");
 }
 
-pub fn decompose(arity:usize, x: Vn,w: Vn) -> Vs {
+pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Vs {
     //dbg_args("decompose",arity,&x,&w);
     let r =
     match arity {
         1 => {
-            if ( // atoms
+            if // atoms
                 match (&x).as_ref().unwrap() {
                     V::Scalar(_n) => true,
                     V::Char(_c) => true,
@@ -486,10 +486,10 @@ pub fn decompose(arity:usize, x: Vn,w: Vn) -> Vs {
                     V::A(_a) => true,
                     _ => false
                 }
-            ) {
+            {
                 Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(-1.0),(&x).as_ref().unwrap().clone()],vec![2]))))
             }
-            else if ( // primitives
+            else if // primitives
                 match (&x).as_ref().unwrap() {
                     V::BlockInst(_b,Some(_prim)) => true,
                     V::DervBlockInst(_b,_a,Some(_prim)) => true,
@@ -502,15 +502,15 @@ pub fn decompose(arity:usize, x: Vn,w: Vn) -> Vs {
                     V::Tr3(_tr3,Some(_prim)) => true,
                     _ => false,
                 }
-            ) {
+            {
                 Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(0.0),(&x).as_ref().unwrap().clone()],vec![2]))))
             }
-            else if ( // repr
+            else if // repr
                 match (&x).as_ref().unwrap() {
-                    V::DervBlockInst(b,a,None) => true,
+                    V::DervBlockInst(_b,_a,None) => true,
                     _ => false,
                 }
-            ) {
+            {
                 match (&x).as_ref().unwrap() {
                     V::DervBlockInst(b,a,None) => {
                         let t = 3 + b.def.typ;
@@ -557,7 +557,7 @@ pub fn decompose(arity:usize, x: Vn,w: Vn) -> Vs {
     r
 }
 
-pub fn prim_ind(arity:usize, x: Vn,w: Vn) -> Vs {
+pub fn prim_ind(arity:usize, x: Vn,_w: Vn) -> Vs {
     match arity {
         1 => match x.unwrap() {
             V::BlockInst(_b,Some(prim)) => Vs::V(V::Scalar(prim as f64)),

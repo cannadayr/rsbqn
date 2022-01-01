@@ -33,15 +33,15 @@ Status
 |bytecode|tests passing|
 |fill|not working|
 |header|not working|
-|identity|not working|
+|identity|tests passing|
 |literal|not working|
 |namespace|not working|
 |prim|tests passing|
-|simple|not working|
+|simple|tests passing|
 |syntax|not working|
 |token|not working|
-|under|not working|
-|undo|not working|
+|under|tests passing|
+|undo|tests passing|
 
 
 Build

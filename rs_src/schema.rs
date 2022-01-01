@@ -56,7 +56,7 @@ impl Encoder for V {
     fn encode<'a>(&self, env: rustler::Env<'a>) -> rustler::Term<'a> {
         match self {
             V::Scalar(n) => n.encode(env),
-            V::Char(c) => panic!("can't encode char to BEAM"),
+            V::Char(_c) => panic!("can't encode char to BEAM"),
             V::BlockInst(_b,_prim) => panic!("can't encode blockinst to BEAM"),
             V::DervBlockInst(_b,_a,_prim) => panic!("can't encode dervblockinst to BEAM"),
             V::Nothing => panic!("can't encode nothing to BEAM"),
@@ -112,7 +112,7 @@ impl Calleable for V {
                 vm(&env,&b.def.code,pos,Vec::new())
             },
             V::BlockInst(b,_prim) => {
-                let mut args = vec![Vh::V(self.clone()),none_or_clone(&x),none_or_clone(&w)];
+                let args = vec![Vh::V(self.clone()),none_or_clone(&x),none_or_clone(&w)];
                 let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args));
                 let pos = body_pos(b,arity);
                 vm(&env,&b.def.code,pos,Vec::new())
@@ -285,7 +285,6 @@ impl Env {
                 match vh {
                     Vh::V(v) => v.clone(),
                     Vh::Undefined => panic!("heap slot is undefined"),
-                    _ => panic!("can't get unset slot"),
                 }
             },
         }
