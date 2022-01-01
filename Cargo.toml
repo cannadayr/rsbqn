@@ -9,7 +9,11 @@ edition = "2018"
 [lib]
 name = "ebqn"
 path = "rs_src/lib.rs"
-crate-type = ["dylib"]
+crate-type = ["dylib","rlib"]
+
+[[bin]]
+name = "bin"
+path = "rs_src/bin.rs"
 
 [dependencies]
 rustler = "0.22.0"
