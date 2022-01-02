@@ -108,31 +108,26 @@ template(Content) ->
     erlang:iolist_to_binary([
         <<"use log::{info};\n">>,
         <<"use core::f64::{INFINITY,NEG_INFINITY};\n">>,
-        %<<"use std::{panic};\n">>,
         <<"use ebqn::init_log;\n">>,
         <<"use ebqn::ebqn::{run,call,runtime,prog};\n">>,
-        %<<"use std::panic::{self, AssertUnwindSafe};\n">>,
         <<"use ebqn::schema::{Code,new_scalar,new_char,new_string,Body,A,Decoder,V};\n\n">>,
-        %<<"pub fn bytecode() {\n">>,ByteCode,<<"}\n\n">>,
         <<"\n\n">>,Content,<<"\n\n">>
-        %<<"pub fn simple(runtime: &A) {\n">>,Simple,<<"\n}\n">>,
-        %<<"pub fn prim(runtime: &A) {\n">>,Prim,<<"}\n\n">>,
-        %<<"pub fn undo(runtime: &A) {\n">>,Undo,<<"}\n\n">>,
-        %<<"pub fn under(runtime: &A) {\n">>,Under,<<"}\n\n">>,
-        %<<"pub fn identity(runtime: &A) {\n">>,Identity,<<"}\n\n">>
-        %<<"pub fn literal(runtime: &A) {\n">>,Literal,<<"}\n\n">>
     ]).
 main([Repo]) ->
     ByteCode = suite(Repo,<<"bytecode.bqn">>,<<"bytecode">>,false),
-    Simple = suite(Repo,<<"simple.bqn">>,<<"simple">>,true),
-    Prim = suite(Repo,<<"prim.bqn">>,<<"prim">>,true),
-    %Undo = suite(Repo,<<"undo.bqn">>),
-    %Under = suite(Repo,<<"under.bqn">>),
-    %Identity = suite(Repo,<<"identity.bqn">>),
-    %Literal = suite(Repo,<<"literal.bqn">>),
     file:write_file("tests/bytecode.rs",template(ByteCode)),
+    Simple = suite(Repo,<<"simple.bqn">>,<<"simple">>,true),
     file:write_file("tests/simple.rs",template(Simple)),
-    file:write_file("tests/prim.rs",template(Prim));
+    Prim = suite(Repo,<<"prim.bqn">>,<<"prim">>,true),
+    file:write_file("tests/prim.rs",template(Prim)),
+    Undo = suite(Repo,<<"undo.bqn">>,<<"prim">>,true),
+    file:write_file("tests/undo.rs",template(Undo)),
+    Under = suite(Repo,<<"under.bqn">>,<<"under">>,true),
+    file:write_file("tests/under.rs",template(Under)),
+    Identity = suite(Repo,<<"identity.bqn">>,<<"identity">>,true),
+    file:write_file("tests/identity.rs",template(Identity));
+    %Literal = suite(Repo,<<"literal.bqn">>,<<"literal">>,true),
+    %file:write_file("tests/literal.rs",template(Literal));
 main(_Args) ->
     io:format("bad arguments~n"),
     halt(1).
