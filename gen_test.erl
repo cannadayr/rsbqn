@@ -35,9 +35,9 @@ prefix(Name,N,true) ->
 suffix() ->
     [<<"}\n">>].
 gen_line(Name,assert,ByteCode,Code,undefined,N,NeedsRuntime) ->
-    [prefix(Name,N,NeedsRuntime),<<"{let desc = r#\"test: ">>,Code,<<"\"#;info!(\"{}\",desc);">>,<<"let code = ">>,ByteCode,<<";let wrapper = AssertUnwindSafe(code);panic::catch_unwind( move || { run(wrapper.clone()) }).unwrap_err();}\n">>,suffix()];
+    [<<"#[should_panic]\n">>,prefix(Name,N,NeedsRuntime),<<"{let desc = r#\"test: ">>,Code,<<"\"#;info!(\"{}\",desc);">>,<<"run(">>,ByteCode,<<")};\n">>,suffix()];
 gen_line(Name,assert,ByteCode,Code,Comment,N,NeedsRuntime) ->
-    [prefix(Name,N,NeedsRuntime),<<"{let desc = r#\"test: ">>,Comment,<<"\"#;info!(\"{}\",desc);">>,<<"let code = ">>,ByteCode,<<";let wrapper = AssertUnwindSafe(code);panic::catch_unwind( move || { run(wrapper.clone()) }).unwrap_err();} // ">>,string:trim(erlang:binary_to_list(Code)),<<"\n">>,suffix()];
+    [<<"#[should_panic]\n">>,prefix(Name,N,NeedsRuntime),<<"{let desc = r#\"test: ">>,Comment,<<"\"#;info!(\"{}\",desc);">>,<<"run(">>,ByteCode,<<")}; // ">>,string:trim(erlang:binary_to_list(Code)),<<"\n">>,suffix()];
 gen_line(Name,Expected,ByteCode,Code,undefined,N,NeedsRuntime) ->
     [prefix(Name,N,NeedsRuntime),<<"{let desc = r#\"test: ">>,Code,<<"\"#;info!(\"{}\",desc);">>,<<"assert_eq!(new_scalar(">>,erlang:float_to_binary(Expected,[{decimals, 4},compact]),<<"),run(">>,ByteCode,<<"));}\n">>,suffix()];
 gen_line(Name,Expected,ByteCode,Code,Comment,N,NeedsRuntime) ->
@@ -107,7 +107,7 @@ suite(Repo,Name,ShortName,NeedsRuntime) ->
 template(Content) ->
     erlang:iolist_to_binary([
         <<"use log::{info};\n">>,
-        %<<"use core::f64::{INFINITY,NEG_INFINITY};\n">>,
+        <<"use core::f64::{INFINITY,NEG_INFINITY};\n">>,
         %<<"use std::{panic};\n">>,
         <<"use ebqn::init_log;\n">>,
         <<"use ebqn::ebqn::{run,call,runtime,prog};\n">>,
@@ -125,13 +125,14 @@ template(Content) ->
 main([Repo]) ->
     ByteCode = suite(Repo,<<"bytecode.bqn">>,<<"bytecode">>,false),
     Simple = suite(Repo,<<"simple.bqn">>,<<"simple">>,true),
-    %Prim = suite(Repo,<<"prim.bqn">>),
+    Prim = suite(Repo,<<"prim.bqn">>,<<"prim">>,true),
     %Undo = suite(Repo,<<"undo.bqn">>),
     %Under = suite(Repo,<<"under.bqn">>),
     %Identity = suite(Repo,<<"identity.bqn">>),
     %Literal = suite(Repo,<<"literal.bqn">>),
     file:write_file("tests/bytecode.rs",template(ByteCode)),
-    file:write_file("tests/simple.rs",template(Simple));
+    file:write_file("tests/simple.rs",template(Simple)),
+    file:write_file("tests/prim.rs",template(Prim));
 main(_Args) ->
     io:format("bad arguments~n"),
     halt(1).
