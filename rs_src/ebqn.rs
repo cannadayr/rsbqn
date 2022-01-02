@@ -307,28 +307,6 @@ pub fn prog(compiler: V,src: V,runtime: A) -> Cc<Code> {
     func
 }
 
-#[test]
-fn test() -> Result<(),Box<dyn std::error::Error>> {
-    init_log();
-    let runtime = runtime();
-
-    // tests
-    bytecode();
-    info!("bytecode tests passed");
-    simple(&runtime);
-    info!("simple tests passed");
-    prim(&runtime);
-    info!("prim tests passed");
-    undo(&runtime);
-    info!("undo tests passed");
-    under(&runtime);
-    info!("under tests passed");
-    identity(&runtime);
-    info!("identity tests passed");
-
-    Ok(())
-}
-
 pub fn run(code: Cc<Code>) -> V {
     let root = Env::new(None,&code.blocks[0],0,None);
     let (pos,_locals) =
