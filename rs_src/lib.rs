@@ -18,10 +18,13 @@ pub fn init_log() {
 
 pub fn load(env: Env, _info: Term) -> bool {
     rustler::resource!(schema::Env, env);
+    rustler::resource!(schema::Runtime, env);
+    rustler::resource!(schema::Compiler, env);
+    rustler::resource!(schema::Prog, env);
     let _r = syslog::init(Facility::LOG_USER,
                  log::LevelFilter::Info,
                  Some("ebqn"));
     log_panics::init();
     true
 }
-rustler::init!("ebqn", [ebqn::init_st],load=load);
+rustler::init!("ebqn", [ebqn::init_r,ebqn::init_c,ebqn::compile,ebqn::callp],load=load);

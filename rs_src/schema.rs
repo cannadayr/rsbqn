@@ -403,6 +403,10 @@ impl Tr3 {
     }
 }
 
+pub struct Runtime(pub A);
+pub struct Compiler(pub Cc<BlockInst>);
+pub struct Prog(pub Cc<Code>);
+
 // Utility fns
 pub fn set(d: bool,is: Vs,vs: Vs) -> V {
     match (is,vs) {
