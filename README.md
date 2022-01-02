@@ -13,7 +13,7 @@ Status
 |prim|ok|535 passed; 0 failed; 0 ignored;|
 |simple|ok|20 passed; 0 failed; 0 ignored;|
 |under|FAILED|40 passed; 1 failed; 0 ignored;|
-|prim|ok|68 passed; 0 failed; 0 ignored;|
+|undo|ok|68 passed; 0 failed; 0 ignored;|
 |fill|N/A|N/A|
 |header|N/A|N/A|
 |literal|N/A|N/A|
@@ -28,3 +28,11 @@ Test
     escript gen_code.erl /path/to/mlochbaum/bqn
 
     cargo test
+
+Usage
+-----
+
+    {ok,R} = ebqn:init_r(),
+    {ok,C} = ebqn:init_c(R),
+    {ok,P} = ebqn:compile(R,C,<<"{𝕩+1}"/utf8>>),
+    {ok,3.0} = ebqn:callp(P,2.0).
