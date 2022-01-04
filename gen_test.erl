@@ -38,12 +38,14 @@ gen_line(Name,assert,ByteCode,Code,undefined,N,NeedsRuntime,rust) ->
     [<<"#[should_panic]\n">>,prefix(Name,N,NeedsRuntime),<<"{let desc = r#\"test: ">>,Code,<<"\"#;info!(\"{}\",desc);">>,<<"run(">>,ByteCode,<<")};\n">>,suffix()];
 gen_line(Name,assert,ByteCode,Code,Comment,N,NeedsRuntime,rust) ->
     [<<"#[should_panic]\n">>,prefix(Name,N,NeedsRuntime),<<"{let desc = r#\"test: ">>,Comment,<<"\"#;info!(\"{}\",desc);">>,<<"run(">>,ByteCode,<<")}; // ">>,string:trim(erlang:binary_to_list(Code)),<<"\n">>,suffix()];
+gen_line(_Name,assert,_ByteCode,Code,_Comment,_N,_NeedsRuntime,erlang) ->
+    [<<"\t?_assertException(error,function_clause,test(R,C,<<\"">>,re:replace(Code, [$"], [$\\, $\\, $"], [{return, list}, global]),<<"\"/utf8>>))\n">>];
 gen_line(Name,Expected,ByteCode,Code,undefined,N,NeedsRuntime,rust) ->
     [prefix(Name,N,NeedsRuntime),<<"{let desc = r#\"test: ">>,Code,<<"\"#;info!(\"{}\",desc);">>,<<"assert_eq!(new_scalar(">>,erlang:float_to_binary(Expected,[{decimals, 4},compact]),<<"),run(">>,ByteCode,<<"));}\n">>,suffix()];
 gen_line(Name,Expected,ByteCode,Code,Comment,N,NeedsRuntime,rust) ->
     [prefix(Name,N,NeedsRuntime),<<"{let desc = r#\"test: ">>,Comment,<<"\"#;info!(\"{}\",desc);">>,<<"assert_eq!(new_scalar(">>,erlang:float_to_binary(Expected,[{decimals, 4},compact]),<<"),run(">>,ByteCode,<<"));} // ">>,string:trim(erlang:binary_to_list(Code)),<<"\n">>,suffix()];
-gen_line(Name,Expected,ByteCode,Code,Comment,N,NeedsRuntime,erlang) ->
-    [<<"\t?_assert(test(R,C,<<\"">>,Code,<<"\"/utf8>>) =:= {ok,">>,erlang:float_to_binary(Expected,[{decimals, 4},compact]),<<"})\n">>].
+gen_line(_Name,Expected,_ByteCode,Code,_Comment,_N,_NeedsRuntime,erlang) ->
+    [<<"\t?_assert(test(R,C,<<\"">>,re:replace(Code, [$"], [$\\, $\\, $"], [{return, list}, global]),<<"\"/utf8>>) =:= {ok,">>,erlang:float_to_binary(Expected,[{decimals, 4},compact]),<<"})\n">>].
 gen_code(_Name,[],Accm,_N,_NeedsRuntime,_Lang) ->
     lists:reverse(Accm);
 gen_code(Name,Todo,Accm,N,NeedsRuntime,Lang) ->
@@ -106,7 +108,7 @@ suite(Repo,Name,ShortName,NeedsRuntime,Lang) ->
     Args = parse(binary:split(Data, [<<"\n">>], [global]),[]),
     Tests = gen_tests(Repo,Args,[]),
     gen_code(ShortName,Tests,[],0,NeedsRuntime,Lang).
-template(Content,rust) ->
+template(Content,rust,_Module) ->
     erlang:iolist_to_binary([
         <<"use log::{info};\n">>,
         <<"use core::f64::{INFINITY,NEG_INFINITY};\n">>,
@@ -115,9 +117,9 @@ template(Content,rust) ->
         <<"use ebqn::schema::{Code,new_scalar,new_char,new_string,Body,A,Decoder,V};\n\n">>,
         <<"\n\n">>,Content,<<"\n\n">>
     ]);
-template(Content,erlang) ->
+template(Content,erlang,Module) ->
     erlang:iolist_to_binary([
-        <<"-module(bytecode).\n">>,
+        <<"-module(">>,Module,<<").\n">>,
         <<"-include_lib(\"eunit/include/eunit.hrl\").\n">>,
         <<"-import(ebqn,[init_r/0,init_c/1,compile/3,callp/2]).\n">>,
         <<"test(R,C,Src) ->\n">>,
@@ -131,23 +133,39 @@ template(Content,erlang) ->
             lists:join(<<",">>,Content),
         <<"]}.\n">>
     ]).
-main([Repo]) ->
-    ByteCode = suite(Repo,<<"bytecode.bqn">>,<<"bytecode">>,false,erlang),
-    file:write_file("etests/bytecode.erl",template(ByteCode,erlang));
-    %ByteCode = suite(Repo,<<"bytecode.bqn">>,<<"bytecode">>,false,rust),
-    %file:write_file("tests/bytecode.rs",template(ByteCode)),
-    %Simple = suite(Repo,<<"simple.bqn">>,<<"simple">>,true,rust),
-    %file:write_file("tests/simple.rs",template(Simple)),
-    %Prim = suite(Repo,<<"prim.bqn">>,<<"prim">>,true,rust),
-    %file:write_file("tests/prim.rs",template(Prim)),
-    %Undo = suite(Repo,<<"undo.bqn">>,<<"prim">>,true,rust),
-    %file:write_file("tests/undo.rs",template(Undo)),
-    %Under = suite(Repo,<<"under.bqn">>,<<"under">>,true,rust),
-    %file:write_file("tests/under.rs",template(Under)),
-    %Identity = suite(Repo,<<"identity.bqn">>,<<"identity">>,true,rust),
-    %file:write_file("tests/identity.rs",template(Identity));
+rust_tests(Repo) ->
+    ByteCode = suite(Repo,<<"bytecode.bqn">>,<<"bytecode">>,false,rust),
+    file:write_file("tests/bytecode.rs",template(ByteCode,rust,undefined)),
+    Simple = suite(Repo,<<"simple.bqn">>,<<"simple">>,true,rust),
+    file:write_file("tests/simple.rs",template(Simple,rust,undefined)),
+    Prim = suite(Repo,<<"prim.bqn">>,<<"prim">>,true,rust),
+    file:write_file("tests/prim.rs",template(Prim,rust,undefined)),
+    Undo = suite(Repo,<<"undo.bqn">>,<<"prim">>,true,rust),
+    file:write_file("tests/undo.rs",template(Undo,rust,undefined)),
+    Under = suite(Repo,<<"under.bqn">>,<<"under">>,true,rust),
+    file:write_file("tests/under.rs",template(Under,rust,undefined)),
+    Identity = suite(Repo,<<"identity.bqn">>,<<"identity">>,true,rust),
+    file:write_file("tests/identity.rs",template(Identity,rust,undefined)).
     %Literal = suite(Repo,<<"literal.bqn">>,<<"literal">>,true),
     %file:write_file("tests/literal.rs",template(Literal));
+erl_tests(Repo) ->
+    ByteCode = suite(Repo,<<"bytecode.bqn">>,<<"bytecode">>,false,erlang),
+    file:write_file("etests/bytecode.erl",template(ByteCode,erlang,<<"bytecode">>)),
+    Simple = suite(Repo,<<"simple.bqn">>,<<"simple">>,true,erlang),
+    file:write_file("etests/simple.erl",template(Simple,erlang,<<"simple">>)),
+    Prim = suite(Repo,<<"prim.bqn">>,<<"prim">>,true,erlang),
+    file:write_file("etests/prim.erl",template(Prim,erlang,<<"prim">>)),
+    Undo = suite(Repo,<<"undo.bqn">>,<<"undo">>,true,erlang),
+    file:write_file("etests/undo.erl",template(Undo,erlang,<<"undo">>)),
+    Under = suite(Repo,<<"under.bqn">>,<<"under">>,true,erlang),
+    file:write_file("etests/under.erl",template(Under,erlang,<<"under">>)),
+    Identity = suite(Repo,<<"identity.bqn">>,<<"identity">>,true,erlang),
+    file:write_file("etests/identity.erl",template(Identity,erlang,<<"identity">>)).
+    %Literal = suite(Repo,<<"literal.bqn">>,<<"literal">>,true),
+    %file:write_file("etests/literal.erl",template(Literal,erlang,<<"literal">>)).
+main([Repo]) ->
+    rust_tests(Repo),
+    erl_tests(Repo);
 main(_Args) ->
     io:format("bad arguments~n"),
     halt(1).
