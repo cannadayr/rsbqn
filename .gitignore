@@ -21,4 +21,5 @@ priv
 /target
 Cargo.lock
 tests/*
+etests/*
 rs_src/code.rs
