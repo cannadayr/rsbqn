@@ -3,7 +3,6 @@ mod late_init;
 mod trace;
 pub mod ebqn;
 mod prim;
-mod test;
 pub mod code;
 mod fmt;
 use rustler::{Env,Term};
