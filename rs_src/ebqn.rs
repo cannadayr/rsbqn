@@ -183,7 +183,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 dbg_stack_in("MD1C",pos-1,"".to_string(),&stack);
                 let f = stack.pop().unwrap();
                 let m = stack.pop().unwrap();
-                let r = call1(m.to_ref().clone(),f.to_ref().clone());
+                let r = call1(m.into_v().unwrap(),f.into_v().unwrap());
                 stack.push(r);
                 dbg_stack_out("MD1C",pos-1,&stack);
             },
@@ -192,7 +192,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let f = stack.pop().unwrap();
                 let m = stack.pop().unwrap();
                 let g = stack.pop().unwrap();
-                let r = call2(m.to_ref().clone(),f.to_ref().clone(),g.to_ref().clone());
+                let r = call2(m.into_v().unwrap(),f.into_v().unwrap(),g.into_v().unwrap());
                 stack.push(r);
                 dbg_stack_out("MD2C",pos-1,&stack);
             },
