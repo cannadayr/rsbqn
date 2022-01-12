@@ -293,6 +293,10 @@ pub fn prog(compiler: V,src: V,runtime: A) -> Cc<Code> {
         blocks.as_a().unwrap().r.iter().map(|e|
             match e.clone().into_a().unwrap().r.iter().collect_tuple() {
                 Some((V::Scalar(typ),V::Scalar(imm),V::Scalar(body))) => (u8::from_f64(*typ).unwrap(),if 1.0 == *imm { true } else { false },Body::Imm(usize::from_f64(*body).unwrap())),
+                Some((V::Scalar(typ),V::Scalar(imm),V::A(bodies))) => {
+                    let (mon,dya) = bodies.r.iter().collect_tuple().unwrap();
+                    (u8::from_f64(*typ).unwrap(),if 1.0 == *imm { true } else { false },Body::Defer(mon.clone().into_a().unwrap().r.iter().map(|e| usize::from_f64(e.clone().into_scalar().unwrap()).unwrap() ).collect::<Vec<usize>>(),dya.clone().into_a().unwrap().r.iter().map(|e| usize::from_f64(e.clone().into_scalar().unwrap()).unwrap() ).collect::<Vec<usize>>()))
+                },
                 _ => panic!("couldn't load compiled block"),
             }
         ).collect::<Vec<(u8, bool, Body)>>(),
