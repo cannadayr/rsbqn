@@ -139,7 +139,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let r =
                     match &x.to_ref() {
                         V::Nothing => x,
-                        _ => call(1,Some(f.to_ref().clone()),Some(x.to_ref().clone()),None),
+                        _ => call(1,Some(f.into_v().unwrap()),Some(x.into_v().unwrap()),None),
                     };
                 stack.push(r);
                 dbg_stack_out("FN1C",pos-1,&stack);
