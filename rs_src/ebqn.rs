@@ -54,7 +54,7 @@ fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>) -> Vs {
             vm(&child,code,pos,Vec::new())
         },
         (_typ,_imm) => {
-            let block_inst = BlockInst::new(env.clone(),(*block).clone());
+            let block_inst = BlockInst::new(env.clone(),block.clone());
             let r = Vs::V(V::BlockInst(Cc::new(block_inst),None));
             r
         },
