@@ -31,7 +31,8 @@ fn typ(arity: usize, x: Vn, _w: Vn) -> Vs {
             V::Scalar(_n) => Vs::V(V::Scalar(1.0)),
             V::A(_a) => Vs::V(V::Scalar(0.0)),
             V::Char(_c) => Vs::V(V::Scalar(2.0)),
-            V::DervBlockInst(_b,_a,_prim) => Vs::V(V::Scalar(3.0)),
+            V::UserMd1(_b,_a,_prim) => Vs::V(V::Scalar(3.0)),
+            V::UserMd2(_b,_a,_prim) => Vs::V(V::Scalar(3.0)),
             V::D1(_d1,_prim) => Vs::V(V::Scalar(3.0)),
             V::D2(_d2,_prim) => Vs::V(V::Scalar(3.0)),
             V::Tr2(_tr3,_prim) => Vs::V(V::Scalar(3.0)),
@@ -252,7 +253,8 @@ fn equals(arity: usize, x: Vn, w: Vn) -> Vs {
             V::A(xa) => Vs::V(V::Scalar(xa.sh.len() as i64 as f64)),
             V::Char(_xc) => Vs::V(V::Scalar(0.0)),
             V::Scalar(_xs) => Vs::V(V::Scalar(0.0)),
-            V::DervBlockInst(_b,_a,_prim) => Vs::V(V::Scalar(0.0)),
+            V::UserMd1(_b,_a,_prim) => Vs::V(V::Scalar(0.0)),
+            V::UserMd2(_b,_a,_prim) => Vs::V(V::Scalar(0.0)),
             V::D2(_d2,_prim) => Vs::V(V::Scalar(0.0)),
             _ => panic!("monadic equals 𝕩 is not a valid value"),
         },
@@ -492,7 +494,8 @@ pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Vs {
             else if // primitives
                 match (&x).as_ref().unwrap() {
                     V::BlockInst(_b,Some(_prim)) => true,
-                    V::DervBlockInst(_b,_a,Some(_prim)) => true,
+                    V::UserMd1(_b,_a,Some(_prim)) => true,
+                    V::UserMd2(_b,_a,Some(_prim)) => true,
                     V::Fn(_a,Some(_prim)) => true,
                     V::R1(_f,Some(_prim)) => true,
                     V::R2(_f,Some(_prim)) => true,
@@ -507,23 +510,30 @@ pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Vs {
             }
             else if // repr
                 match (&x).as_ref().unwrap() {
-                    V::DervBlockInst(_b,_a,None) => true,
+                    V::UserMd1(_b,_a,None) => true,
+                    V::UserMd2(_b,_a,None) => true,
                     _ => false,
                 }
             {
                 match (&x).as_ref().unwrap() {
-                    V::DervBlockInst(b,a,None) => {
+                    V::UserMd1(b,a,None) => {
                         let t = 3 + b.def.typ;
                         match t {
                             4 => {
-                                let (f,g) = a.iter().collect_tuple().unwrap();
+                                let (f,g) = a.deref();
                                 Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(4.0),g.as_ref().unwrap().clone(),f.as_ref().unwrap().clone()],vec![3]))))
                             },
+                            _ => panic!("UserMd1 illegal decompose"),
+                        }
+                    },
+                    V::UserMd2(b,a,None) => {
+                        let t = 3 + b.def.typ;
+                        match t {
                             5 => {
-                                let (f,g,h) = a.iter().collect_tuple().unwrap();
+                                let (f,g,h) = a.deref();
                                 Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(5.0),g.as_ref().unwrap().clone(),f.as_ref().unwrap().clone(),h.as_ref().unwrap().clone()],vec![4]))))
                             },
-                            _ => panic!("DervBlockInst illegal decompose"),
+                            _ => panic!("UserMd2 illegal decompose"),
                         }
                     },
                     _ => panic!("decompose other"),
@@ -561,7 +571,8 @@ pub fn prim_ind(arity:usize, x: Vn,_w: Vn) -> Vs {
     match arity {
         1 => match x.unwrap() {
             V::BlockInst(_b,Some(prim)) => Vs::V(V::Scalar(prim as f64)),
-            V::DervBlockInst(_b,_a,Some(prim)) => Vs::V(V::Scalar(prim as f64)),
+            V::UserMd1(_b,_a,Some(prim)) => Vs::V(V::Scalar(prim as f64)),
+            V::UserMd2(_b,_a,Some(prim)) => Vs::V(V::Scalar(prim as f64)),
             V::Fn(_a,Some(prim)) => Vs::V(V::Scalar(prim as f64)),
             V::R1(_f,Some(prim)) => Vs::V(V::Scalar(prim as f64)),
             V::R2(_f,Some(prim)) => Vs::V(V::Scalar(prim as f64)),

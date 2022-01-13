@@ -23,7 +23,7 @@ fn call1(m: V,f: V) -> Vs {
     match m {
         V::BlockInst(ref bl,_prim) => {
             assert_eq!(1,bl.def.typ);
-            bl.call_block(1,vec![Some(m.clone()),Some(f)])
+            bl.call_md1(1,(Some(m.clone()),Some(f)))
         },
         V::R1(_,_prim) => Vs::V(V::D1(Cc::new(D1::new(m,f)),None)),
         _ => panic!("call1 with invalid type"),
@@ -33,7 +33,7 @@ fn call2(m: V,f: V,g: V) -> Vs {
     match m {
         V::BlockInst(ref bl,_prim) => {
             assert_eq!(2,bl.def.typ);
-            bl.call_block(2,vec![Some(m.clone()),Some(f),Some(g)])
+            bl.call_md2(2,(Some(m.clone()),Some(f),Some(g)))
         },
         V::R2(_,_prim) => Vs::V(V::D2(Cc::new(D2::new(m,f,g)),None)),
         _ => panic!("call2 with invalid type"),
@@ -263,7 +263,8 @@ pub fn runtime() -> A {
     // iterate thru this and create a new runtime array with set primitive indices
     let runtime_ravel =
         (*runtime_w).as_a().unwrap().r.iter().enumerate().map(|(i,e)| match e {
-            V::DervBlockInst(b,a,_prim) => V::DervBlockInst(b.clone(),a.clone(),Some(i)),
+            V::UserMd1(b,a,_prim) => V::UserMd1(b.clone(),a.clone(),Some(i)),
+            V::UserMd2(b,a,_prim) => V::UserMd2(b.clone(),a.clone(),Some(i)),
             V::BlockInst(b,_prim) => V::BlockInst(b.clone(),Some(i)),
             V::Fn(a,_prim) => V::Fn(a.clone(),Some(i)),
             V::R1(r1,_prim) => V::R1(r1.clone(),Some(i)),

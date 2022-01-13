@@ -24,7 +24,8 @@ pub enum V {
     Scalar(f64),
     Char(char),
     BlockInst(Cc<BlockInst>,Option<usize>),
-    DervBlockInst(Cc<BlockInst>,Vec<Vn>,Option<usize>),
+    UserMd1(Cc<BlockInst>,Box<(Vn,Vn)>,Option<usize>),
+    UserMd2(Cc<BlockInst>,Box<(Vn,Vn,Vn)>,Option<usize>),
     Nothing,
     A(Cc<A>),
     Fn(fn(usize,Vn,Vn) -> Vs,Option<usize>),       // X, W
@@ -45,7 +46,8 @@ impl V {
     pub fn is_fn(&self) -> bool {
         match self {
             V::BlockInst(_b,_prim) => true,
-            V::DervBlockInst(_b,_a,_prim) => true,
+            V::UserMd1(_b,_a,_prim) => true,
+            V::UserMd2(_b,_a,_prim) => true,
             V::Tr2(_tr2,_prim) => true,
             V::Tr3(_tr3,_prim) => true,
             _ => false,
@@ -58,7 +60,8 @@ impl Encoder for V {
             V::Scalar(n) => n.encode(env),
             V::Char(_c) => panic!("can't encode char to BEAM"),
             V::BlockInst(_b,_prim) => panic!("can't encode blockinst to BEAM"),
-            V::DervBlockInst(_b,_a,_prim) => panic!("can't encode dervblockinst to BEAM"),
+            V::UserMd1(_b,_a,_prim) => panic!("can't encode UserMd1 to BEAM"),
+            V::UserMd2(_b,_a,_prim) => panic!("can't encode UserMd2 to BEAM"),
             V::Nothing => panic!("can't encode nothing to BEAM"),
             V::A(_a) => panic!("can't encode array to BEAM"),
             V::Fn(_a,_prim) => panic!("can't encode fn to BEAM"),
@@ -87,7 +90,8 @@ impl Decoder for V {
             V::Scalar(n) => *n,
             V::Char(c) => f64::from(u32::from(*c)),
             V::BlockInst(_b,_prim) => panic!("can't decode blockinst to RUST"),
-            V::DervBlockInst(_b,_a,_prim) => panic!("can't encode dervblockinst to BEAM"),
+            V::UserMd1(_b,_a,_prim) => panic!("can't encode UserMd1 to BEAM"),
+            V::UserMd2(_b,_a,_prim) => panic!("can't encode UserMd2 to BEAM"),
             V::Nothing => panic!("can't decode nothing to BEAM"),
             V::A(_a) => panic!("can't decode array to RUST"),
             V::Fn(_a,_prim) => panic!("can't decode fn to RUST"),
@@ -103,10 +107,16 @@ impl Decoder for V {
 impl Calleable for V {
     fn call(&self,arity:usize,x: Vn,w: Vn) -> Vs {
         match self.deref() {
-            V::DervBlockInst(b,mods,_prim) => {
-                let mut args = vec![Vh::V(self.clone()),none_or_clone(&x),none_or_clone(&w)];
-                let mut m = mods.iter().map(|e| Vh::V(e.as_ref().unwrap().clone())).collect::<Vec<Vh>>();
-                args.append(&mut m);
+            V::UserMd1(b,mods,_prim) => {
+                let (m,f) = mods.deref();
+                let args = vec![Vh::V(self.clone()),none_or_clone(&x),none_or_clone(&w),Vh::V(m.as_ref().unwrap().clone()),Vh::V(f.as_ref().unwrap().clone())];
+                let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args));
+                let pos = body_pos(b,arity);
+                vm(&env,&b.def.code,pos,Vec::new())
+            },
+            V::UserMd2(b,mods,_prim) => {
+                let (m,f,g) = mods.deref();
+                let args = vec![Vh::V(self.clone()),none_or_clone(&x),none_or_clone(&w),Vh::V(m.as_ref().unwrap().clone()),Vh::V(f.as_ref().unwrap().clone()),Vh::V(g.as_ref().unwrap().clone())];
                 let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args));
                 let pos = body_pos(b,arity);
                 vm(&env,&b.def.code,pos,Vec::new())
@@ -325,10 +335,10 @@ impl BlockInst {
     pub fn new(env: Env,block: Cc<Block>) -> Self {
         Self {def: block, parent: env }
     }
-    pub fn call_block(&self,arity:usize,args: Vec<Vn>) -> Vs {
+    pub fn call_md1(&self,arity:usize,args: (Vn,Vn)) -> Vs {
         match self.def.imm {
             false => {
-                Vs::V(V::DervBlockInst(Cc::new(BlockInst::new(self.parent.clone(),self.def.clone())),args,None))
+                Vs::V(V::UserMd1(Cc::new(BlockInst::new(self.parent.clone(),self.def.clone())),Box::new(args),None))
             },
             true => {
                 let pos = match self.def.body {
@@ -338,8 +348,27 @@ impl BlockInst {
                     }
                     _ => panic!("body immediacy doesnt match block definition"),
                 };
-                let a = args.iter().map(|v| Vh::V(v.as_ref().unwrap().clone())).collect::<Vec<Vh>>();
-                let env = Env::new(Some(self.parent.clone()),&self.def,arity,Some(a));
+                let (m,f) = args;
+                let env = Env::new(Some(self.parent.clone()),&self.def,arity,Some(vec![Vh::V(m.unwrap().clone()),Vh::V(f.unwrap().clone())]));
+                vm(&env,&self.def.code,pos,Vec::new())
+            },
+        }
+    }
+    pub fn call_md2(&self,arity:usize,args: (Vn,Vn,Vn)) -> Vs {
+        match self.def.imm {
+            false => {
+                Vs::V(V::UserMd2(Cc::new(BlockInst::new(self.parent.clone(),self.def.clone())),Box::new(args),None))
+            },
+            true => {
+                let pos = match self.def.body {
+                   Body::Imm(b) => {
+                        let (p,_l) = self.def.code.bodies[b];
+                        p
+                    }
+                    _ => panic!("body immediacy doesnt match block definition"),
+                };
+                let (m,f,g) = args;
+                let env = Env::new(Some(self.parent.clone()),&self.def,arity,Some(vec![Vh::V(m.unwrap().clone()),Vh::V(f.unwrap().clone()),Vh::V(g.unwrap().clone())]));
                 vm(&env,&self.def.code,pos,Vec::new())
             },
         }
