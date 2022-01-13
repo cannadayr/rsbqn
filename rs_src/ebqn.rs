@@ -233,7 +233,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let i = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
-                let v = call(2,Some(f.to_ref().clone()),Some(x.to_ref().clone()),Some(i.get()));
+                let v = call(2,Some(f.into_v().unwrap()),Some(x.into_v().unwrap()),Some(i.get()));
                 let r = set(false,i,v);
                 stack.push(Vs::V(r));
                 dbg_stack_out("SETM",pos-1,&stack);
@@ -242,7 +242,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 dbg_stack_in("SETC",pos-1,"".to_string(),&stack);
                 let i = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
-                let v = call(1,Some(f.to_ref().clone()),Some(i.get()),None);
+                let v = call(1,Some(f.into_v().unwrap()),Some(i.get()),None);
                 let r = set(false,i,v);
                 stack.push(Vs::V(r));
                 dbg_stack_out("SETC",pos-1,&stack);
