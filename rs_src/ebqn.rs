@@ -254,39 +254,48 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
     }
 }
 
-pub fn runtime() -> A {
+pub fn runtime() -> Cc<A> {
     let builtin = provide();
     let runtime0 = r0(&builtin);
     info!("runtime0 loaded");
-    let full_runtime = r1(&builtin,runtime0.as_a().unwrap()).into_a().unwrap().try_unwrap().unwrap();
-    let (runtime_w,set_prims,_set_inv_w) = full_runtime.r.iter().collect_tuple().unwrap();
-    // iterate thru this and create a new runtime array with set primitive indices
-    let runtime_ravel =
-        (*runtime_w).as_a().unwrap().r.iter().enumerate().map(|(i,e)| match e {
-            V::UserMd1(b,a,_prim) => V::UserMd1(b.clone(),a.clone(),Some(i)),
-            V::UserMd2(b,a,_prim) => V::UserMd2(b.clone(),a.clone(),Some(i)),
-            V::BlockInst(b,_prim) => V::BlockInst(b.clone(),Some(i)),
-            V::Fn(a,_prim) => V::Fn(a.clone(),Some(i)),
-            V::R1(r1,_prim) => V::R1(r1.clone(),Some(i)),
-            V::R2(r2,_prim) => V::R2(r2.clone(),Some(i)),
-            V::D1(d1,_prim) => V::D1(d1.clone(),Some(i)),
-            V::D2(d2,_prim) => V::D2(d2.clone(),Some(i)),
-            V::Tr2(tr2,_prim) => V::Tr2(tr2.clone(),Some(i)),
-            V::Tr3(tr3,_prim) => V::Tr3(tr3.clone(),Some(i)),
-            _ => panic!("illegal setprim"),
-        }).collect::<Vec<V>>();
-    let runtime_shape = &runtime_ravel.len();
-    info!("set_prims on runtime of size {}",runtime_shape);
-    let runtime = A::new(runtime_ravel,vec![*runtime_shape]);
-    //let _set_inv = (*set_inv_w).as_block_inst().unwrap();
-    info!("runtime loaded");
-    let prim_fns = V::A(Cc::new(A::new(vec![V::Fn(decompose,None),V::Fn(prim_ind,None)],vec![2])));
-    let _ = call(1,Some(set_prims.clone()),Some(prim_fns),None);
-    runtime
+    match r1(&builtin,runtime0.as_a().unwrap()).into_a().unwrap().get_mut() {
+        Some(full_runtime) => {
+            let _set_inv = full_runtime.r.pop().unwrap();
+            let set_prims = full_runtime.r.pop().unwrap();
+            let runtime = full_runtime.r.pop().unwrap();
+
+            // Copy-On-Write. Use two assignments to prevent tmp values freed while in use.
+            let mut prims = runtime.into_a().unwrap();
+            let mut mut_prims = prims.make_unique();
+
+            // set primitive indices
+            for i in 0..mut_prims.r.len()-1 {
+                let e = &mut mut_prims.r[i];
+                match e {
+                    V::UserMd1(_b,_a,ref mut prim) => { *prim = Some(i) },
+                    V::UserMd2(_b,_a,ref mut prim) => { *prim = Some(i) },
+                    V::BlockInst(_b,ref mut prim) => { *prim = Some(i) },
+                    V::Fn(_a,ref mut prim) => { *prim = Some(i) },
+                    V::R1(_r1,ref mut prim) => { *prim = Some(i) },
+                    V::R2(_r2,ref mut prim) => { *prim = Some(i) },
+                    V::D1(_d1,ref mut prim) => { *prim = Some(i) },
+                    V::D2(_d2,ref mut prim) => { *prim = Some(i) },
+                    V::Tr2(_tr2,ref mut prim) => { *prim = Some(i) },
+                    V::Tr3(_tr3,ref mut prim) => { *prim = Some(i) },
+                    _ => panic!("illegal setprim"),
+                }
+            }
+            info!("runtime loaded");
+            let prim_fns = V::A(Cc::new(A::new(vec![V::Fn(decompose,None),V::Fn(prim_ind,None)],vec![2])));
+            let _ = call(1,Some(set_prims),Some(prim_fns),None);
+            prims
+        },
+        None => panic!("cant get mutable runtime"),
+    }
 }
 
-pub fn prog(compiler: V,src: V,runtime: A) -> Cc<Code> {
-    let prog = call(2,Some(compiler),Some(src),Some(V::A(Cc::new(runtime)))).into_v().unwrap().into_a().unwrap();
+pub fn prog(compiler: V,src: V,runtime: Cc<A>) -> Cc<Code> {
+    let prog = call(2,Some(compiler),Some(src),Some(V::A(runtime))).into_v().unwrap().into_a().unwrap();
     let (bytecode,objects,blocks,bodies,_indices,_tokenization) = prog.r.iter().collect_tuple().unwrap();
     let func = Code::new(
         bytecode.as_a().unwrap().r.iter().map(|e| usize::from_f64(e.clone().into_scalar().unwrap()).unwrap() ).collect::<Vec<usize>>(),
@@ -321,22 +330,22 @@ pub fn run(code: Cc<Code>) -> V {
     vm(&root,&code,pos,Vec::new()).into_v().unwrap()
 }
 
-#[rustler::nif]
-fn init_r() -> NifResult<(Atom,ResourceArc<Runtime>)> {
-    Ok((ok(),ResourceArc::new(Runtime(runtime()))))
-}
+//#[rustler::nif]
+//fn init_r() -> NifResult<(Atom,ResourceArc<Runtime>)> {
+//    Ok((ok(),ResourceArc::new(Runtime(runtime()))))
+//}
 #[rustler::nif]
 fn init_c(r: ResourceArc<Runtime>) -> NifResult<(Atom,ResourceArc<Compiler>)> {
     let compiler = c(&r.0);
     Ok((ok(),ResourceArc::new(Compiler(compiler.as_block_inst().unwrap().0.clone()))))
 }
-#[rustler::nif]
-fn compile(r: ResourceArc<Runtime>,c: ResourceArc<Compiler>,s: &str) -> NifResult<(Atom,ResourceArc<Prog>)> {
-    info!("got src {:?}",&s);
-    let src = new_string(s);
-    let prog = prog(V::BlockInst(c.0.clone(),None),src,r.0.clone());
-    Ok((ok(),ResourceArc::new(Prog(prog.clone()))))
-}
+//#[rustler::nif]
+//fn compile(r: ResourceArc<Runtime>,c: ResourceArc<Compiler>,s: &str) -> NifResult<(Atom,ResourceArc<Prog>)> {
+//    info!("got src {:?}",&s);
+//    let src = new_string(s);
+//    let prog = prog(V::BlockInst(c.0.clone(),None),src,r.0.clone());
+//    Ok((ok(),ResourceArc::new(Prog(prog.clone()))))
+//}
 #[rustler::nif]
 fn callp(p: ResourceArc<Prog>,n: f64) -> NifResult<(Atom,V)> {
     let result = call(1,Some(run(p.0.clone())),Some(V::Scalar(n)),None);

@@ -26,4 +26,4 @@ pub fn load(env: Env, _info: Term) -> bool {
     log_panics::init();
     true
 }
-rustler::init!("ebqn", [ebqn::init_r,ebqn::init_c,ebqn::compile,ebqn::callp],load=load);
+rustler::init!("ebqn", [/*ebqn::init_r,*/ebqn::init_c,/*ebqn::compile,*/ebqn::callp],load=load);
