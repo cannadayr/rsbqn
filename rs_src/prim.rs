@@ -359,7 +359,7 @@ fn table(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
     match arity {
         1 => match x.unwrap() {
             V::A(xa) => {
-                let ravel = (*xa).r.iter().map(|e| call(arity,f.clone(),Some(e.clone()),None).as_v().unwrap().clone()).collect::<Vec<V>>();
+                let ravel = (*xa).r.iter().map(|e| call(arity,f.clone(),Some(e.clone()),None).into_v().unwrap() ).collect::<Vec<V>>();
                 let sh = (*xa).sh.clone();
                 Vs::V(V::A(Cc::new(A::new(ravel,sh))))
             },
@@ -369,7 +369,7 @@ fn table(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
             match (x.unwrap(),w.unwrap()) {
                 (V::A(xa),V::A(wa)) => {
                     let ravel = (*wa).r.iter().flat_map(|d| {
-                        (*xa).r.iter().map(|e| call(arity,f.clone(),Some(e.clone()),Some(d.clone())).as_v().unwrap().clone()).collect::<Vec<V>>()
+                        (*xa).r.iter().map(|e| call(arity,f.clone(),Some(e.clone()),Some(d.clone())).into_v().unwrap() ).collect::<Vec<V>>()
                     }).collect::<Vec<V>>();
                     let sh = (*wa).sh.clone().into_iter().chain((*xa).sh.clone().into_iter()).collect();
                     Vs::V(V::A(Cc::new(A::new(ravel,sh))))
