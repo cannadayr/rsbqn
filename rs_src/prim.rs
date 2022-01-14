@@ -145,7 +145,7 @@ fn assert_fn(arity: usize, x: Vn, w: Vn) -> Vs {
         2 => match x.unwrap().as_scalar() {
             Some(n) if *n == 1.0 => Vs::V(V::Scalar(1.0)),
             _ => {
-                let msg = w.unwrap().to_array().r.iter().map(|e| match e {
+                let msg = w.unwrap().as_a().unwrap().r.iter().map(|e| match e {
                     V::Char(c) => *c,
                     _ => panic!("panic is not a string"),
                 }).collect::<Vec<char>>();

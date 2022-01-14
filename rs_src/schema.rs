@@ -37,12 +37,6 @@ pub enum V {
     Tr3(Cc<Tr3>,Option<usize>),
 }
 impl V {
-    pub fn to_array(&self) -> &A {
-        match self {
-            V::A(a) => a,
-            _ => panic!("can't convert to array"),
-        }
-    }
     pub fn is_fn(&self) -> bool {
         match self {
             V::BlockInst(_b,_prim) => true,
