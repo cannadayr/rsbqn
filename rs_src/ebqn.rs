@@ -295,29 +295,71 @@ pub fn runtime() -> Cc<A> {
 }
 
 pub fn prog(compiler: V,src: V,runtime: Cc<A>) -> Cc<Code> {
-    let prog = call(2,Some(compiler),Some(src),Some(V::A(runtime))).into_v().unwrap().into_a().unwrap();
-    let (bytecode,objects,blocks,bodies,_indices,_tokenization) = prog.r.iter().collect_tuple().unwrap();
-    let func = Code::new(
-        bytecode.as_a().unwrap().r.iter().map(|e| usize::from_f64(e.clone().into_scalar().unwrap()).unwrap() ).collect::<Vec<usize>>(),
-        objects.as_a().unwrap().r.iter().map(|e| e.clone() ).collect::<Vec<V>>(),
-        blocks.as_a().unwrap().r.iter().map(|e|
-            match e.clone().into_a().unwrap().r.iter().collect_tuple() {
-                Some((V::Scalar(typ),V::Scalar(imm),V::Scalar(body))) => (u8::from_f64(*typ).unwrap(),if 1.0 == *imm { true } else { false },Body::Imm(usize::from_f64(*body).unwrap())),
-                Some((V::Scalar(typ),V::Scalar(imm),V::A(bodies))) => {
-                    let (mon,dya) = bodies.r.iter().collect_tuple().unwrap();
-                    (u8::from_f64(*typ).unwrap(),if 1.0 == *imm { true } else { false },Body::Defer(mon.clone().into_a().unwrap().r.iter().map(|e| usize::from_f64(e.clone().into_scalar().unwrap()).unwrap() ).collect::<Vec<usize>>(),dya.clone().into_a().unwrap().r.iter().map(|e| usize::from_f64(e.clone().into_scalar().unwrap()).unwrap() ).collect::<Vec<usize>>()))
+    let mut prog = call(2,Some(compiler),Some(src),Some(V::A(runtime))).into_v().unwrap().into_a().unwrap();
+    info!("prog count = {}",prog.strong_count());
+    match prog.get_mut() {
+        Some(p) => {
+            let _tokenization = p.r.pop().unwrap();
+            let _indices      = p.r.pop().unwrap();
+            let bodies        = p.r.pop().unwrap();
+            let blocks        = p.r.pop().unwrap();
+            let objects       = p.r.pop().unwrap();
+            let bytecode      = p.r.pop().unwrap();
+
+            Code::new(
+                bytecode.as_a().unwrap().r.iter().map(|e| match e {
+                    V::Scalar(n) => usize::from_f64(*n).unwrap(),
+                    _ => panic!("bytecode not a number"),
+                }).collect::<Vec<usize>>(),
+                match objects.into_a().unwrap().try_unwrap() {
+                    Ok(o) => o.r,
+                    Err(_o) => panic!("objects not unique"),
                 },
-                _ => panic!("couldn't load compiled block"),
-            }
-        ).collect::<Vec<(u8, bool, Body)>>(),
-        bodies.as_a().unwrap().r.iter().map(|e|
-            match e.clone().into_a().unwrap().r.iter().collect_tuple() {
-                Some((V::Scalar(pos),V::Scalar(local),_name_id,_export_mask)) => (usize::from_f64(*pos).unwrap(),usize::from_f64(*local).unwrap()),
-                _ => panic!("couldn't load compiled body"),
-            }
-        ).collect::<Vec<(usize,usize)>>()
-    );
-    func
+                match blocks.into_a().unwrap().try_unwrap() {
+                    Ok(b) => {
+                        b.r.iter().map(|e| match e.as_a().unwrap().r.iter().collect_tuple() {
+                            Some((V::Scalar(typ),V::Scalar(imm),V::Scalar(body))) =>
+                                (
+                                    u8::from_f64(*typ).unwrap(),
+                                    if 1.0 == *imm { true } else { false },
+                                    Body::Imm(usize::from_f64(*body).unwrap())
+                                ),
+                            Some((V::Scalar(typ),V::Scalar(imm),V::A(bodies))) => {
+                                let (mon,dya) = bodies.r.iter().collect_tuple().unwrap();
+                                (
+                                    u8::from_f64(*typ).unwrap(),
+                                    if 1.0 == *imm { true } else { false },
+                                    Body::Defer(
+                                        mon.as_a().unwrap().r.iter().map(|e| match e {
+                                            V::Scalar(n) => usize::from_f64(*n).unwrap(),
+                                            _ => panic!("bytecode not a number"),
+                                        }).collect::<Vec<usize>>(),
+                                        dya.as_a().unwrap().r.iter().map(|e| match e {
+                                            V::Scalar(n) => usize::from_f64(*n).unwrap(),
+                                            _ => panic!("bytecode not a number"),
+                                        }).collect::<Vec<usize>>()
+                                    )
+                                )
+                            },
+                            _ => panic!("couldn't load compiled block"),
+                        }).collect::<Vec<(u8, bool, Body)>>()
+                    },
+                    Err(_b) => panic!("cant get unique ref to program blocks"),
+                },
+                match bodies.into_a().unwrap().try_unwrap() {
+                    Ok(b) => {
+                        b.r.iter().map(|e| match e.as_a().unwrap().r.iter().collect_tuple() {
+                            Some((V::Scalar(pos),V::Scalar(local),_name_id,_export_mask)) =>
+                                (usize::from_f64(*pos).unwrap(),usize::from_f64(*local).unwrap()),
+                            x => panic!("couldn't load compiled body {:?}",x),
+                        }).collect::<Vec<(usize,usize)>>()
+                    },
+                    Err(_b) => panic!("cant get unique ref to program blocks"),
+                }
+            )
+        },
+        None => panic!("cant get unique ref to blocks"),
+    }
 }
 
 pub fn run(code: Cc<Code>) -> V {
