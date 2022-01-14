@@ -121,8 +121,8 @@ impl Calleable for V {
                 let pos = body_pos(b,arity);
                 vm(&env,&b.def.code,pos,Vec::new())
             },
-            V::Scalar(_n) => Vs::V(self.clone()),
-            V::Char(_c) => Vs::V(self.clone()),
+            V::Scalar(n) => Vs::V(V::Scalar(*n)),
+            V::Char(c) => Vs::V(V::Char(*c)),
             V::Fn(f,_prim) => f(arity,x,w),
             V::R1(_f,_prim) => panic!("can't call r1"),
             V::R2(_f,_prim) => panic!("can't call r2"),
