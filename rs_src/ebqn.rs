@@ -137,7 +137,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
                 let r =
-                    match &x.to_ref() {
+                    match &x.as_v().unwrap() {
                         V::Nothing => x,
                         _ => call(1,Some(f.into_v().unwrap()),Some(x.into_v().unwrap()),None),
                     };
@@ -150,7 +150,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
                 let r =
-                    match (&x.to_ref(),&w.to_ref()) {
+                    match (&x.as_v().unwrap(),&w.as_v().unwrap()) {
                         (V::Nothing,_) => x,
                         (_,V::Nothing) => call(1,Some(f.into_v().unwrap()),Some(x.into_v().unwrap()),None),
                         _ => call(2,Some(f.into_v().unwrap()),Some(x.into_v().unwrap()),Some(w.into_v().unwrap()))
@@ -172,7 +172,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let g = stack.pop().unwrap();
                 let h = stack.pop().unwrap();
                 let t =
-                    match &f.to_ref() {
+                    match &f.as_v().unwrap() {
                         V::Nothing => Vs::V(V::Tr2(Cc::new(Tr2::new(g,h)),None)),
                         _ => Vs::V(V::Tr3(Cc::new(Tr3::new(f,g,h)),None)),
                     };

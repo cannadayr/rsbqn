@@ -273,8 +273,8 @@ fn lesseq(arity: usize, x: Vn, w: Vn) -> Vs {
     let r =
     match arity {
         2 => {
-            let t = typ(1,x.clone(),None).to_ref().to_f64();
-            let s = typ(1,w.clone(),None).to_ref().to_f64();
+            let t = typ(1,x.clone(),None).as_v().unwrap().to_f64();
+            let s = typ(1,w.clone(),None).as_v().unwrap().to_f64();
             if (&x).as_ref().unwrap().clone().is_fn() || (&w).as_ref().unwrap().clone().is_fn() {
                 panic!("cannot compare operations")
             };
@@ -359,7 +359,7 @@ fn table(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
     match arity {
         1 => match x.unwrap() {
             V::A(xa) => {
-                let ravel = (*xa).r.iter().map(|e| call(arity,f.clone(),Some(e.clone()),None).to_ref().clone()).collect::<Vec<V>>();
+                let ravel = (*xa).r.iter().map(|e| call(arity,f.clone(),Some(e.clone()),None).as_v().unwrap().clone()).collect::<Vec<V>>();
                 let sh = (*xa).sh.clone();
                 Vs::V(V::A(Cc::new(A::new(ravel,sh))))
             },
@@ -369,7 +369,7 @@ fn table(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
             match (x.unwrap(),w.unwrap()) {
                 (V::A(xa),V::A(wa)) => {
                     let ravel = (*wa).r.iter().flat_map(|d| {
-                        (*xa).r.iter().map(|e| call(arity,f.clone(),Some(e.clone()),Some(d.clone())).to_ref().clone()).collect::<Vec<V>>()
+                        (*xa).r.iter().map(|e| call(arity,f.clone(),Some(e.clone()),Some(d.clone())).as_v().unwrap().clone()).collect::<Vec<V>>()
                     }).collect::<Vec<V>>();
                     let sh = (*wa).sh.clone().into_iter().chain((*xa).sh.clone().into_iter()).collect();
                     Vs::V(V::A(Cc::new(A::new(ravel,sh))))
@@ -405,7 +405,7 @@ fn scan(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
                             i += 1;
                         }
                         while i < l {
-                            r[i] = call(2,f.clone(),Some(a.r[i].clone()),Some(r[i-c].clone())).to_ref().clone();
+                            r[i] = call(2,f.clone(),Some(a.r[i].clone()),Some(r[i-c].clone())).as_v().unwrap().clone();
                             i += 1;
                         }
                     };
@@ -442,11 +442,11 @@ fn scan(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
                         }
                         i = 0;
                         while i < c {
-                            r[i] = call(2,f.clone(),Some(xa.r[i].clone()),Some(wa.r[i].clone())).to_ref().clone();
+                            r[i] = call(2,f.clone(),Some(xa.r[i].clone()),Some(wa.r[i].clone())).as_v().unwrap().clone();
                             i += 1;
                         }
                         while i < l {
-                            r[i] = call(2,f.clone(),Some(xa.r[i].clone()),Some(r[i-c].clone())).to_ref().clone();
+                            r[i] = call(2,f.clone(),Some(xa.r[i].clone()),Some(r[i-c].clone())).as_v().unwrap().clone();
                             i += 1;
                         }
                     };

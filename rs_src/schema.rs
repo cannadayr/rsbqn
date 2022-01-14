@@ -143,7 +143,7 @@ impl Calleable for V {
             V::Tr2(tr,_prim) => {
                 let Tr2(g,h) = tr.deref();
                 let r = h.call(arity,x,w);
-                g.call(1,Some(r.to_ref().clone()),None)
+                g.call(1,Some(r.as_v().unwrap().clone()),None)
             },
             V::Tr3(tr,_prim) => {
                 let Tr3(f,g,h) = tr.deref();
@@ -154,7 +154,7 @@ impl Calleable for V {
                         _ => panic!("illegal arity"),
                     };
                 let l = f.call(arity,x,w);
-                g.call(2,Some(r.to_ref().clone()),Some(l.to_ref().clone()))
+                g.call(2,Some(r.as_v().unwrap().clone()),Some(l.as_v().unwrap().clone()))
             },
             V::A(_) => Vs::V(self.clone()),
             V::Nothing => Vs::V(V::Nothing),
@@ -173,12 +173,6 @@ pub enum Vs {
     Ar(Ar)
 }
 impl Vs {
-    pub fn to_ref(&self) -> &V {
-        match self {
-            Vs::V(v) => v,
-            _ => panic!("can't convert to ref"),
-        }
-    }
     pub fn get(&self) -> V {
         match self {
             Vs::Slot(env,id) => env.get(*id),
@@ -415,14 +409,14 @@ impl D2 {
 pub struct Tr2(pub V,pub V);
 impl Tr2 {
     pub fn new(g: Vs,h: Vs) -> Self {
-        Self(g.to_ref().clone(),h.to_ref().clone())
+        Self(g.as_v().unwrap().clone(),h.as_v().unwrap().clone())
     }
 }
 #[derive(Debug,Clone,PartialEq)]
 pub struct Tr3(pub V,pub V,pub V);
 impl Tr3 {
     pub fn new(f: Vs,g: Vs,h: Vs) -> Self {
-        Self((*f.to_ref()).clone(),(*g.to_ref()).clone(),(*h.to_ref()).clone())
+        Self((*f.as_v().unwrap()).clone(),(*g.as_v().unwrap()).clone(),(*h.as_v().unwrap()).clone())
     }
 }
 
