@@ -239,10 +239,10 @@ pub struct Code {
 impl Code {
     pub fn new(bc: Vec<usize>,objs: Vec<V>,blocks_raw: Vec<(u8,bool,Body)>,bodies: Vec<(usize,usize)>) -> Cc<Self> {
         let code = Cc::new(Self {bc: bc, objs: objs, bodies: bodies, blocks: LateInit::default(), });
-        let blocks_derv = blocks_raw.iter().map(|block|
+        let blocks_derv = blocks_raw.into_iter().map(|block|
             match block {
                 (typ,imm,body) => {
-                        let b = Block { typ: *typ, imm: *imm, body: (*body).clone(), code: LateInit::default(), };
+                        let b = Block { typ: typ, imm: imm, body: body, code: LateInit::default(), };
                         b.code.init(code.clone());
                         Cc::new(b)
                 }
