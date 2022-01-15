@@ -200,8 +200,7 @@ impl Vs {
             Vs::Slot(env,id) => env.get(*id),
             Vs::Ar(a) => {
                 let shape = vec![a.r.len() as usize];
-                let ravel =
-                    a.r.iter().map(|e| match e { Vr::Slot(env,id) => env.get(*id), }).collect::<Vec<V>>();
+                let ravel = a.r.iter().map(|e| match e { Vr::Slot(env,id) => env.get(*id), }).collect::<Vec<V>>();
                 V::A(Cc::new(A::new(ravel,shape)))
             },
             _ => panic!("can only resolve slots or ref arrays"),
