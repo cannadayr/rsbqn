@@ -322,11 +322,11 @@ impl Env {
             },
         }
     }
-    pub fn ge(&self,mut i: usize) -> Env {
+    pub fn ge(&self,mut i: usize) -> &Env {
         let mut cur = self;
         loop {
             match i {
-                0 => break (*cur).clone(),
+                0 => break cur,
                 _ => {
                     i-=1;
                     cur = cur.0.parent.as_ref().unwrap();

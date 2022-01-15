@@ -235,7 +235,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let w = code.bc[pos];pos+=1;
                 let t = env.ge(x);
                 dbg_stack_in("VARM",pos-3,format!("{} {}",&x,&w),&stack);
-                stack.push(Vs::Slot(t,w));
+                stack.push(Vs::Slot(t.clone(),w));
                 dbg_stack_out("VARM",pos-3,&stack);
             },
             48 => { // SETN
