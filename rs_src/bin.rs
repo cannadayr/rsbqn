@@ -11,6 +11,6 @@ fn main() {
     let src = new_string("{×´1+↕𝕩}");
     let prog = prog(compiler,src,runtime);
     info!("func loaded");
-    let result = call(1,Some(run(prog)),Some(V::Scalar(10.0)),None);
+    let result = call(1,Some(&run(prog)),Some(&V::Scalar(10.0)),None);
     info!("result = {}",&result);
 }

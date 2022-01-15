@@ -1,4 +1,4 @@
-use crate::schema::{Env,V,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Body,A,Ar,Tr2,Tr3,Runtime,Compiler,Prog,set,ok,D2,D1,new_scalar,new_string};
+use crate::schema::{Env,V,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Body,A,Ar,Tr2,Tr3,Runtime,Compiler,Prog,set,ok,D2,D1,Fn,new_scalar,new_string};
 use crate::prim::{provide,decompose,prim_ind};
 use crate::code::{r0,r1,c};
 use crate::fmt::{dbg_stack_out,dbg_stack_in};
@@ -139,7 +139,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let r =
                     match &x.as_v().unwrap() {
                         V::Nothing => x,
-                        _ => call(1,Some(f.into_v().unwrap()),Some(x.into_v().unwrap()),None),
+                        _ => call(1,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),None),
                     };
                 stack.push(r);
                 dbg_stack_out("FN1C",pos-1,&stack);
@@ -152,8 +152,8 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let r =
                     match (&x.as_v().unwrap(),&w.as_v().unwrap()) {
                         (V::Nothing,_) => x,
-                        (_,V::Nothing) => call(1,Some(f.into_v().unwrap()),Some(x.into_v().unwrap()),None),
-                        _ => call(2,Some(f.into_v().unwrap()),Some(x.into_v().unwrap()),Some(w.into_v().unwrap()))
+                        (_,V::Nothing) => call(1,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),None),
+                        _ => call(2,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),Some(&w.into_v().unwrap()))
                     };
                 stack.push(r);
                 dbg_stack_out("FN2C",pos-1,&stack);
@@ -233,7 +233,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let i = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
-                let v = call(2,Some(f.into_v().unwrap()),Some(x.into_v().unwrap()),Some(i.get()));
+                let v = call(2,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),Some(&i.get()));
                 let r = set(false,i,v);
                 stack.push(Vs::V(r));
                 dbg_stack_out("SETM",pos-1,&stack);
@@ -242,7 +242,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 dbg_stack_in("SETC",pos-1,"".to_string(),&stack);
                 let i = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
-                let v = call(1,Some(f.into_v().unwrap()),Some(i.get()),None);
+                let v = call(1,Some(&f.into_v().unwrap()),Some(&i.get()),None);
                 let r = set(false,i,v);
                 stack.push(Vs::V(r));
                 dbg_stack_out("SETC",pos-1,&stack);
@@ -286,8 +286,8 @@ pub fn runtime() -> Cc<A> {
                 }
             }
             info!("runtime loaded");
-            let prim_fns = V::A(Cc::new(A::new(vec![V::Fn(decompose,None),V::Fn(prim_ind,None)],vec![2])));
-            let _ = call(1,Some(set_prims),Some(prim_fns),None);
+            let prim_fns = V::A(Cc::new(A::new(vec![V::Fn(Fn(decompose),None),V::Fn(Fn(prim_ind),None)],vec![2])));
+            let _ = call(1,Some(&set_prims),Some(&prim_fns),None);
             prims
         },
         None => panic!("cant get mutable runtime"),
@@ -295,7 +295,7 @@ pub fn runtime() -> Cc<A> {
 }
 
 pub fn prog(compiler: V,src: V,runtime: Cc<A>) -> Cc<Code> {
-    let mut prog = call(2,Some(compiler),Some(src),Some(V::A(runtime))).into_v().unwrap().into_a().unwrap();
+    let mut prog = call(2,Some(&compiler),Some(&src),Some(&V::A(runtime))).into_v().unwrap().into_a().unwrap();
     info!("prog count = {}",prog.strong_count());
     match prog.get_mut() {
         Some(p) => {
@@ -351,7 +351,7 @@ pub fn prog(compiler: V,src: V,runtime: Cc<A>) -> Cc<Code> {
                         b.r.iter().map(|e| match e.as_a().unwrap().r.iter().collect_tuple() {
                             Some((V::Scalar(pos),V::Scalar(local),_name_id,_export_mask)) =>
                                 (usize::from_f64(*pos).unwrap(),usize::from_f64(*local).unwrap()),
-                            x => panic!("couldn't load compiled body {:?}",x),
+                            _x => panic!("couldn't load compiled body"),
                         }).collect::<Vec<(usize,usize)>>()
                     },
                     Err(_b) => panic!("cant get unique ref to program blocks"),
@@ -390,6 +390,6 @@ fn init_c(r: ResourceArc<Runtime>) -> NifResult<(Atom,ResourceArc<Compiler>)> {
 //}
 #[rustler::nif]
 fn callp(p: ResourceArc<Prog>,n: f64) -> NifResult<(Atom,V)> {
-    let result = call(1,Some(run(p.0.clone())),Some(V::Scalar(n)),None);
+    let result = call(1,Some(&run(p.0.clone())),Some(&V::Scalar(n)),None);
     Ok((ok(),result.into_v().unwrap()))
 }

@@ -1,4 +1,4 @@
-use crate::schema::{A,V,Vn,Vs,Decoder,D1,D2,Tr2,Tr3};
+use crate::schema::{A,V,Vn,Vs,Decoder,D1,D2,Tr2,Tr3,Fn,R1,R2};
 use crate::ebqn::{call};
 use cc_mt::Cc;
 use std::cmp::max;
@@ -50,7 +50,7 @@ fn typ(arity: usize, x: Vn, _w: Vn) -> Vs {
 fn fill(arity: usize, x: Vn, _w: Vn) -> Vs {
     match arity {
         1 => Vs::V(V::Scalar(0.0)),
-        2 => Vs::V(x.unwrap()),
+        2 => Vs::V(x.unwrap().clone()),
         _ => panic!("illegal fill arity"),
     }
 }
@@ -162,12 +162,12 @@ pub fn plus(arity:usize, x: Vn,w: Vn) -> Vs {
     //dbg_args("plus",arity,&x,&w);
     let r =
     match arity {
-        1 => Vs::V(x.unwrap()),
+        1 => Vs::V(x.unwrap().clone()),
         2 => match (x.unwrap(),w.unwrap()) {
-                (V::Char(xc),V::Scalar(ws)) if ws >= 0.0 => Vs::V(V::Char(char::from_u32(u32::from(xc) + u32::from_f64(ws).unwrap()).unwrap())),
-                (V::Scalar(xs),V::Char(wc)) if xs >= 0.0 => Vs::V(V::Char(char::from_u32(u32::from(wc) + u32::from_f64(xs).unwrap()).unwrap())),
-                (V::Char(xc),V::Scalar(ws)) if ws <  0.0 => Vs::V(V::Char(char::from_u32(u32::from(xc) - u32::from_f64(ws.abs()).unwrap()).unwrap())),
-                (V::Scalar(xs),V::Char(wc)) if xs <  0.0 => Vs::V(V::Char(char::from_u32(u32::from(wc) - u32::from_f64(xs.abs()).unwrap()).unwrap())),
+                (V::Char(xc),V::Scalar(ws)) if *ws >= 0.0 => Vs::V(V::Char(char::from_u32(u32::from(*xc) + u32::from_f64(*ws).unwrap()).unwrap())),
+                (V::Scalar(xs),V::Char(wc)) if *xs >= 0.0 => Vs::V(V::Char(char::from_u32(u32::from(*wc) + u32::from_f64(*xs).unwrap()).unwrap())),
+                (V::Char(xc),V::Scalar(ws)) if *ws <  0.0 => Vs::V(V::Char(char::from_u32(u32::from(*xc) - u32::from_f64(ws.abs()).unwrap()).unwrap())),
+                (V::Scalar(xs),V::Char(wc)) if *xs <  0.0 => Vs::V(V::Char(char::from_u32(u32::from(*wc) - u32::from_f64(xs.abs()).unwrap()).unwrap())),
                 (V::Scalar(xs),V::Scalar(ws)) => Vs::V(V::Scalar(xs + ws)),
                 _ => panic!("dyadic plus pattern not found"),
         },
@@ -186,9 +186,9 @@ fn minus(arity: usize, x: Vn, w: Vn) -> Vs {
             _ => panic!("monadic minus expected number"),
         },
         2 => match (x.unwrap(),w.unwrap()) {
-            (V::Scalar(xs),V::Char(wc)) => Vs::V(V::Char(char::from_u32(u32::from(wc) - u32::from_f64(xs).unwrap()).unwrap())),
-            (V::Char(xc),V::Char(wc)) if u32::from(xc) > u32::from(wc) => Vs::V(V::Scalar(-1.0*f64::from(u32::from(xc) - u32::from(wc)))),
-            (V::Char(xc),V::Char(wc)) => Vs::V(V::Scalar(f64::from(u32::from(wc) - u32::from(xc)))),
+            (V::Scalar(xs),V::Char(wc)) => Vs::V(V::Char(char::from_u32(u32::from(*wc) - u32::from_f64(*xs).unwrap()).unwrap())),
+            (V::Char(xc),V::Char(wc)) if u32::from(*xc) > u32::from(*wc) => Vs::V(V::Scalar(-1.0*f64::from(u32::from(*xc) - u32::from(*wc)))),
+            (V::Char(xc),V::Char(wc)) => Vs::V(V::Scalar(f64::from(u32::from(*wc) - u32::from(*xc)))),
             (V::Scalar(xs),V::Scalar(ws)) => Vs::V(V::Scalar(ws - xs)),
             _ => panic!("dyadic minus pattern not found"),
         },
@@ -231,7 +231,7 @@ fn power(arity: usize, x: Vn, w: Vn) -> Vs {
             _ => panic!("monadic power expected number"),
         },
         2 => match (x.unwrap(),w.unwrap()) {
-            (V::Scalar(xs),V::Scalar(ws)) => Vs::V(V::Scalar(ws.powf(xs))),
+            (V::Scalar(xs),V::Scalar(ws)) => Vs::V(V::Scalar(ws.powf(*xs))),
             _ => panic!("dyadic power expected numbers"),
         },
         _ => panic!("illegal power arity"),
@@ -333,8 +333,8 @@ fn pick(arity: usize, x: Vn, w: Vn) -> Vs {
     match arity {
         2 => {
             match (x.unwrap(),w.unwrap()) {
-                (V::A(a),V::Scalar(i)) if i >= 0.0 => Vs::V(a.r[i as i64 as usize].clone()),
-                (V::A(a),V::Scalar(i)) if i <  0.0 => Vs::V(a.r[((a.r.len() as f64) + i) as i64 as usize].clone()),
+                (V::A(a),V::Scalar(i)) if *i >= 0.0 => Vs::V(a.r[*i as i64 as usize].clone()),
+                (V::A(a),V::Scalar(i)) if *i <  0.0 => Vs::V(a.r[((a.r.len() as f64) + i) as i64 as usize].clone()),
                 _ => panic!("pick - can't index into non array"),
             }
         },
@@ -347,7 +347,7 @@ fn pick(arity: usize, x: Vn, w: Vn) -> Vs {
 fn windows(arity: usize, x: Vn, _w: Vn) -> Vs {
     match arity {
         1 => match x.unwrap() {
-            V::Scalar(n) => Vs::V(V::A(Cc::new(A::new((0..n as i64).map(|v| V::Scalar(v as f64)).collect::<Vec<V>>(),vec![n as usize])))),
+            V::Scalar(n) => Vs::V(V::A(Cc::new(A::new((0..*n as i64).map(|v| V::Scalar(v as f64)).collect::<Vec<V>>(),vec![*n as usize])))),
             _ => panic!("x is not a number"),
         },
         _ => panic!("illegal windows arity"),
@@ -359,7 +359,7 @@ fn table(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
     match arity {
         1 => match x.unwrap() {
             V::A(xa) => {
-                let ravel = (*xa).r.iter().map(|e| call(arity,f.clone(),Some(e.clone()),None).into_v().unwrap() ).collect::<Vec<V>>();
+                let ravel = (*xa).r.iter().map(|e| call(arity,f,Some(e),None).into_v().unwrap() ).collect::<Vec<V>>();
                 let sh = (*xa).sh.clone();
                 Vs::V(V::A(Cc::new(A::new(ravel,sh))))
             },
@@ -369,7 +369,7 @@ fn table(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
             match (x.unwrap(),w.unwrap()) {
                 (V::A(xa),V::A(wa)) => {
                     let ravel = (*wa).r.iter().flat_map(|d| {
-                        (*xa).r.iter().map(|e| call(arity,f.clone(),Some(e.clone()),Some(d.clone())).into_v().unwrap() ).collect::<Vec<V>>()
+                        (*xa).r.iter().map(|e| call(arity,f,Some(e),Some(d)).into_v().unwrap() ).collect::<Vec<V>>()
                     }).collect::<Vec<V>>();
                     let sh = (*wa).sh.clone().into_iter().chain((*xa).sh.clone().into_iter()).collect();
                     Vs::V(V::A(Cc::new(A::new(ravel,sh))))
@@ -405,7 +405,7 @@ fn scan(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
                             i += 1;
                         }
                         while i < l {
-                            r[i] = call(2,f.clone(),Some(a.r[i].clone()),Some(r[i-c].clone())).as_v().unwrap().clone();
+                            r[i] = call(2,f,Some(&a.r[i]),Some(&r[i-c])).as_v().unwrap().clone();
                             i += 1;
                         }
                     };
@@ -416,9 +416,9 @@ fn scan(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
         },
         2 => {
             let (wr,wa) = match w.unwrap() {
-                V::A(wa) => (wa.sh.len(),wa),
+                V::A(wa) => (wa.sh.len(),wa.clone()),
                 // TODO `wa` doesn't actually need to be a ref counted array
-                V::Scalar(ws) => (0,Cc::new(A::new(vec![V::Scalar(ws)],vec![1]))),
+                V::Scalar(ws) => (0,Cc::new(A::new(vec![V::Scalar(*ws)],vec![1]))),
                 _ => panic!("dyadic scan w is invalid type"),
             };
             match x.unwrap() {
@@ -442,11 +442,11 @@ fn scan(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
                         }
                         i = 0;
                         while i < c {
-                            r[i] = call(2,f.clone(),Some(xa.r[i].clone()),Some(wa.r[i].clone())).as_v().unwrap().clone();
+                            r[i] = call(2,f.clone(),Some(&xa.r[i]),Some(&wa.r[i])).as_v().unwrap().clone();
                             i += 1;
                         }
                         while i < l {
-                            r[i] = call(2,f.clone(),Some(xa.r[i].clone()),Some(r[i-c].clone())).as_v().unwrap().clone();
+                            r[i] = call(2,f.clone(),Some(&xa.r[i]),Some(&r[i-c])).as_v().unwrap().clone();
                             i += 1;
                         }
                     };
@@ -489,7 +489,7 @@ pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Vs {
                     _ => false
                 }
             {
-                Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(-1.0),(&x).as_ref().unwrap().clone()],vec![2]))))
+                Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(-1.0),x.unwrap().clone()],vec![2]))))
             }
             else if // primitives
                 match (&x).as_ref().unwrap() {
@@ -506,7 +506,7 @@ pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Vs {
                     _ => false,
                 }
             {
-                Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(0.0),(&x).as_ref().unwrap().clone()],vec![2]))))
+                Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(0.0),x.unwrap().clone()],vec![2]))))
             }
             else if // repr
                 match (&x).as_ref().unwrap() {
@@ -557,7 +557,7 @@ pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Vs {
                         let Tr3(f,g,h) = (*tr3).deref();
                         Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(3.0),f.clone(),g.clone(),h.clone()],vec![4]))))
                     },
-                    _ => Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(1.0),(&x).as_ref().unwrap().clone()],vec![2])))),
+                    _ => Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(1.0),x.unwrap().clone()],vec![2])))),
                 }
             }
         },
@@ -570,16 +570,16 @@ pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Vs {
 pub fn prim_ind(arity:usize, x: Vn,_w: Vn) -> Vs {
     match arity {
         1 => match x.unwrap() {
-            V::BlockInst(_b,Some(prim)) => Vs::V(V::Scalar(prim as f64)),
-            V::UserMd1(_b,_a,Some(prim)) => Vs::V(V::Scalar(prim as f64)),
-            V::UserMd2(_b,_a,Some(prim)) => Vs::V(V::Scalar(prim as f64)),
-            V::Fn(_a,Some(prim)) => Vs::V(V::Scalar(prim as f64)),
-            V::R1(_f,Some(prim)) => Vs::V(V::Scalar(prim as f64)),
-            V::R2(_f,Some(prim)) => Vs::V(V::Scalar(prim as f64)),
-            V::D1(_d1,Some(prim)) => Vs::V(V::Scalar(prim as f64)),
-            V::D2(_d2,Some(prim)) => Vs::V(V::Scalar(prim as f64)),
-            V::Tr2(_tr2,Some(prim)) => Vs::V(V::Scalar(prim as f64)),
-            V::Tr3(_tr3,Some(prim)) => Vs::V(V::Scalar(prim as f64)),
+            V::BlockInst(_b,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
+            V::UserMd1(_b,_a,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
+            V::UserMd2(_b,_a,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
+            V::Fn(_a,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
+            V::R1(_f,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
+            V::R2(_f,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
+            V::D1(_d1,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
+            V::D2(_d2,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
+            V::Tr2(_tr2,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
+            V::Tr3(_tr3,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
             _ => Vs::V(V::Scalar(64 as f64)),
         },
         _ => panic!("illegal plus arity"),
@@ -587,28 +587,28 @@ pub fn prim_ind(arity:usize, x: Vn,_w: Vn) -> Vs {
 }
 
 pub fn provide() -> A {
-    let fns = vec![V::Fn(typ,None),
-                   V::Fn(fill,None),
-                   V::Fn(log,None),
-                   V::Fn(group_len,None),
-                   V::Fn(group_ord,None),
-                   V::Fn(assert_fn,None),
-                   V::Fn(plus,None),
-                   V::Fn(minus,None),
-                   V::Fn(times,None),
-                   V::Fn(divide,None),
-                   V::Fn(power,None),
-                   V::Fn(floor,None),
-                   V::Fn(equals,None),
-                   V::Fn(lesseq,None),
-                   V::Fn(shape,None),
-                   V::Fn(reshape,None),
-                   V::Fn(pick,None),
-                   V::Fn(windows,None),
-                   V::R1(table,None),
-                   V::R1(scan,None),
-                   V::R2(fill_by,None),
-                   V::R2(cases,None),
-                   V::R2(catches,None)];
+    let fns = vec![V::Fn(Fn(typ),None),
+                   V::Fn(Fn(fill),None),
+                   V::Fn(Fn(log),None),
+                   V::Fn(Fn(group_len),None),
+                   V::Fn(Fn(group_ord),None),
+                   V::Fn(Fn(assert_fn),None),
+                   V::Fn(Fn(plus),None),
+                   V::Fn(Fn(minus),None),
+                   V::Fn(Fn(times),None),
+                   V::Fn(Fn(divide),None),
+                   V::Fn(Fn(power),None),
+                   V::Fn(Fn(floor),None),
+                   V::Fn(Fn(equals),None),
+                   V::Fn(Fn(lesseq),None),
+                   V::Fn(Fn(shape),None),
+                   V::Fn(Fn(reshape),None),
+                   V::Fn(Fn(pick),None),
+                   V::Fn(Fn(windows),None),
+                   V::R1(R1(table),None),
+                   V::R1(R1(scan),None),
+                   V::R2(R2(fill_by),None),
+                   V::R2(R2(cases),None),
+                   V::R2(R2(catches),None)];
     A::new(fns,vec![23])
 }

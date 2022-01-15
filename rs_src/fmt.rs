@@ -1,5 +1,5 @@
-use std::fmt::{Display,Formatter,Result};
-use crate::schema::{V,Vs};
+use std::fmt::{Debug,Display,Formatter,Result};
+use crate::schema::{V,Vs,Fn,R1,R2};
 use log::{debug, trace, error, log_enabled, info, Level};
 
 pub fn fmt_stack(stack: &Vec<Vs>) -> String {
@@ -48,3 +48,18 @@ impl Display for Vs {
     }
 }
 
+impl Debug for Fn {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        write!(f, "{:?}", self)
+    }
+}
+impl Debug for R1 {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        write!(f, "{:?}", self)
+    }
+}
+impl Debug for R2 {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        write!(f, "{:?}", self)
+    }
+}

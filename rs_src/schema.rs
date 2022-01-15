@@ -18,6 +18,28 @@ pub trait Decoder {
     fn to_f64(&self) -> f64;
 }
 
+#[derive(Clone)]
+pub struct Fn(pub fn(usize,Vn,Vn) -> Vs);
+impl PartialEq for Fn {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 as usize == other.0 as usize
+    }
+}
+#[derive(Clone)]
+pub struct R1(pub fn(usize,Vn,Vn,Vn) -> Vs);
+impl PartialEq for R1 {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 as usize == other.0 as usize
+    }
+}
+#[derive(Clone)]
+pub struct R2(pub fn(usize,Vn,Vn,Vn,Vn) -> Vs);
+impl PartialEq for R2 {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 as usize == other.0 as usize
+    }
+}
+
 // Value (unboxed)
 #[derive(Debug,Clone,PartialEq,EnumAsInner)]
 pub enum V {
@@ -28,9 +50,9 @@ pub enum V {
     UserMd2(Cc<BlockInst>,Cc<D2>,Option<usize>),
     Nothing,
     A(Cc<A>),
-    Fn(fn(usize,Vn,Vn) -> Vs,Option<usize>),       // X, W
-    R1(fn(usize,Vn,Vn,Vn) -> Vs,Option<usize>),    // F, X, W
-    R2(fn(usize,Vn,Vn,Vn,Vn) -> Vs,Option<usize>), // F, G, X, W
+    Fn(Fn,Option<usize>),                          // X, W
+    R1(R1,Option<usize>),                          // F, X, W
+    R2(R2,Option<usize>),                          // F, G, X, W
     D1(Cc<D1>,Option<usize>),                      // M, F
     D2(Cc<D2>,Option<usize>),                      // M, F, G
     Tr2(Cc<Tr2>,Option<usize>),
@@ -123,38 +145,38 @@ impl Calleable for V {
             },
             V::Scalar(n) => Vs::V(V::Scalar(*n)),
             V::Char(c) => Vs::V(V::Char(*c)),
-            V::Fn(f,_prim) => f(arity,x,w),
+            V::Fn(f,_prim) => f.0(arity,x,w),
             V::R1(_f,_prim) => panic!("can't call r1"),
             V::R2(_f,_prim) => panic!("can't call r2"),
             V::D1(d1,_prim) => {
                 let D1(m,f) = d1.deref();
                 match m {
-                    V::R1(r1,_prim) => r1(arity,Some(f.clone()),x,w),
+                    V::R1(r1,_prim) => r1.0(arity,Some(f),x,w),
                     _ => panic!("can only call raw1 mods in derv1"),
                 }
             },
             V::D2(d2,_prim) => {
                 let D2(m,f,g) = d2.deref();
                 match m {
-                    V::R2(r2,_prim) => r2(arity,Some(f.clone()),Some(g.clone()),x,w),
+                    V::R2(r2,_prim) => r2.0(arity,Some(f),Some(g),x,w),
                     _ => panic!("can only call raw2 mods in derv2"),
                 }
             },
             V::Tr2(tr,_prim) => {
                 let Tr2(g,h) = tr.deref();
                 let r = h.call(arity,x,w);
-                g.call(1,Some(r.as_v().unwrap().clone()),None)
+                g.call(1,Some(&r.as_v().unwrap().clone()),None)
             },
             V::Tr3(tr,_prim) => {
                 let Tr3(f,g,h) = tr.deref();
                 let r =
                     match arity {
-                        1 => h.call(arity,Some((*x.as_ref().unwrap()).clone()),None),
-                        2 => h.call(arity,Some((*x.as_ref().unwrap()).clone()),Some((*w.as_ref().unwrap()).clone())),
+                        1 => h.call(arity,Some((*x.as_ref().unwrap())),None),
+                        2 => h.call(arity,Some(*x.as_ref().unwrap()),Some(*w.as_ref().unwrap())),
                         _ => panic!("illegal arity"),
                     };
                 let l = f.call(arity,x,w);
-                g.call(2,Some(r.as_v().unwrap().clone()),Some(l.as_v().unwrap().clone()))
+                g.call(2,Some(&r.as_v().unwrap()),Some(&l.as_v().unwrap()))
             },
             V::A(_) => Vs::V(self.clone()),
             V::Nothing => Vs::V(V::Nothing),
@@ -163,7 +185,7 @@ impl Calleable for V {
 }
 
 // Value (Optional)
-pub type Vn = Option<V>;
+pub type Vn<'a> = Option<&'a V>;
 
 // Value (boxed on the stack)
 #[derive(Debug,Clone,EnumAsInner)]
@@ -452,7 +474,7 @@ pub fn new_scalar<T: Decoder>(n: T) -> V {
 pub fn none_or_clone(vn: &Vn) -> Vh {
     match vn {
         None => Vh::V(V::Nothing),
-        Some(v) => Vh::V(v.clone()),
+        Some(v) => Vh::V(v.deref().clone()),
     }
 }
 pub fn body_pos(b: &Cc<BlockInst>,arity: usize) -> usize {
