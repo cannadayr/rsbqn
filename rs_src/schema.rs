@@ -165,7 +165,7 @@ impl Calleable for V {
             V::Tr2(tr,_prim) => {
                 let Tr2(g,h) = tr.deref();
                 let r = h.call(arity,x,w);
-                g.call(1,Some(&r.as_v().unwrap().clone()),None)
+                g.call(1,Some(&r.as_v().unwrap()),None)
             },
             V::Tr3(tr,_prim) => {
                 let Tr3(f,g,h) = tr.deref();
