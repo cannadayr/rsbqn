@@ -300,7 +300,7 @@ impl Env {
         match self {
             Env(e) => {
                 let guard = e.vars.lock().unwrap();
-                let vh = &(*guard)[id];
+                let vh = &guard[id];
                 match vh {
                     Vh::V(v) => v.clone(),
                     Vh::Undefined => panic!("heap slot is undefined"),
@@ -312,12 +312,12 @@ impl Env {
         match self {
             Env(e) => {
                 let mut guard = e.vars.lock().unwrap();
-                let vh = &(*guard)[id];
+                let vh = &guard[id];
                 assert_eq!(d,match vh {
                     Vh::Undefined => true,
                     _ => false,
                 });
-                (*guard)[id] = Vh::V((*v).clone());
+                guard[id] = Vh::V(v.clone());
             },
         }
     }
