@@ -12,10 +12,10 @@ use num_traits::{cast::FromPrimitive};
 fn dbg_args(fun: &str, arity: usize, x: &Vn, w: &Vn) {
     match arity {
         1 => {
-            info!("calling {}/{}: 𝕩 = {}",fun,arity,format!("{}",x.clone().unwrap().to_string()));
+            info!("calling {}/{}: 𝕩 = {}",fun,arity,format!("{}",x.unwrap().to_string()));
         },
         2 => {
-            info!("calling {}/{}: 𝕩 = {};𝕨 = {}",fun,arity,format!("{}",x.clone().unwrap().to_string()),format!("{}",w.clone().unwrap().to_string()));
+            info!("calling {}/{}: 𝕩 = {};𝕨 = {}",fun,arity,format!("{}",x.unwrap().to_string()),format!("{}",w.unwrap().to_string()));
         },
         _ => ()
     };
