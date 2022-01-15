@@ -222,13 +222,21 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 stack.push(r);
                 dbg_stack_out("MD2C",pos-1,&stack);
             },
-            32|34 => { // VARO|VARU
+            32 => { // VARO
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
                 let t = env.ge(x);
                 dbg_stack_in("VARO",pos-3,format!("{} {}",&x,&w),&stack);
-                stack.push(Vs::V(t.get(w)));
+                stack.push(Vs::V(t.get(w).clone()));
                 dbg_stack_out("VARO",pos-3,&stack);
+            },
+            34 => { // VARU
+                let x = code.bc[pos];pos+=1;
+                let w = code.bc[pos];pos+=1;
+                let t = env.ge(x);
+                dbg_stack_in("VARU",pos-3,format!("{} {}",&x,&w),&stack);
+                stack.push(Vs::V(t.get_drop(w).clone()));
+                dbg_stack_out("VARU",pos-3,&stack);
             },
             33 => { // VARM
                 let x = code.bc[pos];pos+=1;

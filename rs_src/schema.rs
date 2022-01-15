@@ -321,6 +321,21 @@ impl Env {
             },
         }
     }
+    pub fn get_drop(&self,id: usize) -> V {
+        match self {
+            Env(e) => {
+                let mut guard = e.vars.lock().unwrap();
+                let vh = &guard[id];
+                let r =
+                    match vh {
+                        Vh::V(v) => v.clone(),
+                        Vh::Undefined => panic!("heap slot is undefined"),
+                    };
+                guard[id] = Vh::Undefined;
+                r
+            },
+        }
+    }
     pub fn ge(&self,mut i: usize) -> &Env {
         let mut cur = self;
         loop {
