@@ -431,14 +431,14 @@ impl D2 {
 pub struct Tr2(pub V,pub V);
 impl Tr2 {
     pub fn new(g: Vs,h: Vs) -> Self {
-        Self(g.as_v().unwrap().clone(),h.as_v().unwrap().clone())
+        Self(g.into_v().unwrap(),h.into_v().unwrap())
     }
 }
 #[derive(Debug,Clone,PartialEq)]
 pub struct Tr3(pub V,pub V,pub V);
 impl Tr3 {
     pub fn new(f: Vs,g: Vs,h: Vs) -> Self {
-        Self((*f.as_v().unwrap()).clone(),(*g.as_v().unwrap()).clone(),(*h.as_v().unwrap()).clone())
+        Self(f.into_v().unwrap(),g.into_v().unwrap(),h.into_v().unwrap())
     }
 }
 
