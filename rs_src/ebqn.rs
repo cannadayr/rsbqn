@@ -152,8 +152,17 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 stack.push(r);
                 dbg_stack_out("FN1O",pos-1,&stack);
             },
-            17|19 => { // FN2C|FN2O
+            17 => { // FN2C
                 dbg_stack_in("FN2C",pos-1,"".to_string(),&stack);
+                let w = stack.pop().unwrap();
+                let f = stack.pop().unwrap();
+                let x = stack.pop().unwrap();
+                let r = call(2,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),Some(&w.into_v().unwrap()));
+                stack.push(r);
+                dbg_stack_out("FN2C",pos-1,&stack);
+            },
+            19 => { // FN2O
+                dbg_stack_in("FN2O",pos-1,"".to_string(),&stack);
                 let w = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
@@ -164,7 +173,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                         _ => call(2,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),Some(&w.into_v().unwrap()))
                     };
                 stack.push(r);
-                dbg_stack_out("FN2C",pos-1,&stack);
+                dbg_stack_out("FN2O",pos-1,&stack);
             },
             20 => { // TR2D
                 let g = stack.pop().unwrap();
