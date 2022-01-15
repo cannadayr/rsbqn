@@ -520,8 +520,8 @@ pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Vs {
                         let t = 3 + b.def.typ;
                         match t {
                             4 => {
-                                let (f,g) = a.deref();
-                                Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(4.0),g.as_ref().unwrap().clone(),f.as_ref().unwrap().clone()],vec![3]))))
+                                let D1(f,g) = a.deref();
+                                Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(4.0),g.clone(),f.clone()],vec![3]))))
                             },
                             _ => panic!("UserMd1 illegal decompose"),
                         }
@@ -530,8 +530,8 @@ pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Vs {
                         let t = 3 + b.def.typ;
                         match t {
                             5 => {
-                                let (f,g,h) = a.deref();
-                                Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(5.0),g.as_ref().unwrap().clone(),f.as_ref().unwrap().clone(),h.as_ref().unwrap().clone()],vec![4]))))
+                                let D2(f,g,h) = a.deref();
+                                Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(5.0),g.clone(),f.clone(),h.clone()],vec![4]))))
                             },
                             _ => panic!("UserMd2 illegal decompose"),
                         }

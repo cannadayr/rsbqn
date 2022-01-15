@@ -24,8 +24,8 @@ pub enum V {
     Scalar(f64),
     Char(char),
     BlockInst(Cc<BlockInst>,Option<usize>),
-    UserMd1(Cc<BlockInst>,Box<(Vn,Vn)>,Option<usize>),
-    UserMd2(Cc<BlockInst>,Box<(Vn,Vn,Vn)>,Option<usize>),
+    UserMd1(Cc<BlockInst>,Cc<D1>,Option<usize>),
+    UserMd2(Cc<BlockInst>,Cc<D2>,Option<usize>),
     Nothing,
     A(Cc<A>),
     Fn(fn(usize,Vn,Vn) -> Vs,Option<usize>),       // X, W
@@ -102,15 +102,15 @@ impl Calleable for V {
     fn call(&self,arity:usize,x: Vn,w: Vn) -> Vs {
         match self.deref() {
             V::UserMd1(b,mods,_prim) => {
-                let (m,f) = mods.deref();
-                let args = vec![Vh::V(self.clone()),none_or_clone(&x),none_or_clone(&w),Vh::V(m.as_ref().unwrap().clone()),Vh::V(f.as_ref().unwrap().clone())];
+                let D1(m,f) = mods.deref();
+                let args = vec![Vh::V(self.clone()),none_or_clone(&x),none_or_clone(&w),Vh::V(m.clone()),Vh::V(f.clone())];
                 let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args));
                 let pos = body_pos(b,arity);
                 vm(&env,&b.def.code,pos,Vec::new())
             },
             V::UserMd2(b,mods,_prim) => {
-                let (m,f,g) = mods.deref();
-                let args = vec![Vh::V(self.clone()),none_or_clone(&x),none_or_clone(&w),Vh::V(m.as_ref().unwrap().clone()),Vh::V(f.as_ref().unwrap().clone()),Vh::V(g.as_ref().unwrap().clone())];
+                let D2(m,f,g) = mods.deref();
+                let args = vec![Vh::V(self.clone()),none_or_clone(&x),none_or_clone(&w),Vh::V(m.clone()),Vh::V(f.clone()),Vh::V(g.clone())];
                 let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args));
                 let pos = body_pos(b,arity);
                 vm(&env,&b.def.code,pos,Vec::new())
@@ -323,10 +323,10 @@ impl BlockInst {
     pub fn new(env: Env,block: Cc<Block>) -> Self {
         Self {def: block, parent: env }
     }
-    pub fn call_md1(&self,arity:usize,args: (Vn,Vn)) -> Vs {
+    pub fn call_md1(&self,arity:usize,args: D1) -> Vs {
         match self.def.imm {
             false => {
-                Vs::V(V::UserMd1(Cc::new(BlockInst::new(self.parent.clone(),self.def.clone())),Box::new(args),None))
+                Vs::V(V::UserMd1(Cc::new(BlockInst::new(self.parent.clone(),self.def.clone())),Cc::new(args),None))
             },
             true => {
                 let pos = match self.def.body {
@@ -336,16 +336,16 @@ impl BlockInst {
                     }
                     _ => panic!("body immediacy doesnt match block definition"),
                 };
-                let (m,f) = args;
-                let env = Env::new(Some(self.parent.clone()),&self.def,arity,Some(vec![Vh::V(m.unwrap().clone()),Vh::V(f.unwrap().clone())]));
+                let D1(m,f) = args;
+                let env = Env::new(Some(self.parent.clone()),&self.def,arity,Some(vec![Vh::V(m.clone()),Vh::V(f.clone())]));
                 vm(&env,&self.def.code,pos,Vec::new())
             },
         }
     }
-    pub fn call_md2(&self,arity:usize,args: (Vn,Vn,Vn)) -> Vs {
+    pub fn call_md2(&self,arity:usize,args: D2) -> Vs {
         match self.def.imm {
             false => {
-                Vs::V(V::UserMd2(Cc::new(BlockInst::new(self.parent.clone(),self.def.clone())),Box::new(args),None))
+                Vs::V(V::UserMd2(Cc::new(BlockInst::new(self.parent.clone(),self.def.clone())),Cc::new(args),None))
             },
             true => {
                 let pos = match self.def.body {
@@ -355,8 +355,8 @@ impl BlockInst {
                     }
                     _ => panic!("body immediacy doesnt match block definition"),
                 };
-                let (m,f,g) = args;
-                let env = Env::new(Some(self.parent.clone()),&self.def,arity,Some(vec![Vh::V(m.unwrap().clone()),Vh::V(f.unwrap().clone()),Vh::V(g.unwrap().clone())]));
+                let D2(m,f,g) = args;
+                let env = Env::new(Some(self.parent.clone()),&self.def,arity,Some(vec![Vh::V(m.clone()),Vh::V(f.clone()),Vh::V(g.clone())]));
                 vm(&env,&self.def.code,pos,Vec::new())
             },
         }

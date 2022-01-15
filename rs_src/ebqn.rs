@@ -23,7 +23,7 @@ fn call1(m: V,f: V) -> Vs {
     match m {
         V::BlockInst(ref bl,_prim) => {
             assert_eq!(1,bl.def.typ);
-            bl.call_md1(1,(Some(m.clone()),Some(f)))
+            bl.call_md1(1,D1::new(m.clone(),f))
         },
         V::R1(_,_prim) => Vs::V(V::D1(Cc::new(D1::new(m,f)),None)),
         _ => panic!("call1 with invalid type"),
@@ -33,7 +33,7 @@ fn call2(m: V,f: V,g: V) -> Vs {
     match m {
         V::BlockInst(ref bl,_prim) => {
             assert_eq!(2,bl.def.typ);
-            bl.call_md2(2,(Some(m.clone()),Some(f),Some(g)))
+            bl.call_md2(2,D2::new(m.clone(),f,g))
         },
         V::R2(_,_prim) => Vs::V(V::D2(Cc::new(D2::new(m,f,g)),None)),
         _ => panic!("call2 with invalid type"),
