@@ -273,9 +273,9 @@ fn lesseq(arity: usize, x: Vn, w: Vn) -> Vs {
     let r =
     match arity {
         2 => {
-            let t = typ(1,x.clone(),None).as_v().unwrap().to_f64();
-            let s = typ(1,w.clone(),None).as_v().unwrap().to_f64();
-            if (&x).as_ref().unwrap().clone().is_fn() || (&w).as_ref().unwrap().clone().is_fn() {
+            let t = typ(1,x,None).as_v().unwrap().to_f64();
+            let s = typ(1,w,None).as_v().unwrap().to_f64();
+            if (&x).as_ref().unwrap().is_fn() || (&w).as_ref().unwrap().is_fn() {
                 panic!("cannot compare operations")
             };
             match t != s {
@@ -442,11 +442,11 @@ fn scan(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
                         }
                         i = 0;
                         while i < c {
-                            r[i] = call(2,f.clone(),Some(&xa.r[i]),Some(&wa.r[i])).as_v().unwrap().clone();
+                            r[i] = call(2,f,Some(&xa.r[i]),Some(&wa.r[i])).as_v().unwrap().clone();
                             i += 1;
                         }
                         while i < l {
-                            r[i] = call(2,f.clone(),Some(&xa.r[i]),Some(&r[i-c])).as_v().unwrap().clone();
+                            r[i] = call(2,f,Some(&xa.r[i]),Some(&r[i-c])).as_v().unwrap().clone();
                             i += 1;
                         }
                     };
