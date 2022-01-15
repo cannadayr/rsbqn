@@ -183,8 +183,17 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 stack.push(t);
                 dbg_stack_out("TR2D",pos-1,&stack);
             },
-            21|23 => { // TR3D|TR3O
+            21 => { // TR3D
                 dbg_stack_in("TR3D",pos-1,"".to_string(),&stack);
+                let f = stack.pop().unwrap();
+                let g = stack.pop().unwrap();
+                let h = stack.pop().unwrap();
+                let t = Vs::V(V::Tr3(Cc::new(Tr3::new(f,g,h)),None));
+                stack.push(t);
+                dbg_stack_out("TR3D",pos-1,&stack);
+            },
+            23 => { // TR3O
+                dbg_stack_in("TR3O",pos-1,"".to_string(),&stack);
                 let f = stack.pop().unwrap();
                 let g = stack.pop().unwrap();
                 let h = stack.pop().unwrap();
@@ -194,7 +203,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                         _ => Vs::V(V::Tr3(Cc::new(Tr3::new(f,g,h)),None)),
                     };
                 stack.push(t);
-                dbg_stack_out("TR3D",pos-1,&stack);
+                dbg_stack_out("TR3O",pos-1,&stack);
             },
             26 => { // MD1C
                 dbg_stack_in("MD1C",pos-1,"".to_string(),&stack);
