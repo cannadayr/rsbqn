@@ -288,11 +288,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
     }
 }
 
-pub fn runtime() -> Cc<A> {
+pub fn runtime() -> V {
     let builtin = provide();
     let runtime0 = r0(&builtin);
     info!("runtime0 loaded");
-    match r1(&builtin,runtime0.as_a().unwrap()).into_a().unwrap().get_mut() {
+    match r1(&builtin,&runtime0).into_a().unwrap().get_mut() {
         Some(full_runtime) => {
             let _set_inv = full_runtime.r.pop().unwrap();
             let set_prims = full_runtime.r.pop().unwrap();
@@ -322,14 +322,14 @@ pub fn runtime() -> Cc<A> {
             info!("runtime loaded");
             let prim_fns = V::A(Cc::new(A::new(vec![V::Fn(Fn(decompose),None),V::Fn(Fn(prim_ind),None)],vec![2])));
             let _ = call(1,Some(&set_prims),Some(&prim_fns),None);
-            prims
+            V::A(prims)
         },
         None => panic!("cant get mutable runtime"),
     }
 }
 
-pub fn prog(compiler: V,src: V,runtime: Cc<A>) -> Cc<Code> {
-    let mut prog = call(2,Some(&compiler),Some(&src),Some(&V::A(runtime))).into_v().unwrap().into_a().unwrap();
+pub fn prog(compiler: &V,src: V,runtime: &V) -> Cc<Code> {
+    let mut prog = call(2,Some(compiler),Some(&src),Some(runtime)).into_v().unwrap().into_a().unwrap();
     info!("prog count = {}",prog.strong_count());
     match prog.get_mut() {
         Some(p) => {
