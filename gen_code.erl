@@ -40,14 +40,16 @@ main([Repo]) ->
     {ok,R0} = test(Repo,<<"r0">>),
     {ok,R1} = test(Repo,<<"r1">>),
     {ok,C}  = test(Repo,<<"c">>),
+    %{ok,F}  = test(Repo,<<"f">>),
     file:write_file("rs_src/code.rs",erlang:iolist_to_binary([
         <<"use log::{debug};\n">>,
         <<"use core::f64::{INFINITY,NEG_INFINITY};\n">>,
         <<"use crate::ebqn::run;\n">>,
         <<"use crate::schema::{Code,new_scalar,new_char,new_string,Body,A,Decoder,V};\n">>,
         <<"pub fn r0(provide: &A) -> V {\nrun(Code::new(">>,utf8(R0),<<"))\n}\n\n">>,
-        <<"pub fn r1(provide: &A,runtime_0: &A) -> V {\nrun(Code::new(">>,utf8(R1),<<"))\n}\n\n">>,
-        <<"pub fn c(runtime: &A) -> V {\nrun(Code::new(">>,utf8(C),<<"))\n}\n\n">>
+        <<"pub fn r1(provide: &A,runtime_0v: &V) -> V {let runtime_0 = runtime_0v.as_a().unwrap();\nrun(Code::new(">>,utf8(R1),<<"))\n}\n\n">>,
+        <<"pub fn c(runtimev: &V) -> V {\nlet runtime = runtimev.as_a().unwrap();run(Code::new(">>,utf8(C),<<"))\n}\n\n">>
+        %<<"pub fn c(runtime: &V) -> V {\nrun(Code::new(">>,utf8(F),<<"))\n}\n\n">>
     ]));
 main(_Args) ->
     io:format("bad arguments~n"),
