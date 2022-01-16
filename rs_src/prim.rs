@@ -26,6 +26,7 @@ fn dbg_rtn(fun: &str,arity: usize, r: &Vs) {
 
 // Type
 fn typ(arity: usize, x: Vn, _w: Vn) -> Vs {
+    coz::scope!("typ");
     match arity {
         1 => match x.unwrap() {
             V::Scalar(_n) => Vs::V(V::Scalar(1.0)),
@@ -48,6 +49,7 @@ fn typ(arity: usize, x: Vn, _w: Vn) -> Vs {
 }
 // Fill
 fn fill(arity: usize, x: Vn, _w: Vn) -> Vs {
+    coz::scope!("fill");
     match arity {
         1 => Vs::V(V::Scalar(0.0)),
         2 => Vs::V(x.unwrap().clone()),
@@ -56,6 +58,7 @@ fn fill(arity: usize, x: Vn, _w: Vn) -> Vs {
 }
 // Log
 fn log(arity: usize, x: Vn, w: Vn) -> Vs {
+    coz::scope!("log");
     match arity {
         1 => match x.unwrap() {
             V::Scalar(xs) => Vs::V(V::Scalar(xs.ln())),
@@ -70,6 +73,7 @@ fn log(arity: usize, x: Vn, w: Vn) -> Vs {
 }
 // GroupLen
 fn group_len(arity: usize, x: Vn, w: Vn) -> Vs {
+    coz::scope!("group_len");
     match arity {
         1 => {
             match x.unwrap() {
@@ -114,6 +118,7 @@ fn group_len(arity: usize, x: Vn, w: Vn) -> Vs {
 }
 // GroupOrd
 fn group_ord(arity: usize, x: Vn, w: Vn) -> Vs {
+    coz::scope!("group_ord");
     match arity {
         2 => {
             match (&x.unwrap(),&w.unwrap()) {
@@ -135,6 +140,7 @@ fn group_ord(arity: usize, x: Vn, w: Vn) -> Vs {
 }
 // !
 fn assert_fn(arity: usize, x: Vn, w: Vn) -> Vs {
+    coz::scope!("assert_fn");
     //dbg_args("assert_fn",arity,&x,&w);
     let r =
     match arity {
@@ -159,6 +165,7 @@ fn assert_fn(arity: usize, x: Vn, w: Vn) -> Vs {
 }
 // +
 pub fn plus(arity:usize, x: Vn,w: Vn) -> Vs {
+    coz::scope!("plus");
     //dbg_args("plus",arity,&x,&w);
     let r =
     match arity {
@@ -178,6 +185,7 @@ pub fn plus(arity:usize, x: Vn,w: Vn) -> Vs {
 }
 // -
 fn minus(arity: usize, x: Vn, w: Vn) -> Vs {
+    coz::scope!("minus");
     //dbg_args("minus",arity,&x,&w);
     let r =
     match arity {
@@ -199,6 +207,7 @@ fn minus(arity: usize, x: Vn, w: Vn) -> Vs {
 }
 // ×
 fn times(arity: usize, x: Vn, w: Vn) -> Vs {
+    coz::scope!("times");
     //dbg_args("times",arity,&x,&w);
     match arity {
         2 => match (x.unwrap(),w.unwrap()) {
@@ -210,6 +219,7 @@ fn times(arity: usize, x: Vn, w: Vn) -> Vs {
 }
 // ÷
 fn divide(arity: usize, x: Vn, w: Vn) -> Vs {
+    coz::scope!("divide");
     //dbg_args("divide",arity,&x,&w);
     match arity {
         1 => match x.unwrap() {
@@ -225,6 +235,7 @@ fn divide(arity: usize, x: Vn, w: Vn) -> Vs {
 }
 // ⋆
 fn power(arity: usize, x: Vn, w: Vn) -> Vs {
+    coz::scope!("power");
     match arity {
         1 => match x.unwrap() {
             V::Scalar(xs) => Vs::V(V::Scalar(xs.exp())),
@@ -239,6 +250,7 @@ fn power(arity: usize, x: Vn, w: Vn) -> Vs {
 }
 // ⌊
 fn floor(arity: usize, x: Vn, _w: Vn) -> Vs {
+    coz::scope!("floor");
     match arity {
         1|2 => Vs::V(V::Scalar(x.unwrap().to_f64().floor())),
         _ => panic!("illegal divide arity"),
@@ -246,6 +258,7 @@ fn floor(arity: usize, x: Vn, _w: Vn) -> Vs {
 }
 // =
 fn equals(arity: usize, x: Vn, w: Vn) -> Vs {
+    coz::scope!("equals");
     //dbg_args("equals",arity,&x,&w);
     let r =
     match arity {
@@ -269,6 +282,7 @@ fn equals(arity: usize, x: Vn, w: Vn) -> Vs {
 }
 // ≤
 fn lesseq(arity: usize, x: Vn, w: Vn) -> Vs {
+    coz::scope!("lesseq");
     //dbg_args("lesseq",arity,&x,&w);
     let r =
     match arity {
@@ -290,6 +304,7 @@ fn lesseq(arity: usize, x: Vn, w: Vn) -> Vs {
 }
 // ≢
 fn shape(arity: usize, x: Vn, _w: Vn) -> Vs {
+    coz::scope!("shape");
     match arity {
         1 => match x.unwrap() {
             V::A(xa) => {
@@ -304,6 +319,7 @@ fn shape(arity: usize, x: Vn, _w: Vn) -> Vs {
 }
 // ⥊
 fn reshape(arity: usize, x: Vn, w: Vn) -> Vs {
+    coz::scope!("reshape");
     match arity {
         1 => {
             match x.unwrap() {
@@ -328,6 +344,7 @@ fn reshape(arity: usize, x: Vn, w: Vn) -> Vs {
 }
 // ⊑
 fn pick(arity: usize, x: Vn, w: Vn) -> Vs {
+    coz::scope!("pick");
     //dbg_args("pick",arity,&x,&w);
     let r =
     match arity {
@@ -345,6 +362,7 @@ fn pick(arity: usize, x: Vn, w: Vn) -> Vs {
 }
 // ↕
 fn windows(arity: usize, x: Vn, _w: Vn) -> Vs {
+    coz::scope!("windows");
     match arity {
         1 => match x.unwrap() {
             V::Scalar(n) => Vs::V(V::A(Cc::new(A::new((0..*n as i64).map(|v| V::Scalar(v as f64)).collect::<Vec<V>>(),vec![*n as usize])))),
@@ -356,6 +374,7 @@ fn windows(arity: usize, x: Vn, _w: Vn) -> Vs {
 }
 // ⌜
 fn table(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
+    coz::scope!("table");
     match arity {
         1 => match x.unwrap() {
             V::A(xa) => {
@@ -382,6 +401,7 @@ fn table(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
 }
 // `
 fn scan(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
+    coz::scope!("scan");
     match arity {
         1 => {
             match x.unwrap() {
@@ -460,10 +480,12 @@ fn scan(arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
 }
 // _fillBy_
 fn fill_by(arity: usize, f: Vn, _g: Vn, x: Vn, w: Vn) -> Vs {
+    coz::scope!("fill_by");
     call(arity,f,x,w)
 }
 // ⊘
 fn cases(arity: usize, f: Vn, g: Vn, x: Vn, w: Vn) -> Vs {
+    coz::scope!("cases");
     match arity {
         1 => call(arity,f,x,None),
         2 => call(arity,g,x,w),
@@ -472,10 +494,12 @@ fn cases(arity: usize, f: Vn, g: Vn, x: Vn, w: Vn) -> Vs {
 }
 // ⎊
 fn catches(_arity: usize, _f: Vn, _g: Vn, _x: Vn, _w: Vn) -> Vs {
+    coz::scope!("catches");
     panic!("catches not implemented");
 }
 
 pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Vs {
+    coz::scope!("decompose");
     //dbg_args("decompose",arity,&x,&w);
     let r =
     match arity {
@@ -568,6 +592,7 @@ pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Vs {
 }
 
 pub fn prim_ind(arity:usize, x: Vn,_w: Vn) -> Vs {
+    coz::scope!("prim_ind");
     match arity {
         1 => match x.unwrap() {
             V::BlockInst(_b,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),

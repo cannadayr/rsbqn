@@ -14,12 +14,14 @@ use itertools::Itertools;
 use num_traits::FromPrimitive;
 
 pub fn call(arity: usize,a: Vn,x: Vn, w: Vn) -> Vs {
+    coz::scope!("call");
     match a {
         Some(v) => v.call(arity,x,w),
         _ => panic!("unimplemented call"),
     }
 }
 fn call1(m: V,f: V) -> Vs {
+    coz::scope!("call1");
     match m {
         V::BlockInst(ref bl,_prim) => {
             assert_eq!(1,bl.def.typ);
@@ -30,6 +32,7 @@ fn call1(m: V,f: V) -> Vs {
     }
 }
 fn call2(m: V,f: V,g: V) -> Vs {
+    coz::scope!("call2");
     match m {
         V::BlockInst(ref bl,_prim) => {
             assert_eq!(2,bl.def.typ);
@@ -41,6 +44,7 @@ fn call2(m: V,f: V,g: V) -> Vs {
 }
 
 fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>) -> Vs {
+    coz::scope!("derv");
     match (block.typ,block.imm) {
         (0,true) => {
             let child = Env::new(Some(env.clone()),block,0,None);
@@ -62,6 +66,7 @@ fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>) -> Vs {
 }
 
 fn list(l: Vec<Vs>) -> Vs {
+    coz::scope!("list");
     let shape = vec![l.len() as usize];
     let ravel = l.into_iter().map(|e|
         match e {
@@ -72,6 +77,7 @@ fn list(l: Vec<Vs>) -> Vs {
     Vs::V(V::A(Cc::new(A::new(ravel,shape))))
 }
 fn listr(l: Vec<Vs>) -> Vs {
+    coz::scope!("listr");
     let ravel = l.into_iter().map(|e|
         match e {
             Vs::Slot(env,slot) => Vr::Slot(env,slot),
@@ -86,29 +92,37 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
         let op = code.bc[pos];pos+=1;
         match op {
             0 => { // PUSH
+                coz::begin!("PUSH");
                 let x = code.bc[pos];pos+=1;
                 let r = code.objs[x].clone();
                 dbg_stack_in("PUSH",pos-2,format!("{} {}",&x,&r),&stack);
                 stack.push(Vs::V(r));
                 dbg_stack_out("PUSH",pos-2,&stack);
+                coz::end!("PUSH");
             },
             1 => { // DFND
+                coz::begin!("DFND");
                 let x = code.bc[pos];pos+=1;
                 let r = derv(env.clone(),&code,&code.blocks[x]);
                 dbg_stack_in("DFND",pos-2,format!("{} {}",&x,&r),&stack);
                 stack.push(r);
                 dbg_stack_out("DFND",pos-2,&stack);
+                coz::end!("DFND");
             },
             6 => { // POPS
+                coz::begin!("POPS");
                 dbg_stack_in("POPS",pos-1,"".to_string(),&stack);
                 let _ = stack.pop();
                 dbg_stack_out("POPS",pos-1,&stack);
+                coz::end!("POPS");
             },
             7 => { // RETN
                 break match stack.len() {
                     1 => {
+                        coz::begin!("RETN");
                         dbg_stack_in("RETN",pos-1,"".to_string(),&stack);
                         let rtn = stack.pop().unwrap();
+                        coz::end!("RETN");
                         rtn
                     },
                     _ => {
@@ -117,30 +131,37 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 };
             },
             11 => { // ARRO
+                coz::begin!("ARRO");
                 let x = code.bc[pos];pos+=1;
                 dbg_stack_in("ARRO",pos-2,format!("{}",&x),&stack);
                 let hd = stack.len() - x;
                 let tl = stack.split_off(hd);
                 stack.push(list(tl));
                 dbg_stack_out("ARRO",pos-2,&stack);
+                coz::end!("ARRO");
             },
             12 => { // ARRM
+                coz::begin!("ARRM");
                 let x = code.bc[pos];pos+=1;
                 let hd = stack.len() - x;
                 let tl = stack.split_off(hd);
                 dbg_stack_in("ARRM",pos-2,format!("{}",&x),&stack);
                 stack.push(listr(tl));
                 dbg_stack_out("ARRM",pos-2,&stack);
+                coz::end!("ARRM");
             },
             16 => { // FN1C
+                coz::begin!("FN1C");
                 dbg_stack_in("FN1C",pos-1,"".to_string(),&stack);
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
                 let r = call(1,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),None);
                 stack.push(r);
                 dbg_stack_out("FN1C",pos-1,&stack);
+                coz::end!("FN1C");
             },
             18 => { // FN1O
+                coz::begin!("FN1O");
                 dbg_stack_in("FN1O",pos-1,"".to_string(),&stack);
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
@@ -151,8 +172,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                     };
                 stack.push(r);
                 dbg_stack_out("FN1O",pos-1,&stack);
+                coz::end!("FN1O");
             },
             17 => { // FN2C
+                coz::begin!("FN2C");
                 dbg_stack_in("FN2C",pos-1,"".to_string(),&stack);
                 let w = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
@@ -160,8 +183,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let r = call(2,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),Some(&w.into_v().unwrap()));
                 stack.push(r);
                 dbg_stack_out("FN2C",pos-1,&stack);
+                coz::end!("FN2C");
             },
             19 => { // FN2O
+                coz::begin!("FN2O");
                 dbg_stack_in("FN2O",pos-1,"".to_string(),&stack);
                 let w = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
@@ -174,16 +199,20 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                     };
                 stack.push(r);
                 dbg_stack_out("FN2O",pos-1,&stack);
+                coz::end!("FN2O");
             },
             20 => { // TR2D
+                coz::begin!("TR2D");
                 let g = stack.pop().unwrap();
                 let h = stack.pop().unwrap();
                 dbg_stack_in("TR2D",pos-1,format!("{} {}",&g,&h),&stack);
                 let t = Vs::V(V::Tr2(Cc::new(Tr2::new(g,h)),None));
                 stack.push(t);
                 dbg_stack_out("TR2D",pos-1,&stack);
+                coz::end!("TR2D");
             },
             21 => { // TR3D
+                coz::begin!("TR3D");
                 dbg_stack_in("TR3D",pos-1,"".to_string(),&stack);
                 let f = stack.pop().unwrap();
                 let g = stack.pop().unwrap();
@@ -191,8 +220,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let t = Vs::V(V::Tr3(Cc::new(Tr3::new(f,g,h)),None));
                 stack.push(t);
                 dbg_stack_out("TR3D",pos-1,&stack);
+                coz::end!("TR3D");
             },
             23 => { // TR3O
+                coz::begin!("TR3O");
                 dbg_stack_in("TR3O",pos-1,"".to_string(),&stack);
                 let f = stack.pop().unwrap();
                 let g = stack.pop().unwrap();
@@ -204,16 +235,20 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                     };
                 stack.push(t);
                 dbg_stack_out("TR3O",pos-1,&stack);
+                coz::end!("TR3O");
             },
             26 => { // MD1C
+                coz::begin!("MD1C");
                 dbg_stack_in("MD1C",pos-1,"".to_string(),&stack);
                 let f = stack.pop().unwrap();
                 let m = stack.pop().unwrap();
                 let r = call1(m.into_v().unwrap(),f.into_v().unwrap());
                 stack.push(r);
                 dbg_stack_out("MD1C",pos-1,&stack);
+                coz::end!("MD1C");
             },
             27 => { // MD2C
+                coz::begin!("MD2C");
                 dbg_stack_in("MD2C",pos-1,"".to_string(),&stack);
                 let f = stack.pop().unwrap();
                 let m = stack.pop().unwrap();
@@ -221,48 +256,60 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let r = call2(m.into_v().unwrap(),f.into_v().unwrap(),g.into_v().unwrap());
                 stack.push(r);
                 dbg_stack_out("MD2C",pos-1,&stack);
+                coz::end!("MD2C");
             },
             32 => { // VARO
+                coz::begin!("VARO");
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
                 let t = env.ge(x);
                 dbg_stack_in("VARO",pos-3,format!("{} {}",&x,&w),&stack);
                 stack.push(Vs::V(t.get(w).clone()));
                 dbg_stack_out("VARO",pos-3,&stack);
+                coz::end!("VARO");
             },
             34 => { // VARU
+                coz::begin!("VARU");
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
                 let t = env.ge(x);
                 dbg_stack_in("VARU",pos-3,format!("{} {}",&x,&w),&stack);
                 stack.push(Vs::V(t.get_drop(w).clone()));
                 dbg_stack_out("VARU",pos-3,&stack);
+                coz::end!("VARU");
             },
             33 => { // VARM
+                coz::begin!("VARM");
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
                 let t = env.ge(x);
                 dbg_stack_in("VARM",pos-3,format!("{} {}",&x,&w),&stack);
                 stack.push(Vs::Slot(t.clone(),w));
                 dbg_stack_out("VARM",pos-3,&stack);
+                coz::end!("VARM");
             },
             48 => { // SETN
+                coz::begin!("SETN");
                 dbg_stack_in("SETN",pos-1,"".to_string(),&stack);
                 let i = stack.pop().unwrap();
                 let v = stack.pop().unwrap();
                 let r = set(true,i,v);
                 stack.push(Vs::V(r));
                 dbg_stack_out("SETN",pos-1,&stack);
+                coz::end!("SETN");
             },
             49 => { // SETU
+                coz::begin!("SETU");
                 dbg_stack_in("SETU",pos-1,"".to_string(),&stack);
                 let i = stack.pop().unwrap();
                 let v = stack.pop().unwrap();
                 let r = set(false,i,v);
                 stack.push(Vs::V(r));
                 dbg_stack_out("SETU",pos-1,&stack);
+                coz::end!("SETU");
             },
             50 => { // SETM
+                coz::begin!("SETM");
                 dbg_stack_in("SETM",pos-1,"".to_string(),&stack);
                 let i = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
@@ -271,8 +318,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let r = set(false,i,v);
                 stack.push(Vs::V(r));
                 dbg_stack_out("SETM",pos-1,&stack);
+                coz::end!("SETM");
             },
             51 => { // SETC
+                coz::begin!("SETC");
                 dbg_stack_in("SETC",pos-1,"".to_string(),&stack);
                 let i = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
@@ -280,6 +329,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let r = set(false,i,v);
                 stack.push(Vs::V(r));
                 dbg_stack_out("SETC",pos-1,&stack);
+                coz::end!("SETC");
             },
             _ => {
                 panic!("unreachable op: {}",op);
@@ -289,6 +339,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
 }
 
 pub fn runtime() -> V {
+    coz::scope!("runtime");
     let builtin = provide();
     let runtime0 = r0(&builtin);
     info!("runtime0 loaded");
@@ -329,6 +380,7 @@ pub fn runtime() -> V {
 }
 
 pub fn prog(compiler: &V,src: V,runtime: &V) -> Cc<Code> {
+    coz::scope!("prog");
     let mut prog = call(2,Some(compiler),Some(&src),Some(runtime)).into_v().unwrap().into_a().unwrap();
     info!("prog count = {}",prog.strong_count());
     match prog.get_mut() {
@@ -397,6 +449,7 @@ pub fn prog(compiler: &V,src: V,runtime: &V) -> Cc<Code> {
 }
 
 pub fn run(code: Cc<Code>) -> V {
+    coz::scope!("run");
     let root = Env::new(None,&code.blocks[0],0,None);
     let (pos,_locals) =
         match code.blocks[0].body {
