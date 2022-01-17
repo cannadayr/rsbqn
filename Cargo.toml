@@ -41,5 +41,7 @@ optional = true
 default-features = false
 
 [features]
+default = []
 prof = ["coz"]
 heap = ["dhat"]
+debug = []

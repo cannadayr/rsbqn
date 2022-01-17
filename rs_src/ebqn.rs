@@ -100,8 +100,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 coz::begin!("PUSH");
                 let x = code.bc[pos];pos+=1;
                 let r = code.objs[x].clone();
+                #[cfg(feature = "debug")]
                 dbg_stack_in("PUSH",pos-2,format!("{} {}",&x,&r),&stack);
                 stack.push(Vs::V(r));
+                #[cfg(feature = "debug")]
                 dbg_stack_out("PUSH",pos-2,&stack);
                 #[cfg(feature = "coz")]
                 coz::end!("PUSH");
@@ -111,8 +113,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 coz::begin!("DFND");
                 let x = code.bc[pos];pos+=1;
                 let r = derv(env.clone(),&code,&code.blocks[x]);
+                #[cfg(feature = "debug")]
                 dbg_stack_in("DFND",pos-2,format!("{} {}",&x,&r),&stack);
                 stack.push(r);
+                #[cfg(feature = "debug")]
                 dbg_stack_out("DFND",pos-2,&stack);
                 #[cfg(feature = "coz")]
                 coz::end!("DFND");
@@ -120,8 +124,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
             6 => { // POPS
                 #[cfg(feature = "coz")]
                 coz::begin!("POPS");
+                #[cfg(feature = "debug")]
                 dbg_stack_in("POPS",pos-1,"".to_string(),&stack);
                 let _ = stack.pop();
+                #[cfg(feature = "debug")]
                 dbg_stack_out("POPS",pos-1,&stack);
                 #[cfg(feature = "coz")]
                 coz::end!("POPS");
@@ -131,6 +137,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                     1 => {
                         #[cfg(feature = "coz")]
                         coz::begin!("RETN");
+                        #[cfg(feature = "debug")]
                         dbg_stack_in("RETN",pos-1,"".to_string(),&stack);
                         let rtn = stack.pop().unwrap();
                         #[cfg(feature = "coz")]
@@ -146,10 +153,12 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 #[cfg(feature = "coz")]
                 coz::begin!("ARRO");
                 let x = code.bc[pos];pos+=1;
+                #[cfg(feature = "debug")]
                 dbg_stack_in("ARRO",pos-2,format!("{}",&x),&stack);
                 let hd = stack.len() - x;
                 let tl = stack.split_off(hd);
                 stack.push(list(tl));
+                #[cfg(feature = "debug")]
                 dbg_stack_out("ARRO",pos-2,&stack);
                 #[cfg(feature = "coz")]
                 coz::end!("ARRO");
@@ -160,8 +169,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let x = code.bc[pos];pos+=1;
                 let hd = stack.len() - x;
                 let tl = stack.split_off(hd);
+                #[cfg(feature = "debug")]
                 dbg_stack_in("ARRM",pos-2,format!("{}",&x),&stack);
                 stack.push(listr(tl));
+                #[cfg(feature = "debug")]
                 dbg_stack_out("ARRM",pos-2,&stack);
                 #[cfg(feature = "coz")]
                 coz::end!("ARRM");
@@ -169,11 +180,13 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
             16 => { // FN1C
                 #[cfg(feature = "coz")]
                 coz::begin!("FN1C");
+                #[cfg(feature = "debug")]
                 dbg_stack_in("FN1C",pos-1,"".to_string(),&stack);
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
                 let r = call(1,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),None);
                 stack.push(r);
+                #[cfg(feature = "debug")]
                 dbg_stack_out("FN1C",pos-1,&stack);
                 #[cfg(feature = "coz")]
                 coz::end!("FN1C");
@@ -181,6 +194,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
             18 => { // FN1O
                 #[cfg(feature = "coz")]
                 coz::begin!("FN1O");
+                #[cfg(feature = "debug")]
                 dbg_stack_in("FN1O",pos-1,"".to_string(),&stack);
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
@@ -190,6 +204,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                         _ => call(1,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),None),
                     };
                 stack.push(r);
+                #[cfg(feature = "debug")]
                 dbg_stack_out("FN1O",pos-1,&stack);
                 #[cfg(feature = "coz")]
                 coz::end!("FN1O");
@@ -197,12 +212,14 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
             17 => { // FN2C
                 #[cfg(feature = "coz")]
                 coz::begin!("FN2C");
+                #[cfg(feature = "debug")]
                 dbg_stack_in("FN2C",pos-1,"".to_string(),&stack);
                 let w = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
                 let r = call(2,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),Some(&w.into_v().unwrap()));
                 stack.push(r);
+                #[cfg(feature = "debug")]
                 dbg_stack_out("FN2C",pos-1,&stack);
                 #[cfg(feature = "coz")]
                 coz::end!("FN2C");
@@ -210,6 +227,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
             19 => { // FN2O
                 #[cfg(feature = "coz")]
                 coz::begin!("FN2O");
+                #[cfg(feature = "debug")]
                 dbg_stack_in("FN2O",pos-1,"".to_string(),&stack);
                 let w = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
@@ -221,6 +239,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                         _ => call(2,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),Some(&w.into_v().unwrap()))
                     };
                 stack.push(r);
+                #[cfg(feature = "debug")]
                 dbg_stack_out("FN2O",pos-1,&stack);
                 #[cfg(feature = "coz")]
                 coz::end!("FN2O");
@@ -230,9 +249,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 coz::begin!("TR2D");
                 let g = stack.pop().unwrap();
                 let h = stack.pop().unwrap();
+                #[cfg(feature = "debug")]
                 dbg_stack_in("TR2D",pos-1,format!("{} {}",&g,&h),&stack);
                 let t = Vs::V(V::Tr2(Cc::new(Tr2::new(g,h)),None));
                 stack.push(t);
+                #[cfg(feature = "debug")]
                 dbg_stack_out("TR2D",pos-1,&stack);
                 #[cfg(feature = "coz")]
                 coz::end!("TR2D");
@@ -240,12 +261,14 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
             21 => { // TR3D
                 #[cfg(feature = "coz")]
                 coz::begin!("TR3D");
+                #[cfg(feature = "debug")]
                 dbg_stack_in("TR3D",pos-1,"".to_string(),&stack);
                 let f = stack.pop().unwrap();
                 let g = stack.pop().unwrap();
                 let h = stack.pop().unwrap();
                 let t = Vs::V(V::Tr3(Cc::new(Tr3::new(f,g,h)),None));
                 stack.push(t);
+                #[cfg(feature = "debug")]
                 dbg_stack_out("TR3D",pos-1,&stack);
                 #[cfg(feature = "coz")]
                 coz::end!("TR3D");
@@ -253,6 +276,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
             23 => { // TR3O
                 #[cfg(feature = "coz")]
                 coz::begin!("TR3O");
+                #[cfg(feature = "debug")]
                 dbg_stack_in("TR3O",pos-1,"".to_string(),&stack);
                 let f = stack.pop().unwrap();
                 let g = stack.pop().unwrap();
@@ -263,6 +287,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                         _ => Vs::V(V::Tr3(Cc::new(Tr3::new(f,g,h)),None)),
                     };
                 stack.push(t);
+                #[cfg(feature = "debug")]
                 dbg_stack_out("TR3O",pos-1,&stack);
                 #[cfg(feature = "coz")]
                 coz::end!("TR3O");
@@ -270,11 +295,13 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
             26 => { // MD1C
                 #[cfg(feature = "coz")]
                 coz::begin!("MD1C");
+                #[cfg(feature = "debug")]
                 dbg_stack_in("MD1C",pos-1,"".to_string(),&stack);
                 let f = stack.pop().unwrap();
                 let m = stack.pop().unwrap();
                 let r = call1(m.into_v().unwrap(),f.into_v().unwrap());
                 stack.push(r);
+                #[cfg(feature = "debug")]
                 dbg_stack_out("MD1C",pos-1,&stack);
                 #[cfg(feature = "coz")]
                 coz::end!("MD1C");
@@ -282,12 +309,14 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
             27 => { // MD2C
                 #[cfg(feature = "coz")]
                 coz::begin!("MD2C");
+                #[cfg(feature = "debug")]
                 dbg_stack_in("MD2C",pos-1,"".to_string(),&stack);
                 let f = stack.pop().unwrap();
                 let m = stack.pop().unwrap();
                 let g = stack.pop().unwrap();
                 let r = call2(m.into_v().unwrap(),f.into_v().unwrap(),g.into_v().unwrap());
                 stack.push(r);
+                #[cfg(feature = "debug")]
                 dbg_stack_out("MD2C",pos-1,&stack);
                 #[cfg(feature = "coz")]
                 coz::end!("MD2C");
@@ -298,8 +327,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
                 let t = env.ge(x);
+                #[cfg(feature = "debug")]
                 dbg_stack_in("VARO",pos-3,format!("{} {}",&x,&w),&stack);
                 stack.push(Vs::V(t.get(w).clone()));
+                #[cfg(feature = "debug")]
                 dbg_stack_out("VARO",pos-3,&stack);
                 #[cfg(feature = "coz")]
                 coz::end!("VARO");
@@ -310,8 +341,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
                 let t = env.ge(x);
+                #[cfg(feature = "debug")]
                 dbg_stack_in("VARU",pos-3,format!("{} {}",&x,&w),&stack);
                 stack.push(Vs::V(t.get_drop(w).clone()));
+                #[cfg(feature = "debug")]
                 dbg_stack_out("VARU",pos-3,&stack);
                 #[cfg(feature = "coz")]
                 coz::end!("VARU");
@@ -322,8 +355,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
                 let t = env.ge(x);
+                #[cfg(feature = "debug")]
                 dbg_stack_in("VARM",pos-3,format!("{} {}",&x,&w),&stack);
                 stack.push(Vs::Slot(t.clone(),w));
+                #[cfg(feature = "debug")]
                 dbg_stack_out("VARM",pos-3,&stack);
                 #[cfg(feature = "coz")]
                 coz::end!("VARM");
@@ -331,11 +366,13 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
             48 => { // SETN
                 #[cfg(feature = "coz")]
                 coz::begin!("SETN");
+                #[cfg(feature = "debug")]
                 dbg_stack_in("SETN",pos-1,"".to_string(),&stack);
                 let i = stack.pop().unwrap();
                 let v = stack.pop().unwrap();
                 let r = set(true,i,v);
                 stack.push(Vs::V(r));
+                #[cfg(feature = "debug")]
                 dbg_stack_out("SETN",pos-1,&stack);
                 #[cfg(feature = "coz")]
                 coz::end!("SETN");
@@ -343,11 +380,13 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
             49 => { // SETU
                 #[cfg(feature = "coz")]
                 coz::begin!("SETU");
+                #[cfg(feature = "debug")]
                 dbg_stack_in("SETU",pos-1,"".to_string(),&stack);
                 let i = stack.pop().unwrap();
                 let v = stack.pop().unwrap();
                 let r = set(false,i,v);
                 stack.push(Vs::V(r));
+                #[cfg(feature = "debug")]
                 dbg_stack_out("SETU",pos-1,&stack);
                 #[cfg(feature = "coz")]
                 coz::end!("SETU");
@@ -355,6 +394,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
             50 => { // SETM
                 #[cfg(feature = "coz")]
                 coz::begin!("SETM");
+                #[cfg(feature = "debug")]
                 dbg_stack_in("SETM",pos-1,"".to_string(),&stack);
                 let i = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
@@ -362,6 +402,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let v = call(2,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),Some(&i.get()));
                 let r = set(false,i,v);
                 stack.push(Vs::V(r));
+                #[cfg(feature = "debug")]
                 dbg_stack_out("SETM",pos-1,&stack);
                 #[cfg(feature = "coz")]
                 coz::end!("SETM");
@@ -369,12 +410,14 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
             51 => { // SETC
                 #[cfg(feature = "coz")]
                 coz::begin!("SETC");
+                #[cfg(feature = "debug")]
                 dbg_stack_in("SETC",pos-1,"".to_string(),&stack);
                 let i = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
                 let v = call(1,Some(&f.into_v().unwrap()),Some(&i.get()),None);
                 let r = set(false,i,v);
                 stack.push(Vs::V(r));
+                #[cfg(feature = "debug")]
                 dbg_stack_out("SETC",pos-1,&stack);
                 #[cfg(feature = "coz")]
                 coz::end!("SETC");
