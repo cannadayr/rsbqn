@@ -3,12 +3,11 @@ use core::f64::{INFINITY,NEG_INFINITY};
 use ebqn::init_log;
 use ebqn::ebqn::{run,call,runtime,prog};
 use ebqn::code::{r0,r1,c};
-use ebqn::schema::{new_string,new_char,V,Vs};
+use ebqn::schema::{new_string,new_char,V,Vs,Stack};
 use ebqn::prim::{provide,decompose,prim_ind};
 use ebqn::schema::Body;
 use ebqn::schema::new_scalar;
 use ebqn::schema::Code;
-use tinyvec::array_vec;
 
 #[cfg(feature = "dhat")]
 use dhat::{Dhat, DhatAlloc};
@@ -22,7 +21,7 @@ fn main() {
     #[cfg(feature = "dhat")]
     let _dhat = Dhat::start_heap_profiling();
 
-    let stack = array_vec!([Vs; 128]);
+    let stack = Stack::new();
 
     // each function one-at-a-time
     let runtime = runtime(&stack);

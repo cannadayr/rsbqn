@@ -1,4 +1,4 @@
-use crate::schema::{A,V,Vn,Vs,Decoder,D1,D2,Tr2,Tr3,Fn,R1,R2};
+use crate::schema::{A,V,Vn,Vs,Decoder,D1,D2,Tr2,Tr3,Fn,R1,R2,Stack};
 use crate::ebqn::{call};
 use bacon_rajan_cc::Cc;
 use std::cmp::max;
@@ -8,7 +8,6 @@ use std::ops::Deref;
 use std::char;
 use itertools::Itertools;
 use num_traits::{cast::FromPrimitive};
-use tinyvec::ArrayVec;
 
 fn dbg_args(fun: &str, arity: usize, x: &Vn, w: &Vn) {
     match arity {
@@ -392,7 +391,7 @@ fn windows(arity: usize, x: Vn, _w: Vn) -> Vs {
 
 }
 // ⌜
-fn table(stack1: &ArrayVec<[Vs;128]>,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
+fn table(stack1: &Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
     #[cfg(feature = "coz")]
     coz::scope!("table");
     match arity {
@@ -420,7 +419,7 @@ fn table(stack1: &ArrayVec<[Vs;128]>,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
     }
 }
 // `
-fn scan(stack1: &ArrayVec<[Vs;128]>,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
+fn scan(stack1: &Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
     #[cfg(feature = "coz")]
     coz::scope!("scan");
     match arity {
@@ -500,13 +499,13 @@ fn scan(stack1: &ArrayVec<[Vs;128]>,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
     }
 }
 // _fillBy_
-fn fill_by(stack1:&ArrayVec<[Vs;128]>,arity: usize, f: Vn, _g: Vn, x: Vn, w: Vn) -> Vs {
+fn fill_by(stack1:&Stack,arity: usize, f: Vn, _g: Vn, x: Vn, w: Vn) -> Vs {
     #[cfg(feature = "coz")]
     coz::scope!("fill_by");
     call(&stack1,arity,f,x,w)
 }
 // ⊘
-fn cases(stack1:&ArrayVec<[Vs;128]>,arity: usize, f: Vn, g: Vn, x: Vn, w: Vn) -> Vs {
+fn cases(stack1:&Stack,arity: usize, f: Vn, g: Vn, x: Vn, w: Vn) -> Vs {
     #[cfg(feature = "coz")]
     coz::scope!("cases");
     match arity {
@@ -516,7 +515,7 @@ fn cases(stack1:&ArrayVec<[Vs;128]>,arity: usize, f: Vn, g: Vn, x: Vn, w: Vn) ->
     }
 }
 // ⎊
-fn catches(_stack1:&ArrayVec<[Vs;128]>,_arity: usize, _f: Vn, _g: Vn, _x: Vn, _w: Vn) -> Vs {
+fn catches(_stack1:&Stack,_arity: usize, _f: Vn, _g: Vn, _x: Vn, _w: Vn) -> Vs {
     #[cfg(feature = "coz")]
     coz::scope!("catches");
     panic!("catches not implemented");

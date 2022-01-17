@@ -1,4 +1,4 @@
-use crate::schema::{Env,V,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Body,A,Ar,Tr2,Tr3,Runtime,Compiler,Prog,set,D2,D1,Fn,new_scalar,new_string};
+use crate::schema::{Env,V,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Stack,Body,A,Ar,Tr2,Tr3,Runtime,Compiler,Prog,set,D2,D1,Fn,new_scalar,new_string};
 use crate::prim::{provide,decompose,prim_ind};
 use crate::code::{r0,r1,c};
 use crate::fmt::{dbg_stack_out,dbg_stack_in};
@@ -10,9 +10,8 @@ use std::error::Error;
 use log::{debug, trace, error, log_enabled, info, Level};
 use itertools::Itertools;
 use num_traits::FromPrimitive;
-use tinyvec::ArrayVec;
 
-pub fn call(stack1: &ArrayVec<[Vs;128]>,arity: usize,a: Vn,x: Vn, w: Vn) -> Vs {
+pub fn call(stack1: &Stack,arity: usize,a: Vn,x: Vn, w: Vn) -> Vs {
     #[cfg(feature = "coz")]
     coz::scope!("call");
     match a {
@@ -20,7 +19,7 @@ pub fn call(stack1: &ArrayVec<[Vs;128]>,arity: usize,a: Vn,x: Vn, w: Vn) -> Vs {
         _ => panic!("unimplemented call"),
     }
 }
-fn call1(stack1: &ArrayVec<[Vs;128]>,m: V,f: V) -> Vs {
+fn call1(stack1: &Stack,m: V,f: V) -> Vs {
     #[cfg(feature = "coz")]
     coz::scope!("call1");
     match m {
@@ -32,7 +31,7 @@ fn call1(stack1: &ArrayVec<[Vs;128]>,m: V,f: V) -> Vs {
         _ => panic!("call1 with invalid type"),
     }
 }
-fn call2(stack1: &ArrayVec<[Vs;128]>,m: V,f: V,g: V) -> Vs {
+fn call2(stack1: &Stack,m: V,f: V,g: V) -> Vs {
     #[cfg(feature = "coz")]
     coz::scope!("call2");
     match m {
@@ -45,7 +44,7 @@ fn call2(stack1: &ArrayVec<[Vs;128]>,m: V,f: V,g: V) -> Vs {
     }
 }
 
-fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>,stack1: &ArrayVec<[Vs;128]>) -> Vs {
+fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>,stack1: &Stack) -> Vs {
     #[cfg(feature = "coz")]
     coz::scope!("derv");
     match (block.typ,block.imm) {
@@ -91,7 +90,7 @@ fn listr(l: Vec<Vs>) -> Vs {
     ).collect::<Vec<Vr>>();
     Vs::Ar(Ar::new(ravel))
 }
-pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>,stack1: &ArrayVec<[Vs;128]>) -> Vs {
+pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>,stack1: &Stack) -> Vs {
     debug!("new eval");
     loop {
         let op = code.bc[pos];pos+=1;
@@ -146,7 +145,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>,stack1: &A
                         rtn
                     },
                     _ => {
-                        panic!("stack overflow")
+                        panic!("non-unary stack frame on return")
                     }
                 };
             },
@@ -430,7 +429,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>,stack1: &A
     }
 }
 
-pub fn runtime(stack1: &ArrayVec<[Vs;128]>) -> V {
+pub fn runtime(stack1: &Stack) -> V {
     #[cfg(feature = "coz")]
     coz::scope!("runtime");
     let builtin = provide();
@@ -473,7 +472,7 @@ pub fn runtime(stack1: &ArrayVec<[Vs;128]>) -> V {
     }
 }
 
-pub fn prog(stack1: &ArrayVec<[Vs;128]>,compiler: &V,src: V,runtime: &V) -> Cc<Code> {
+pub fn prog(stack1: &Stack,compiler: &V,src: V,runtime: &V) -> Cc<Code> {
     #[cfg(feature = "coz")]
     coz::scope!("prog");
     let mut prog = call(&stack1,2,Some(compiler),Some(&src),Some(runtime)).into_v().unwrap().into_a().unwrap();
@@ -543,7 +542,7 @@ pub fn prog(stack1: &ArrayVec<[Vs;128]>,compiler: &V,src: V,runtime: &V) -> Cc<C
     }
 }
 
-pub fn run(stack1: &ArrayVec<[Vs;128]>,code: Cc<Code>) -> V {
+pub fn run(stack1: &Stack,code: Cc<Code>) -> V {
     #[cfg(feature = "coz")]
     coz::scope!("run");
     let root = Env::new(None,&code.blocks[0],0,None);
