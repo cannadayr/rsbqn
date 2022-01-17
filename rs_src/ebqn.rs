@@ -1,11 +1,9 @@
-use crate::schema::{Env,V,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Body,A,Ar,Tr2,Tr3,Runtime,Compiler,Prog,set,ok,D2,D1,Fn,new_scalar,new_string};
+use crate::schema::{Env,V,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Body,A,Ar,Tr2,Tr3,Runtime,Compiler,Prog,set,D2,D1,Fn,new_scalar,new_string};
 use crate::prim::{provide,decompose,prim_ind};
 use crate::code::{r0,r1,c};
 use crate::fmt::{dbg_stack_out,dbg_stack_in};
 use crate::init_log;
-use rustler::{Atom,NifResult};
-use rustler::resource::ResourceArc;
-use cc_mt::Cc;
+use bacon_rajan_cc::Cc;
 use std::ops::Deref;
 use std::error::Error;
 //use std::panic;
@@ -457,26 +455,4 @@ pub fn run(code: Cc<Code>) -> V {
             Body::Defer(_,_) => panic!("cant run deferred block"),
         };
     vm(&root,&code,pos,Vec::new()).into_v().unwrap()
-}
-
-//#[rustler::nif]
-//fn init_r() -> NifResult<(Atom,ResourceArc<Runtime>)> {
-//    Ok((ok(),ResourceArc::new(Runtime(runtime()))))
-//}
-#[rustler::nif]
-fn init_c(r: ResourceArc<Runtime>) -> NifResult<(Atom,ResourceArc<Compiler>)> {
-    let compiler = c(&r.0);
-    Ok((ok(),ResourceArc::new(Compiler(compiler.as_block_inst().unwrap().0.clone()))))
-}
-//#[rustler::nif]
-//fn compile(r: ResourceArc<Runtime>,c: ResourceArc<Compiler>,s: &str) -> NifResult<(Atom,ResourceArc<Prog>)> {
-//    info!("got src {:?}",&s);
-//    let src = new_string(s);
-//    let prog = prog(V::BlockInst(c.0.clone(),None),src,r.0.clone());
-//    Ok((ok(),ResourceArc::new(Prog(prog.clone()))))
-//}
-#[rustler::nif]
-fn callp(p: ResourceArc<Prog>,n: f64) -> NifResult<(Atom,V)> {
-    let result = call(1,Some(&run(p.0.clone())),Some(&V::Scalar(n)),None);
-    Ok((ok(),result.into_v().unwrap()))
 }

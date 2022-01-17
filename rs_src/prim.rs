@@ -1,6 +1,6 @@
 use crate::schema::{A,V,Vn,Vs,Decoder,D1,D2,Tr2,Tr3,Fn,R1,R2};
 use crate::ebqn::{call};
-use cc_mt::Cc;
+use bacon_rajan_cc::Cc;
 use std::cmp::max;
 use log::{debug, trace, error, log_enabled, info, Level};
 use std::iter::FromIterator;

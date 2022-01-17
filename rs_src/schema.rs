@@ -1,14 +1,11 @@
 use std::ops::Deref;
 use std::sync::Mutex;
-use cc_mt::Cc;
-use rustler::{Encoder};
+use bacon_rajan_cc::Cc;
 use crate::ebqn::vm;
 use crate::late_init::LateInit;
 //use log::{debug, trace, error, log_enabled, info, Level};
 use enum_as_inner::EnumAsInner;
 use num_traits::{cast::FromPrimitive};
-
-rustler::atoms!{ok}
 
 // Traits
 pub trait Calleable {
@@ -67,26 +64,6 @@ impl V {
             V::Tr2(_tr2,_prim) => true,
             V::Tr3(_tr3,_prim) => true,
             _ => false,
-        }
-    }
-}
-impl Encoder for V {
-    fn encode<'a>(&self, env: rustler::Env<'a>) -> rustler::Term<'a> {
-        match self {
-            V::Scalar(n) => n.encode(env),
-            V::Char(_c) => panic!("can't encode char to BEAM"),
-            V::BlockInst(_b,_prim) => panic!("can't encode blockinst to BEAM"),
-            V::UserMd1(_b,_a,_prim) => panic!("can't encode UserMd1 to BEAM"),
-            V::UserMd2(_b,_a,_prim) => panic!("can't encode UserMd2 to BEAM"),
-            V::Nothing => panic!("can't encode nothing to BEAM"),
-            V::A(_a) => panic!("can't encode array to BEAM"),
-            V::Fn(_a,_prim) => panic!("can't encode fn to BEAM"),
-            V::R1(_f,_prim) => panic!("can't encode r1 to BEAM"),
-            V::R2(_f,_prim) => panic!("can't encode r2 to BEAM"),
-            V::D1(_d1,_prim) => panic!("can't encode d1 to BEAM"),
-            V::D2(_d2,_prim) => panic!("can't encode d2 to BEAM"),
-            V::Tr2(_tr2,_prim) => panic!("can't encode train2 to BEAM"),
-            V::Tr3(_tr3,_prim) => panic!("can't encode train3 to BEAM"),
         }
     }
 }
