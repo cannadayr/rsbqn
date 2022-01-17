@@ -8,6 +8,8 @@ use ebqn::prim::{provide,decompose,prim_ind};
 use ebqn::schema::Body;
 use ebqn::schema::new_scalar;
 use ebqn::schema::Code;
+use tinyvec::array_vec;
+
 #[cfg(feature = "dhat")]
 use dhat::{Dhat, DhatAlloc};
 
@@ -20,9 +22,7 @@ fn main() {
     #[cfg(feature = "dhat")]
     let _dhat = Dhat::start_heap_profiling();
 
-    const SIZE: usize = 128;
-    const INIT: Vs = Vs::Nothing;
-    let stack: [Vs; SIZE] = [INIT; SIZE];
+    let stack = array_vec!([Vs; 128]);
 
     // each function one-at-a-time
     let runtime = runtime(&stack);

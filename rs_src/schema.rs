@@ -6,10 +6,11 @@ use crate::late_init::LateInit;
 //use log::{debug, trace, error, log_enabled, info, Level};
 use enum_as_inner::EnumAsInner;
 use num_traits::{cast::FromPrimitive};
+use tinyvec::ArrayVec;
 
 // Traits
 pub trait Calleable {
-    fn call(&self,stack1:&[Vs; 128],arity:usize,x: Vn,w: Vn) -> Vs;
+    fn call(&self,stack1:&ArrayVec<[Vs;128]>,arity:usize,x: Vn,w: Vn) -> Vs;
 }
 pub trait Decoder {
     fn to_f64(&self) -> f64;
@@ -23,14 +24,14 @@ impl PartialEq for Fn {
     }
 }
 #[derive(Clone)]
-pub struct R1(pub fn(&[Vs;128],usize,Vn,Vn,Vn) -> Vs);
+pub struct R1(pub fn(&ArrayVec<[Vs;128]>,usize,Vn,Vn,Vn) -> Vs);
 impl PartialEq for R1 {
     fn eq(&self, other: &Self) -> bool {
         self.0 as usize == other.0 as usize
     }
 }
 #[derive(Clone)]
-pub struct R2(pub fn(&[Vs;128],usize,Vn,Vn,Vn,Vn) -> Vs);
+pub struct R2(pub fn(&ArrayVec<[Vs;128]>,usize,Vn,Vn,Vn,Vn) -> Vs);
 impl PartialEq for R2 {
     fn eq(&self, other: &Self) -> bool {
         self.0 as usize == other.0 as usize
@@ -98,7 +99,7 @@ impl Decoder for V {
     }
 }
 impl Calleable for V {
-    fn call(&self,stack1:&[Vs;128],arity:usize,x: Vn,w: Vn) -> Vs {
+    fn call(&self,stack1:&ArrayVec<[Vs;128]>,arity:usize,x: Vn,w: Vn) -> Vs {
         match self.deref() {
             V::UserMd1(b,mods,_prim) => {
                 #[cfg(feature = "coz")]
@@ -215,6 +216,11 @@ impl Vs {
             },
             _ => panic!("can only resolve slots or ref arrays"),
         }
+    }
+}
+impl Default for Vs {
+    fn default() -> Self {
+        Vs::Nothing
     }
 }
 
@@ -374,7 +380,7 @@ impl BlockInst {
     pub fn new(env: Env,block: Cc<Block>) -> Self {
         Self {def: block, parent: env }
     }
-    pub fn call_md1(&self,stack1: &[Vs;128],arity:usize,args: D1) -> Vs {
+    pub fn call_md1(&self,stack1:&ArrayVec<[Vs;128]>,arity:usize,args: D1) -> Vs {
         match self.def.imm {
             false => {
                 #[cfg(feature = "coz")]
@@ -402,7 +408,7 @@ impl BlockInst {
             },
         }
     }
-    pub fn call_md2(&self,stack1:&[Vs;128],arity:usize,args: D2) -> Vs {
+    pub fn call_md2(&self,stack1:&ArrayVec<[Vs;128]>,arity:usize,args: D2) -> Vs {
         match self.def.imm {
             false => {
                 #[cfg(feature = "coz")]
