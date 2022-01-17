@@ -24,3 +24,4 @@ tests/*
 etests/*
 rs_src/code.rs
 profile.coz
+dhat-heap.json

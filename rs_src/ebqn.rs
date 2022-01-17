@@ -12,6 +12,7 @@ use itertools::Itertools;
 use num_traits::FromPrimitive;
 
 pub fn call(arity: usize,a: Vn,x: Vn, w: Vn) -> Vs {
+    #[cfg(feature = "coz")]
     coz::scope!("call");
     match a {
         Some(v) => v.call(arity,x,w),
@@ -19,6 +20,7 @@ pub fn call(arity: usize,a: Vn,x: Vn, w: Vn) -> Vs {
     }
 }
 fn call1(m: V,f: V) -> Vs {
+    #[cfg(feature = "coz")]
     coz::scope!("call1");
     match m {
         V::BlockInst(ref bl,_prim) => {
@@ -30,6 +32,7 @@ fn call1(m: V,f: V) -> Vs {
     }
 }
 fn call2(m: V,f: V,g: V) -> Vs {
+    #[cfg(feature = "coz")]
     coz::scope!("call2");
     match m {
         V::BlockInst(ref bl,_prim) => {
@@ -42,6 +45,7 @@ fn call2(m: V,f: V,g: V) -> Vs {
 }
 
 fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>) -> Vs {
+    #[cfg(feature = "coz")]
     coz::scope!("derv");
     match (block.typ,block.imm) {
         (0,true) => {
@@ -64,6 +68,7 @@ fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>) -> Vs {
 }
 
 fn list(l: Vec<Vs>) -> Vs {
+    #[cfg(feature = "coz")]
     coz::scope!("list");
     let shape = vec![l.len() as usize];
     let ravel = l.into_iter().map(|e|
@@ -75,6 +80,7 @@ fn list(l: Vec<Vs>) -> Vs {
     Vs::V(V::A(Cc::new(A::new(ravel,shape))))
 }
 fn listr(l: Vec<Vs>) -> Vs {
+    #[cfg(feature = "coz")]
     coz::scope!("listr");
     let ravel = l.into_iter().map(|e|
         match e {
@@ -90,36 +96,44 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
         let op = code.bc[pos];pos+=1;
         match op {
             0 => { // PUSH
+                #[cfg(feature = "coz")]
                 coz::begin!("PUSH");
                 let x = code.bc[pos];pos+=1;
                 let r = code.objs[x].clone();
                 dbg_stack_in("PUSH",pos-2,format!("{} {}",&x,&r),&stack);
                 stack.push(Vs::V(r));
                 dbg_stack_out("PUSH",pos-2,&stack);
+                #[cfg(feature = "coz")]
                 coz::end!("PUSH");
             },
             1 => { // DFND
+                #[cfg(feature = "coz")]
                 coz::begin!("DFND");
                 let x = code.bc[pos];pos+=1;
                 let r = derv(env.clone(),&code,&code.blocks[x]);
                 dbg_stack_in("DFND",pos-2,format!("{} {}",&x,&r),&stack);
                 stack.push(r);
                 dbg_stack_out("DFND",pos-2,&stack);
+                #[cfg(feature = "coz")]
                 coz::end!("DFND");
             },
             6 => { // POPS
+                #[cfg(feature = "coz")]
                 coz::begin!("POPS");
                 dbg_stack_in("POPS",pos-1,"".to_string(),&stack);
                 let _ = stack.pop();
                 dbg_stack_out("POPS",pos-1,&stack);
+                #[cfg(feature = "coz")]
                 coz::end!("POPS");
             },
             7 => { // RETN
                 break match stack.len() {
                     1 => {
+                        #[cfg(feature = "coz")]
                         coz::begin!("RETN");
                         dbg_stack_in("RETN",pos-1,"".to_string(),&stack);
                         let rtn = stack.pop().unwrap();
+                        #[cfg(feature = "coz")]
                         coz::end!("RETN");
                         rtn
                     },
@@ -129,6 +143,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 };
             },
             11 => { // ARRO
+                #[cfg(feature = "coz")]
                 coz::begin!("ARRO");
                 let x = code.bc[pos];pos+=1;
                 dbg_stack_in("ARRO",pos-2,format!("{}",&x),&stack);
@@ -136,9 +151,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let tl = stack.split_off(hd);
                 stack.push(list(tl));
                 dbg_stack_out("ARRO",pos-2,&stack);
+                #[cfg(feature = "coz")]
                 coz::end!("ARRO");
             },
             12 => { // ARRM
+                #[cfg(feature = "coz")]
                 coz::begin!("ARRM");
                 let x = code.bc[pos];pos+=1;
                 let hd = stack.len() - x;
@@ -146,9 +163,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 dbg_stack_in("ARRM",pos-2,format!("{}",&x),&stack);
                 stack.push(listr(tl));
                 dbg_stack_out("ARRM",pos-2,&stack);
+                #[cfg(feature = "coz")]
                 coz::end!("ARRM");
             },
             16 => { // FN1C
+                #[cfg(feature = "coz")]
                 coz::begin!("FN1C");
                 dbg_stack_in("FN1C",pos-1,"".to_string(),&stack);
                 let f = stack.pop().unwrap();
@@ -156,9 +175,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let r = call(1,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),None);
                 stack.push(r);
                 dbg_stack_out("FN1C",pos-1,&stack);
+                #[cfg(feature = "coz")]
                 coz::end!("FN1C");
             },
             18 => { // FN1O
+                #[cfg(feature = "coz")]
                 coz::begin!("FN1O");
                 dbg_stack_in("FN1O",pos-1,"".to_string(),&stack);
                 let f = stack.pop().unwrap();
@@ -170,9 +191,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                     };
                 stack.push(r);
                 dbg_stack_out("FN1O",pos-1,&stack);
+                #[cfg(feature = "coz")]
                 coz::end!("FN1O");
             },
             17 => { // FN2C
+                #[cfg(feature = "coz")]
                 coz::begin!("FN2C");
                 dbg_stack_in("FN2C",pos-1,"".to_string(),&stack);
                 let w = stack.pop().unwrap();
@@ -181,9 +204,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let r = call(2,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),Some(&w.into_v().unwrap()));
                 stack.push(r);
                 dbg_stack_out("FN2C",pos-1,&stack);
+                #[cfg(feature = "coz")]
                 coz::end!("FN2C");
             },
             19 => { // FN2O
+                #[cfg(feature = "coz")]
                 coz::begin!("FN2O");
                 dbg_stack_in("FN2O",pos-1,"".to_string(),&stack);
                 let w = stack.pop().unwrap();
@@ -197,9 +222,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                     };
                 stack.push(r);
                 dbg_stack_out("FN2O",pos-1,&stack);
+                #[cfg(feature = "coz")]
                 coz::end!("FN2O");
             },
             20 => { // TR2D
+                #[cfg(feature = "coz")]
                 coz::begin!("TR2D");
                 let g = stack.pop().unwrap();
                 let h = stack.pop().unwrap();
@@ -207,9 +234,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let t = Vs::V(V::Tr2(Cc::new(Tr2::new(g,h)),None));
                 stack.push(t);
                 dbg_stack_out("TR2D",pos-1,&stack);
+                #[cfg(feature = "coz")]
                 coz::end!("TR2D");
             },
             21 => { // TR3D
+                #[cfg(feature = "coz")]
                 coz::begin!("TR3D");
                 dbg_stack_in("TR3D",pos-1,"".to_string(),&stack);
                 let f = stack.pop().unwrap();
@@ -218,9 +247,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let t = Vs::V(V::Tr3(Cc::new(Tr3::new(f,g,h)),None));
                 stack.push(t);
                 dbg_stack_out("TR3D",pos-1,&stack);
+                #[cfg(feature = "coz")]
                 coz::end!("TR3D");
             },
             23 => { // TR3O
+                #[cfg(feature = "coz")]
                 coz::begin!("TR3O");
                 dbg_stack_in("TR3O",pos-1,"".to_string(),&stack);
                 let f = stack.pop().unwrap();
@@ -233,9 +264,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                     };
                 stack.push(t);
                 dbg_stack_out("TR3O",pos-1,&stack);
+                #[cfg(feature = "coz")]
                 coz::end!("TR3O");
             },
             26 => { // MD1C
+                #[cfg(feature = "coz")]
                 coz::begin!("MD1C");
                 dbg_stack_in("MD1C",pos-1,"".to_string(),&stack);
                 let f = stack.pop().unwrap();
@@ -243,9 +276,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let r = call1(m.into_v().unwrap(),f.into_v().unwrap());
                 stack.push(r);
                 dbg_stack_out("MD1C",pos-1,&stack);
+                #[cfg(feature = "coz")]
                 coz::end!("MD1C");
             },
             27 => { // MD2C
+                #[cfg(feature = "coz")]
                 coz::begin!("MD2C");
                 dbg_stack_in("MD2C",pos-1,"".to_string(),&stack);
                 let f = stack.pop().unwrap();
@@ -254,9 +289,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let r = call2(m.into_v().unwrap(),f.into_v().unwrap(),g.into_v().unwrap());
                 stack.push(r);
                 dbg_stack_out("MD2C",pos-1,&stack);
+                #[cfg(feature = "coz")]
                 coz::end!("MD2C");
             },
             32 => { // VARO
+                #[cfg(feature = "coz")]
                 coz::begin!("VARO");
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
@@ -264,9 +301,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 dbg_stack_in("VARO",pos-3,format!("{} {}",&x,&w),&stack);
                 stack.push(Vs::V(t.get(w).clone()));
                 dbg_stack_out("VARO",pos-3,&stack);
+                #[cfg(feature = "coz")]
                 coz::end!("VARO");
             },
             34 => { // VARU
+                #[cfg(feature = "coz")]
                 coz::begin!("VARU");
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
@@ -274,9 +313,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 dbg_stack_in("VARU",pos-3,format!("{} {}",&x,&w),&stack);
                 stack.push(Vs::V(t.get_drop(w).clone()));
                 dbg_stack_out("VARU",pos-3,&stack);
+                #[cfg(feature = "coz")]
                 coz::end!("VARU");
             },
             33 => { // VARM
+                #[cfg(feature = "coz")]
                 coz::begin!("VARM");
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
@@ -284,9 +325,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 dbg_stack_in("VARM",pos-3,format!("{} {}",&x,&w),&stack);
                 stack.push(Vs::Slot(t.clone(),w));
                 dbg_stack_out("VARM",pos-3,&stack);
+                #[cfg(feature = "coz")]
                 coz::end!("VARM");
             },
             48 => { // SETN
+                #[cfg(feature = "coz")]
                 coz::begin!("SETN");
                 dbg_stack_in("SETN",pos-1,"".to_string(),&stack);
                 let i = stack.pop().unwrap();
@@ -294,9 +337,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let r = set(true,i,v);
                 stack.push(Vs::V(r));
                 dbg_stack_out("SETN",pos-1,&stack);
+                #[cfg(feature = "coz")]
                 coz::end!("SETN");
             },
             49 => { // SETU
+                #[cfg(feature = "coz")]
                 coz::begin!("SETU");
                 dbg_stack_in("SETU",pos-1,"".to_string(),&stack);
                 let i = stack.pop().unwrap();
@@ -304,9 +349,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let r = set(false,i,v);
                 stack.push(Vs::V(r));
                 dbg_stack_out("SETU",pos-1,&stack);
+                #[cfg(feature = "coz")]
                 coz::end!("SETU");
             },
             50 => { // SETM
+                #[cfg(feature = "coz")]
                 coz::begin!("SETM");
                 dbg_stack_in("SETM",pos-1,"".to_string(),&stack);
                 let i = stack.pop().unwrap();
@@ -316,9 +363,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let r = set(false,i,v);
                 stack.push(Vs::V(r));
                 dbg_stack_out("SETM",pos-1,&stack);
+                #[cfg(feature = "coz")]
                 coz::end!("SETM");
             },
             51 => { // SETC
+                #[cfg(feature = "coz")]
                 coz::begin!("SETC");
                 dbg_stack_in("SETC",pos-1,"".to_string(),&stack);
                 let i = stack.pop().unwrap();
@@ -327,6 +376,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let r = set(false,i,v);
                 stack.push(Vs::V(r));
                 dbg_stack_out("SETC",pos-1,&stack);
+                #[cfg(feature = "coz")]
                 coz::end!("SETC");
             },
             _ => {
@@ -337,6 +387,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
 }
 
 pub fn runtime() -> V {
+    #[cfg(feature = "coz")]
     coz::scope!("runtime");
     let builtin = provide();
     let runtime0 = r0(&builtin);
@@ -378,6 +429,7 @@ pub fn runtime() -> V {
 }
 
 pub fn prog(compiler: &V,src: V,runtime: &V) -> Cc<Code> {
+    #[cfg(feature = "coz")]
     coz::scope!("prog");
     let mut prog = call(2,Some(compiler),Some(&src),Some(runtime)).into_v().unwrap().into_a().unwrap();
     info!("prog count = {}",prog.strong_count());
@@ -447,6 +499,7 @@ pub fn prog(compiler: &V,src: V,runtime: &V) -> Cc<Code> {
 }
 
 pub fn run(code: Cc<Code>) -> V {
+    #[cfg(feature = "coz")]
     coz::scope!("run");
     let root = Env::new(None,&code.blocks[0],0,None);
     let (pos,_locals) =
