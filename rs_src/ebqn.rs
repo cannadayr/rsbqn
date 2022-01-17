@@ -429,11 +429,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
     }
 }
 
-pub fn runtime() -> V {
+pub fn runtime(stack1: &[Vs; 128]) -> V {
     #[cfg(feature = "coz")]
     coz::scope!("runtime");
     let builtin = provide();
-    let runtime0 = r0(&builtin);
+    let runtime0 = run(r0(&builtin));
     info!("runtime0 loaded");
     match r1(&builtin,&runtime0).into_a().unwrap().get_mut() {
         Some(full_runtime) => {

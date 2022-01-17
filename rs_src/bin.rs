@@ -25,7 +25,7 @@ fn main() {
     let stack: [Vs; SIZE] = [INIT; SIZE];
 
     // each function one-at-a-time
-    let runtime = runtime();
+    let runtime = runtime(&stack);
     let compiler = c(&runtime);
     let src = new_string("{×´1+↕𝕩}");
     let prog = prog(&compiler,src,&runtime);
