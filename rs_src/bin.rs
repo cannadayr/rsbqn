@@ -28,9 +28,9 @@ fn main() {
     let runtime = runtime(&stack);
     let compiler = run(&stack,c(&runtime));
     let src = new_string("{×´1+↕𝕩}");
-    let prog = prog(&compiler,src,&runtime);
+    let prog = prog(&stack,&compiler,src,&runtime);
     let exec = run(&stack,prog);
-    let result = call(1,Some(&exec),Some(&V::Scalar(10.0)),None);
+    let result = call(&stack,1,Some(&exec),Some(&V::Scalar(10.0)),None);
     println!("{}",result);
 
     // single line variations for copy-pasting

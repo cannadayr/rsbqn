@@ -11,40 +11,40 @@ use log::{debug, trace, error, log_enabled, info, Level};
 use itertools::Itertools;
 use num_traits::FromPrimitive;
 
-pub fn call(arity: usize,a: Vn,x: Vn, w: Vn) -> Vs {
+pub fn call(stack1: &[Vs;128],arity: usize,a: Vn,x: Vn, w: Vn) -> Vs {
     #[cfg(feature = "coz")]
     coz::scope!("call");
     match a {
-        Some(v) => v.call(arity,x,w),
+        Some(v) => v.call(&stack1,arity,x,w),
         _ => panic!("unimplemented call"),
     }
 }
-fn call1(m: V,f: V) -> Vs {
+fn call1(stack1: &[Vs;128],m: V,f: V) -> Vs {
     #[cfg(feature = "coz")]
     coz::scope!("call1");
     match m {
         V::BlockInst(ref bl,_prim) => {
             assert_eq!(1,bl.def.typ);
-            bl.call_md1(1,D1::new(m.clone(),f))
+            bl.call_md1(&stack1,1,D1::new(m.clone(),f))
         },
         V::R1(_,_prim) => Vs::V(V::D1(Cc::new(D1::new(m,f)),None)),
         _ => panic!("call1 with invalid type"),
     }
 }
-fn call2(m: V,f: V,g: V) -> Vs {
+fn call2(stack1: &[Vs;128],m: V,f: V,g: V) -> Vs {
     #[cfg(feature = "coz")]
     coz::scope!("call2");
     match m {
         V::BlockInst(ref bl,_prim) => {
             assert_eq!(2,bl.def.typ);
-            bl.call_md2(2,D2::new(m.clone(),f,g))
+            bl.call_md2(&stack1,2,D2::new(m.clone(),f,g))
         },
         V::R2(_,_prim) => Vs::V(V::D2(Cc::new(D2::new(m,f,g)),None)),
         _ => panic!("call2 with invalid type"),
     }
 }
 
-fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>) -> Vs {
+fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>,stack1: &[Vs;128]) -> Vs {
     #[cfg(feature = "coz")]
     coz::scope!("derv");
     match (block.typ,block.imm) {
@@ -57,7 +57,7 @@ fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>) -> Vs {
                 },
                 _ => panic!("body immediacy derivation doesnt match block definition"),
             };
-            vm(&child,code,pos,Vec::new())
+            vm(&child,code,pos,Vec::new(),&stack1)
         },
         (_typ,_imm) => {
             let block_inst = BlockInst::new(env.clone(),block.clone());
@@ -90,7 +90,7 @@ fn listr(l: Vec<Vs>) -> Vs {
     ).collect::<Vec<Vr>>();
     Vs::Ar(Ar::new(ravel))
 }
-pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
+pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>,stack1: &[Vs;128]) -> Vs {
     debug!("new eval");
     loop {
         let op = code.bc[pos];pos+=1;
@@ -112,7 +112,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 #[cfg(feature = "coz")]
                 coz::begin!("DFND");
                 let x = code.bc[pos];pos+=1;
-                let r = derv(env.clone(),&code,&code.blocks[x]);
+                let r = derv(env.clone(),&code,&code.blocks[x],&stack1);
                 #[cfg(feature = "debug")]
                 dbg_stack_in("DFND",pos-2,format!("{} {}",&x,&r),&stack);
                 stack.push(r);
@@ -184,7 +184,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 dbg_stack_in("FN1C",pos-1,"".to_string(),&stack);
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
-                let r = call(1,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),None);
+                let r = call(&stack1,1,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),None);
                 stack.push(r);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("FN1C",pos-1,&stack);
@@ -201,7 +201,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let r =
                     match &x.as_v().unwrap() {
                         V::Nothing => x,
-                        _ => call(1,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),None),
+                        _ => call(&stack1,1,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),None),
                     };
                 stack.push(r);
                 #[cfg(feature = "debug")]
@@ -217,7 +217,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let w = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
-                let r = call(2,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),Some(&w.into_v().unwrap()));
+                let r = call(&stack1,2,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),Some(&w.into_v().unwrap()));
                 stack.push(r);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("FN2C",pos-1,&stack);
@@ -235,8 +235,8 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let r =
                     match (&x.as_v().unwrap(),&w.as_v().unwrap()) {
                         (V::Nothing,_) => x,
-                        (_,V::Nothing) => call(1,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),None),
-                        _ => call(2,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),Some(&w.into_v().unwrap()))
+                        (_,V::Nothing) => call(&stack1,1,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),None),
+                        _ => call(&stack1,2,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),Some(&w.into_v().unwrap()))
                     };
                 stack.push(r);
                 #[cfg(feature = "debug")]
@@ -299,7 +299,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 dbg_stack_in("MD1C",pos-1,"".to_string(),&stack);
                 let f = stack.pop().unwrap();
                 let m = stack.pop().unwrap();
-                let r = call1(m.into_v().unwrap(),f.into_v().unwrap());
+                let r = call1(&stack1,m.into_v().unwrap(),f.into_v().unwrap());
                 stack.push(r);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("MD1C",pos-1,&stack);
@@ -314,7 +314,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let f = stack.pop().unwrap();
                 let m = stack.pop().unwrap();
                 let g = stack.pop().unwrap();
-                let r = call2(m.into_v().unwrap(),f.into_v().unwrap(),g.into_v().unwrap());
+                let r = call2(&stack1,m.into_v().unwrap(),f.into_v().unwrap(),g.into_v().unwrap());
                 stack.push(r);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("MD2C",pos-1,&stack);
@@ -399,7 +399,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 let i = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
                 let x = stack.pop().unwrap();
-                let v = call(2,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),Some(&i.get()));
+                let v = call(&stack1,2,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),Some(&i.get()));
                 let r = set(false,i,v);
                 stack.push(Vs::V(r));
                 #[cfg(feature = "debug")]
@@ -414,7 +414,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: Vec<Vs>) -> Vs {
                 dbg_stack_in("SETC",pos-1,"".to_string(),&stack);
                 let i = stack.pop().unwrap();
                 let f = stack.pop().unwrap();
-                let v = call(1,Some(&f.into_v().unwrap()),Some(&i.get()),None);
+                let v = call(&stack1,1,Some(&f.into_v().unwrap()),Some(&i.get()),None);
                 let r = set(false,i,v);
                 stack.push(Vs::V(r));
                 #[cfg(feature = "debug")]
@@ -465,17 +465,17 @@ pub fn runtime(stack1: &[Vs; 128]) -> V {
             }
             info!("runtime loaded");
             let prim_fns = V::A(Cc::new(A::new(vec![V::Fn(Fn(decompose),None),V::Fn(Fn(prim_ind),None)],vec![2])));
-            let _ = call(1,Some(&set_prims),Some(&prim_fns),None);
+            let _ = call(&stack1,1,Some(&set_prims),Some(&prim_fns),None);
             V::A(prims)
         },
         None => panic!("cant get mutable runtime"),
     }
 }
 
-pub fn prog(compiler: &V,src: V,runtime: &V) -> Cc<Code> {
+pub fn prog(stack1: &[Vs;128],compiler: &V,src: V,runtime: &V) -> Cc<Code> {
     #[cfg(feature = "coz")]
     coz::scope!("prog");
-    let mut prog = call(2,Some(compiler),Some(&src),Some(runtime)).into_v().unwrap().into_a().unwrap();
+    let mut prog = call(&stack1,2,Some(compiler),Some(&src),Some(runtime)).into_v().unwrap().into_a().unwrap();
     info!("prog count = {}",prog.strong_count());
     match prog.get_mut() {
         Some(p) => {
@@ -551,5 +551,5 @@ pub fn run(stack1: &[Vs; 128],code: Cc<Code>) -> V {
             Body::Imm(b) => code.bodies[b],
             Body::Defer(_,_) => panic!("cant run deferred block"),
         };
-    vm(&root,&code,pos,Vec::new()).into_v().unwrap()
+    vm(&root,&code,pos,Vec::new(),&stack1).into_v().unwrap()
 }
