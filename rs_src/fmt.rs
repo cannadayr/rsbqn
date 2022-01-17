@@ -43,7 +43,8 @@ impl Display for Vs {
         match self {
             Vs::V(v) => write!(f,"{}",v),
             Vs::Slot(_env,_size) => write!(f,"Slot"),
-            Vs::Ar(_ar) => write!(f,"ArrayRef")
+            Vs::Ar(_ar) => write!(f,"ArrayRef"),
+            Vs::Nothing => panic!("can't fmt nothing"),
         }
     }
 }

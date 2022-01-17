@@ -199,7 +199,8 @@ pub type Vn<'a> = Option<&'a V>;
 pub enum Vs {
     V(V),
     Slot(Env,usize),
-    Ar(Ar)
+    Ar(Ar),
+    Nothing
 }
 impl Vs {
     pub fn get(&self) -> V {
