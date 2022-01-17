@@ -433,9 +433,10 @@ pub fn runtime(stack1: &[Vs; 128]) -> V {
     #[cfg(feature = "coz")]
     coz::scope!("runtime");
     let builtin = provide();
-    let runtime0 = run(r0(&builtin));
+    let runtime0 = run(&stack1,r0(&builtin));
+    let runtime1 = run(&stack1,r1(&builtin,&runtime0));
     info!("runtime0 loaded");
-    match r1(&builtin,&runtime0).into_a().unwrap().get_mut() {
+    match runtime1.into_a().unwrap().get_mut() {
         Some(full_runtime) => {
             let _set_inv = full_runtime.r.pop().unwrap();
             let set_prims = full_runtime.r.pop().unwrap();
@@ -541,7 +542,7 @@ pub fn prog(compiler: &V,src: V,runtime: &V) -> Cc<Code> {
     }
 }
 
-pub fn run(code: Cc<Code>) -> V {
+pub fn run(stack1: &[Vs; 128],code: Cc<Code>) -> V {
     #[cfg(feature = "coz")]
     coz::scope!("run");
     let root = Env::new(None,&code.blocks[0],0,None);

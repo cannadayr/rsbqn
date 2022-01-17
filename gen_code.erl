@@ -48,8 +48,8 @@ main([Repo]) ->
         <<"use crate::schema::{Code,new_scalar,new_char,new_string,Body,A,Decoder,V};\n">>,
         <<"use bacon_rajan_cc::Cc;\n">>,
         <<"pub fn r0(provide: &A) -> Cc<Code> {\nCode::new(">>,utf8(R0),<<")\n}\n\n">>,
-        <<"pub fn r1(provide: &A,runtime_0v: &V) -> V {let runtime_0 = runtime_0v.as_a().unwrap();\nrun(Code::new(">>,utf8(R1),<<"))\n}\n\n">>,
-        <<"pub fn c(runtimev: &V) -> V {\nlet runtime = runtimev.as_a().unwrap();run(Code::new(">>,utf8(C),<<"))\n}\n\n">>
+        <<"pub fn r1(provide: &A,runtime_0v: &V) -> Cc<Code> {let runtime_0 = runtime_0v.as_a().unwrap();\nCode::new(">>,utf8(R1),<<")\n}\n\n">>,
+        <<"pub fn c(runtimev: &V) -> Cc<Code> {\nlet runtime = runtimev.as_a().unwrap();Code::new(">>,utf8(C),<<")\n}\n\n">>
         %<<"pub fn c(runtime: &V) -> V {\nrun(Code::new(">>,utf8(F),<<"))\n}\n\n">>
     ]));
 main(_Args) ->

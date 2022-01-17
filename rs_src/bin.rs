@@ -26,10 +26,10 @@ fn main() {
 
     // each function one-at-a-time
     let runtime = runtime(&stack);
-    let compiler = c(&runtime);
+    let compiler = run(&stack,c(&runtime));
     let src = new_string("{×´1+↕𝕩}");
     let prog = prog(&compiler,src,&runtime);
-    let exec = run(prog);
+    let exec = run(&stack,prog);
     let result = call(1,Some(&exec),Some(&V::Scalar(10.0)),None);
     println!("{}",result);
 
