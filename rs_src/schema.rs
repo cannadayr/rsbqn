@@ -104,7 +104,7 @@ impl Calleable for V {
                 #[cfg(feature = "coz")]
                 coz::begin!("call::UserMd1");
                 let D1(m,f) = mods.deref();
-                let args = vec![Vh::V(self.clone()),none_or_clone(&x),none_or_clone(&w),Vh::V(m.clone()),Vh::V(f.clone())];
+                let args = vec![Some(self.clone()),none_or_clone(&x),none_or_clone(&w),Some(m.clone()),Some(f.clone())];
                 let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args));
                 let pos = body_pos(b,arity);
                 #[cfg(feature = "coz")]
@@ -115,7 +115,7 @@ impl Calleable for V {
                 #[cfg(feature = "coz")]
                 coz::begin!("call::UserMd2");
                 let D2(m,f,g) = mods.deref();
-                let args = vec![Vh::V(self.clone()),none_or_clone(&x),none_or_clone(&w),Vh::V(m.clone()),Vh::V(f.clone()),Vh::V(g.clone())];
+                let args = vec![Some(self.clone()),none_or_clone(&x),none_or_clone(&w),Some(m.clone()),Some(f.clone()),Some(g.clone())];
                 let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args));
                 let pos = body_pos(b,arity);
                 #[cfg(feature = "coz")]
@@ -125,7 +125,7 @@ impl Calleable for V {
             V::BlockInst(b,_prim) => {
                 #[cfg(feature = "coz")]
                 coz::begin!("call::BlockInst");
-                let args = vec![Vh::V(self.clone()),none_or_clone(&x),none_or_clone(&w)];
+                let args = vec![Some(self.clone()),none_or_clone(&x),none_or_clone(&w)];
                 let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args));
                 let pos = body_pos(b,arity);
                 #[cfg(feature = "coz")]
@@ -218,11 +218,7 @@ impl Vs {
 }
 
 // Value (boxed on the heap)
-#[derive(Debug)]
-pub enum Vh {
-    Undefined,
-    V(V),
-}
+pub type Vh = Option<V>;
 
 // value reference
 #[derive(Debug,Clone)]
@@ -298,11 +294,11 @@ impl Env {
             match args {
                 None => {
                     let mut v: Vec<Vh> = Vec::with_capacity(locals);
-                    v.resize_with(locals, || Vh::Undefined);
+                    v.resize_with(locals, || None);
                     v
                 },
                 Some(mut v) => {
-                    v.resize_with(locals, || Vh::Undefined);
+                    v.resize_with(locals, || None);
                     v
                 },
             };
@@ -315,10 +311,9 @@ impl Env {
         match self {
             Env(e) => {
                 let guard = e.vars.lock().unwrap();
-                let vh = &guard[id];
-                match vh {
-                    Vh::V(v) => v.clone(),
-                    Vh::Undefined => panic!("heap slot is undefined"),
+                match &guard[id] {
+                    Some(v) => v.clone(),
+                    None => panic!("heap slot is undefined"),
                 }
             },
         }
@@ -329,12 +324,11 @@ impl Env {
         match self {
             Env(e) => {
                 let mut guard = e.vars.lock().unwrap();
-                let vh = &guard[id];
-                assert_eq!(d,match vh {
-                    Vh::Undefined => true,
-                    _ => false,
+                assert_eq!(d,match &guard[id] {
+                    None => true,
+                    Some(_) => false,
                 });
-                guard[id] = Vh::V(v.clone());
+                guard[id] = Some(v.clone());
             },
         }
     }
@@ -344,13 +338,12 @@ impl Env {
         match self {
             Env(e) => {
                 let mut guard = e.vars.lock().unwrap();
-                let vh = &guard[id];
                 let r =
-                    match vh {
-                        Vh::V(v) => v.clone(),
-                        Vh::Undefined => panic!("heap slot is undefined"),
+                    match &guard[id] {
+                        Some(v) => v.clone(),
+                        None => panic!("heap slot is undefined"),
                     };
-                guard[id] = Vh::Undefined;
+                guard[id] = None;
                 r
             },
         }
@@ -401,7 +394,7 @@ impl BlockInst {
                     _ => panic!("body immediacy doesnt match block definition"),
                 };
                 let D1(m,f) = args;
-                let env = Env::new(Some(self.parent.clone()),&self.def,arity,Some(vec![Vh::V(m.clone()),Vh::V(f.clone())]));
+                let env = Env::new(Some(self.parent.clone()),&self.def,arity,Some(vec![Some(m.clone()),Some(f.clone())]));
                 #[cfg(feature = "coz")]
                 coz::end!("call_md1");
                 vm(&env,&self.def.code,pos,Vec::new())
@@ -429,7 +422,7 @@ impl BlockInst {
                     _ => panic!("body immediacy doesnt match block definition"),
                 };
                 let D2(m,f,g) = args;
-                let env = Env::new(Some(self.parent.clone()),&self.def,arity,Some(vec![Vh::V(m.clone()),Vh::V(f.clone()),Vh::V(g.clone())]));
+                let env = Env::new(Some(self.parent.clone()),&self.def,arity,Some(vec![Some(m.clone()),Some(f.clone()),Some(g.clone())]));
                 #[cfg(feature = "coz")]
                 coz::end!("call_md1");
                 vm(&env,&self.def.code,pos,Vec::new())
@@ -532,8 +525,8 @@ pub fn none_or_clone(vn: &Vn) -> Vh {
     #[cfg(feature = "coz")]
     coz::scope!("none_or_clone");
     match vn {
-        None => Vh::V(V::Nothing),
-        Some(v) => Vh::V(v.deref().clone()),
+        None => Some(V::Nothing),
+        Some(v) => Some(v.deref().clone()),
     }
 }
 pub fn body_pos(b: &Cc<BlockInst>,arity: usize) -> usize {
