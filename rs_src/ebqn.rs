@@ -6,6 +6,7 @@ use crate::init_log;
 use bacon_rajan_cc::Cc;
 use std::ops::Deref;
 use std::error::Error;
+use std::collections::VecDeque;
 //use std::panic;
 use log::{debug, trace, error, log_enabled, info, Level};
 use itertools::Itertools;
@@ -68,32 +69,17 @@ fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>,stack: &mut Stack) -> Vs {
     }
 }
 
-fn list(l: ArrayVec<[Vs;128]>) -> Vs {
+fn list(ravel: Vec<V>) -> Vs {
     #[cfg(feature = "coz")]
     coz::scope!("list");
-    let shape = vec![l.len() as usize];
-    let ravel = l.into_iter().map(|e|
-        match e {
-            Vs::V(v) => v,
-            _ => panic!("illegal slot passed to list"),
-        }
-    ).collect::<Vec<V>>();
+    let shape = vec![ravel.len() as usize];
     Vs::V(V::A(Cc::new(A::new(ravel,shape))))
 }
-fn listr(l: ArrayVec<[Vs;128]>) -> Vs {
-    #[cfg(feature = "coz")]
-    coz::scope!("listr");
-    let ravel = l.into_iter().map(|e|
-        match e {
-            Vs::Slot(env,slot) => Vr::Slot(env,slot),
-            _ => panic!("illegal non-slot passed to list"),
-        }
-    ).collect::<Vec<Vr>>();
-    Vs::Ar(Ar::new(ravel))
-}
+
 fn incr(stack: &mut Stack) {
     stack.fp = stack.s.len();
 }
+
 pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs {
     #[cfg(feature = "debug")]
     incr(stack);
@@ -161,9 +147,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let x = code.bc[pos];pos+=1;
                 #[cfg(feature = "debug")]
                 dbg_stack_in("ARRO",pos-2,format!("{}",&x),stack);
-                let hd = stack.s.len() - x;
-                let tl = stack.s.split_off(hd);
-                stack.s.push(list(tl));
+                let mut acc: VecDeque<V> = VecDeque::with_capacity(x);
+                for i in 0..x {
+                    acc.push_front(stack.s.pop().unwrap().into_v().unwrap())
+                }
+                stack.s.push(list(Vec::from(acc)));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("ARRO",pos-2,stack);
                 #[cfg(feature = "coz")]
@@ -173,11 +161,16 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 #[cfg(feature = "coz")]
                 coz::begin!("ARRM");
                 let x = code.bc[pos];pos+=1;
-                let hd = stack.s.len() - x;
-                let tl = stack.s.split_off(hd);
+                let mut acc: VecDeque<Vr> = VecDeque::with_capacity(x);
+                for i in 0..x {
+                    acc.push_front(match stack.s.pop().unwrap() {
+                        Vs::Slot(env,slot) => Vr::Slot(env,slot),
+                        _ => panic!("illegal non-slot passed to list"),
+                    })
+                }
                 #[cfg(feature = "debug")]
                 dbg_stack_in("ARRM",pos-2,format!("{}",&x),stack);
-                stack.s.push(listr(tl));
+                stack.s.push(Vs::Ar(Ar::new(Vec::from(acc))));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("ARRM",pos-2,stack);
                 #[cfg(feature = "coz")]
