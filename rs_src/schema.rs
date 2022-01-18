@@ -10,7 +10,7 @@ use tinyvec::{array_vec,ArrayVec};
 
 // Traits
 pub trait Calleable {
-    fn call(&self,stack1:&Stack,arity:usize,x: Vn,w: Vn) -> Vs;
+    fn call(&self,stack:&mut Stack,arity:usize,x: Vn,w: Vn) -> Vs;
 }
 pub trait Decoder {
     fn to_f64(&self) -> f64;
@@ -24,14 +24,14 @@ impl PartialEq for Fn {
     }
 }
 #[derive(Clone)]
-pub struct R1(pub fn(&Stack,usize,Vn,Vn,Vn) -> Vs);
+pub struct R1(pub fn(&mut Stack,usize,Vn,Vn,Vn) -> Vs);
 impl PartialEq for R1 {
     fn eq(&self, other: &Self) -> bool {
         self.0 as usize == other.0 as usize
     }
 }
 #[derive(Clone)]
-pub struct R2(pub fn(&Stack,usize,Vn,Vn,Vn,Vn) -> Vs);
+pub struct R2(pub fn(&mut Stack,usize,Vn,Vn,Vn,Vn) -> Vs);
 impl PartialEq for R2 {
     fn eq(&self, other: &Self) -> bool {
         self.0 as usize == other.0 as usize
@@ -99,7 +99,7 @@ impl Decoder for V {
     }
 }
 impl Calleable for V {
-    fn call(&self,stack1:&Stack,arity:usize,x: Vn,w: Vn) -> Vs {
+    fn call(&self,stack:&mut Stack,arity:usize,x: Vn,w: Vn) -> Vs {
         match self.deref() {
             V::UserMd1(b,mods,_prim) => {
                 #[cfg(feature = "coz")]
@@ -110,7 +110,7 @@ impl Calleable for V {
                 let pos = body_pos(b,arity);
                 #[cfg(feature = "coz")]
                 coz::end!("call:UserMd1");
-                vm(&env,&b.def.code,pos,Vec::new(),&stack1)
+                vm(&env,&b.def.code,pos,stack)
             },
             V::UserMd2(b,mods,_prim) => {
                 #[cfg(feature = "coz")]
@@ -121,7 +121,7 @@ impl Calleable for V {
                 let pos = body_pos(b,arity);
                 #[cfg(feature = "coz")]
                 coz::end!("call:UserMd2");
-                vm(&env,&b.def.code,pos,Vec::new(),&stack1)
+                vm(&env,&b.def.code,pos,stack)
             },
             V::BlockInst(b,_prim) => {
                 #[cfg(feature = "coz")]
@@ -131,7 +131,7 @@ impl Calleable for V {
                 let pos = body_pos(b,arity);
                 #[cfg(feature = "coz")]
                 coz::end!("call:BlockInst");
-                vm(&env,&b.def.code,pos,Vec::new(),&stack1)
+                vm(&env,&b.def.code,pos,stack)
             },
             V::Scalar(n) => Vs::V(V::Scalar(*n)),
             V::Char(c) => Vs::V(V::Char(*c)),
@@ -144,7 +144,7 @@ impl Calleable for V {
                 let D1(m,f) = d1.deref();
                 let r =
                 match m {
-                    V::R1(r1,_prim) => r1.0(&stack1,arity,Some(f),x,w),
+                    V::R1(r1,_prim) => r1.0(stack,arity,Some(f),x,w),
                     _ => panic!("can only call raw1 mods in derv1"),
                 };
                 #[cfg(feature = "coz")]
@@ -158,7 +158,7 @@ impl Calleable for V {
                 #[cfg(feature = "coz")]
                 coz::end!("call:D2");
                 match m {
-                    V::R2(r2,_prim) => r2.0(&stack1,arity,Some(f),Some(g),x,w),
+                    V::R2(r2,_prim) => r2.0(stack,arity,Some(f),Some(g),x,w),
                     _ => panic!("can only call raw2 mods in derv2"),
                 }
             },
@@ -168,8 +168,8 @@ impl Calleable for V {
                 let Tr2(g,h) = tr.deref();
                 #[cfg(feature = "coz")]
                 coz::end!("call:Tr2");
-                let r = h.call(&stack1,arity,x,w);
-                g.call(&stack1,1,Some(&r.as_v().unwrap()),None)
+                let r = h.call(stack,arity,x,w);
+                g.call(stack,1,Some(&r.as_v().unwrap()),None)
             },
             V::Tr3(tr,_prim) => {
                 #[cfg(feature = "coz")]
@@ -179,12 +179,12 @@ impl Calleable for V {
                 coz::end!("call:Tr3");
                 let r =
                     match arity {
-                        1 => h.call(&stack1,arity,Some(*x.as_ref().unwrap()),None),
-                        2 => h.call(&stack1,arity,Some(*x.as_ref().unwrap()),Some(*w.as_ref().unwrap())),
+                        1 => h.call(stack,arity,Some(*x.as_ref().unwrap()),None),
+                        2 => h.call(stack,arity,Some(*x.as_ref().unwrap()),Some(*w.as_ref().unwrap())),
                         _ => panic!("illegal arity"),
                     };
-                let l = f.call(&stack1,arity,x,w);
-                g.call(&stack1,2,Some(&r.as_v().unwrap()),Some(&l.as_v().unwrap()))
+                let l = f.call(stack,arity,x,w);
+                g.call(stack,2,Some(&r.as_v().unwrap()),Some(&l.as_v().unwrap()))
             },
             V::A(_) => Vs::V(self.clone()),
             V::Nothing => Vs::V(V::Nothing),
@@ -392,7 +392,7 @@ impl BlockInst {
     pub fn new(env: Env,block: Cc<Block>) -> Self {
         Self {def: block, parent: env }
     }
-    pub fn call_md1(&self,stack1:&Stack,arity:usize,args: D1) -> Vs {
+    pub fn call_md1(&self,stack:&mut Stack,arity:usize,args: D1) -> Vs {
         match self.def.imm {
             false => {
                 #[cfg(feature = "coz")]
@@ -416,11 +416,11 @@ impl BlockInst {
                 let env = Env::new(Some(self.parent.clone()),&self.def,arity,Some(vec![Some(m.clone()),Some(f.clone())]));
                 #[cfg(feature = "coz")]
                 coz::end!("call_md1");
-                vm(&env,&self.def.code,pos,Vec::new(),&stack1)
+                vm(&env,&self.def.code,pos,stack)
             },
         }
     }
-    pub fn call_md2(&self,stack1:&Stack,arity:usize,args: D2) -> Vs {
+    pub fn call_md2(&self,stack:&mut Stack,arity:usize,args: D2) -> Vs {
         match self.def.imm {
             false => {
                 #[cfg(feature = "coz")]
@@ -444,7 +444,7 @@ impl BlockInst {
                 let env = Env::new(Some(self.parent.clone()),&self.def,arity,Some(vec![Some(m.clone()),Some(f.clone()),Some(g.clone())]));
                 #[cfg(feature = "coz")]
                 coz::end!("call_md1");
-                vm(&env,&self.def.code,pos,Vec::new(),&stack1)
+                vm(&env,&self.def.code,pos,stack)
             },
         }
     }

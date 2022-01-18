@@ -391,13 +391,13 @@ fn windows(arity: usize, x: Vn, _w: Vn) -> Vs {
 
 }
 // ⌜
-fn table(stack1: &Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
+fn table(stack: &mut Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
     #[cfg(feature = "coz")]
     coz::scope!("table");
     match arity {
         1 => match x.unwrap() {
             V::A(xa) => {
-                let ravel = (*xa).r.iter().map(|e| call(&stack1,arity,f,Some(e),None).into_v().unwrap() ).collect::<Vec<V>>();
+                let ravel = (*xa).r.iter().map(|e| call(stack,arity,f,Some(e),None).into_v().unwrap() ).collect::<Vec<V>>();
                 let sh = (*xa).sh.clone();
                 Vs::V(V::A(Cc::new(A::new(ravel,sh))))
             },
@@ -407,7 +407,7 @@ fn table(stack1: &Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
             match (x.unwrap(),w.unwrap()) {
                 (V::A(xa),V::A(wa)) => {
                     let ravel = (*wa).r.iter().flat_map(|d| {
-                        (*xa).r.iter().map(|e| call(&stack1,arity,f,Some(e),Some(d)).into_v().unwrap() ).collect::<Vec<V>>()
+                        (*xa).r.iter().map(|e| call(stack,arity,f,Some(e),Some(d)).into_v().unwrap() ).collect::<Vec<V>>()
                     }).collect::<Vec<V>>();
                     let sh = (*wa).sh.clone().into_iter().chain((*xa).sh.clone().into_iter()).collect();
                     Vs::V(V::A(Cc::new(A::new(ravel,sh))))
@@ -419,7 +419,7 @@ fn table(stack1: &Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
     }
 }
 // `
-fn scan(stack1: &Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
+fn scan(stack: &mut Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
     #[cfg(feature = "coz")]
     coz::scope!("scan");
     match arity {
@@ -445,7 +445,7 @@ fn scan(stack1: &Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
                             i += 1;
                         }
                         while i < l {
-                            r[i] = call(&stack1,2,f,Some(&a.r[i]),Some(&r[i-c])).as_v().unwrap().clone();
+                            r[i] = call(stack,2,f,Some(&a.r[i]),Some(&r[i-c])).as_v().unwrap().clone();
                             i += 1;
                         }
                     };
@@ -482,11 +482,11 @@ fn scan(stack1: &Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
                         }
                         i = 0;
                         while i < c {
-                            r[i] = call(&stack1,2,f,Some(&xa.r[i]),Some(&wa.r[i])).as_v().unwrap().clone();
+                            r[i] = call(stack,2,f,Some(&xa.r[i]),Some(&wa.r[i])).as_v().unwrap().clone();
                             i += 1;
                         }
                         while i < l {
-                            r[i] = call(&stack1,2,f,Some(&xa.r[i]),Some(&r[i-c])).as_v().unwrap().clone();
+                            r[i] = call(stack,2,f,Some(&xa.r[i]),Some(&r[i-c])).as_v().unwrap().clone();
                             i += 1;
                         }
                     };
@@ -499,23 +499,23 @@ fn scan(stack1: &Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
     }
 }
 // _fillBy_
-fn fill_by(stack1:&Stack,arity: usize, f: Vn, _g: Vn, x: Vn, w: Vn) -> Vs {
+fn fill_by(stack:&mut Stack,arity: usize, f: Vn, _g: Vn, x: Vn, w: Vn) -> Vs {
     #[cfg(feature = "coz")]
     coz::scope!("fill_by");
-    call(&stack1,arity,f,x,w)
+    call(stack,arity,f,x,w)
 }
 // ⊘
-fn cases(stack1:&Stack,arity: usize, f: Vn, g: Vn, x: Vn, w: Vn) -> Vs {
+fn cases(stack:&mut Stack,arity: usize, f: Vn, g: Vn, x: Vn, w: Vn) -> Vs {
     #[cfg(feature = "coz")]
     coz::scope!("cases");
     match arity {
-        1 => call(&stack1,arity,f,x,None),
-        2 => call(&stack1,arity,g,x,w),
+        1 => call(stack,arity,f,x,None),
+        2 => call(stack,arity,g,x,w),
         _ => panic!("illegal cases arity"),
     }
 }
 // ⎊
-fn catches(_stack1:&Stack,_arity: usize, _f: Vn, _g: Vn, _x: Vn, _w: Vn) -> Vs {
+fn catches(_stack:&mut Stack,_arity: usize, _f: Vn, _g: Vn, _x: Vn, _w: Vn) -> Vs {
     #[cfg(feature = "coz")]
     coz::scope!("catches");
     panic!("catches not implemented");

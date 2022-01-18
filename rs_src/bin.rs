@@ -21,21 +21,22 @@ fn main() {
     #[cfg(feature = "dhat")]
     let _dhat = Dhat::start_heap_profiling();
 
-    let stack = Stack::new();
+    let mut stack = Stack::new();
 
     // each function one-at-a-time
-    let runtime = runtime(&stack);
-    let compiler = run(&stack,c(&runtime));
+    let runtime = runtime(&mut stack);
+    let compiler = run(&mut stack,c(&runtime));
     let src = new_string("{×´1+↕𝕩}");
-    let prog = prog(&stack,&compiler,src,&runtime);
-    let exec = run(&stack,prog);
-    let result = call(&stack,1,Some(&exec),Some(&V::Scalar(10.0)),None);
+    let prog = prog(&mut stack,&compiler,src,&runtime);
+    let exec = run(&mut stack,prog);
+    let result = call(&mut stack,1,Some(&exec),Some(&V::Scalar(10.0)),None);
     println!("{}",result);
 
     // single line variations for copy-pasting
+    //{ let result = call(1,Some(&run(prog(&compiler,new_string("{×´1+↕𝕩}"),&runtime))),Some(&V::Scalar(10.0)),None); println!("{}",result); }
     //{ let runtimev = runtime(); let runtime = runtimev.as_a().unwrap();let compiler = c(&runtimev); }
     //{ let runtimev = runtime(); }
     //{ let runtimev = runtime(); let runtime = runtimev.as_a().unwrap();let compiler = c(&runtimev); call(1,Some(&run(prog(&compiler,src,&runtime))),Some(&V::Scalar(10.0)),None); }
-    //{ let runtimev = runtime(); let runtime = runtimev.as_a().unwrap();let compiler = c(&runtimev); let result = call(1,Some(&run(prog(&compiler,src,&runtime))),Some(&V::Scalar(10.0)),None); pringln!("{}",result); }
+    //{ let runtimev = runtime(); let runtime = runtimev.as_a().unwrap();let compiler = c(&runtimev); let result = call(1,Some(&run(prog(&compiler,src,&runtime))),Some(&V::Scalar(10.0)),None); println!("{}",result); }
 
 }

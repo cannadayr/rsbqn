@@ -1,21 +1,21 @@
 use std::fmt::{Debug,Display,Formatter,Result};
-use crate::schema::{V,Vs,Fn,R1,R2};
+use crate::schema::{V,Vs,Fn,R1,R2,Stack};
 use log::{debug, trace, error, log_enabled, info, Level};
 
-pub fn fmt_stack(stack: &Vec<Vs>) -> String {
-    stack.iter().fold(String::new(), |acc, num| acc + &num.to_string() + ";")
+pub fn fmt_stack(stack: &mut Stack) -> String {
+    stack.s.iter().skip(stack.fp).fold(String::new(), |acc, num| acc + &num.to_string() + ";")
 }
 
 pub fn fmt_array(a: &Vec<V>) -> String {
     a.iter().fold(String::new(), |acc, num| acc + &num.to_string() + ",")
 }
 
-pub fn dbg_stack_in(op: &str, pos: usize, args: String, stack: &Vec<Vs>) {
-    debug!("{:<22}  in: {}",format!("{:<16} @{}",format!("{} {}",op,args),pos),fmt_stack(&stack));
+pub fn dbg_stack_in(op: &str, pos: usize, args: String, stack: &mut Stack) {
+    debug!("{:<22}  in: {}",format!("{:<16} @{}",format!("{} {}",op,args),pos),fmt_stack(stack));
 }
 
-pub fn dbg_stack_out(op: &str, pos: usize, stack: &Vec<Vs>) {
-    debug!("{:<22} out: {}",format!("{:<16} @{}",format!("{}",op),pos),fmt_stack(&stack));
+pub fn dbg_stack_out(op: &str, pos: usize, stack: &mut Stack) {
+    debug!("{:<22} out: {}",format!("{:<16} @{}",format!("{}",op),pos),fmt_stack(stack));
 }
 
 impl Display for V {
