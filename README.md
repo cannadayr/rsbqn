@@ -40,3 +40,9 @@ Heap Analysis
 
     cargo build --profile bench --features dhat
     ./target/release/bin
+
+Perf
+-----
+
+    cargo build --profile bench
+    perf stat -e instructions ./target/release/bin
