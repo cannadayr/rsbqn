@@ -1,5 +1,5 @@
 use std::ops::Deref;
-use std::sync::Mutex;
+use std::cell::RefCell;
 use bacon_rajan_cc::Cc;
 use crate::ebqn::vm;
 use crate::late_init::LateInit;
@@ -288,10 +288,10 @@ pub struct Block {
 #[derive(Default,Debug)]
 pub struct EnvUnboxed {
     pub parent:Option<Env>,
-    pub vars:   Mutex<Vec<Vh>>,
+    pub vars:   RefCell<Vec<Vh>>,
 }
 
-#[derive(Clone,Default,Debug)]
+#[derive(Clone,Debug)]
 pub struct Env(Cc<EnvUnboxed>);
 impl Env {
     pub fn new(parent: Option<Env>,block: &Cc<Block>,arity: usize,args: Option<Vec<Vh>>) -> Self {
@@ -320,7 +320,7 @@ impl Env {
                     v
                 },
             };
-        let env = EnvUnboxed {parent: parent, vars: Mutex::new(vars) };
+        let env = EnvUnboxed {parent: parent, vars: RefCell::new(vars) };
         Self(Cc::new(env))
     }
     pub fn get(&self,id: usize) -> V {
@@ -328,8 +328,7 @@ impl Env {
         coz::scope!("Env::get");
         match self {
             Env(e) => {
-                let guard = e.vars.lock().unwrap();
-                match &guard[id] {
+                match &e.vars.borrow()[id] {
                     Some(v) => v.clone(),
                     None => panic!("heap slot is undefined"),
                 }
@@ -341,12 +340,8 @@ impl Env {
         coz::scope!("Env::set");
         match self {
             Env(e) => {
-                let mut guard = e.vars.lock().unwrap();
-                assert_eq!(d,match &guard[id] {
-                    None => true,
-                    Some(_) => false,
-                });
-                guard[id] = Some(v.clone());
+                assert_eq!(d,e.vars.borrow()[id].is_none());
+                e.vars.borrow_mut()[id] = Some(v.clone());
             },
         }
     }
@@ -355,13 +350,12 @@ impl Env {
         coz::scope!("Env::get_drop");
         match self {
             Env(e) => {
-                let mut guard = e.vars.lock().unwrap();
                 let r =
-                    match &guard[id] {
+                    match &e.vars.borrow()[id] {
                         Some(v) => v.clone(),
                         None => panic!("heap slot is undefined"),
                     };
-                guard[id] = None;
+                e.vars.borrow_mut()[id] = None;
                 r
             },
         }
