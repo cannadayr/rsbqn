@@ -29,10 +29,14 @@ Test
 
     cargo test
 
-Usage
+Causal Profiling
 -----
 
-    {ok,R} = ebqn:init_r(),
-    {ok,C} = ebqn:init_c(R),
-    {ok,P} = ebqn:compile(R,C,<<"{𝕩+1}"/utf8>>),
-    {ok,3.0} = ebqn:callp(P,2.0).
+    cargo build --profile bench --features coz
+    coz run --- ./target/release/bin
+
+Heap Analysis
+-----
+
+    cargo build --profile bench --features dhat
+    ./target/release/bin
