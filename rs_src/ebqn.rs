@@ -11,7 +11,6 @@ use std::collections::VecDeque;
 use log::{debug, trace, error, log_enabled, info, Level};
 use itertools::Itertools;
 use num_traits::FromPrimitive;
-use tinyvec::ArrayVec;
 
 pub fn call(stack: &mut Stack,arity: usize,a: Vn,x: Vn, w: Vn) -> Vs {
     #[cfg(feature = "coz")]

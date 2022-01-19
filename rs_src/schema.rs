@@ -235,12 +235,12 @@ pub enum Vr {
 
 // Stack
 pub struct Stack {
-    pub s: ArrayVec<[Vs;128]>,
+    pub s: Vec<Vs>,
     pub fp: usize,
 }
 impl Stack {
     pub fn new() -> Self {
-        Self { s: array_vec!([Vs; 128]), fp: 0 }
+        Self { s: Vec::new(), fp: 0 }
     }
 }
 
