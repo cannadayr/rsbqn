@@ -79,7 +79,7 @@ impl Decoder for f64 {
 }
 impl Decoder for V {
     fn to_f64(&self) -> f64 {
-        match self.deref() {
+        match self {
             V::Scalar(n) => *n,
             V::Char(c) => f64::from(u32::from(*c)),
             V::BlockInst(_b,_prim) => panic!("can't decode blockinst to RUST"),
@@ -99,7 +99,7 @@ impl Decoder for V {
 }
 impl Calleable for V {
     fn call(&self,stack:&mut Stack,arity:usize,x: Vn,w: Vn) -> Vs {
-        match self.deref() {
+        match self {
             V::UserMd1(b,mods,_prim) => {
                 #[cfg(feature = "coz")]
                 coz::begin!("call::UserMd1");
