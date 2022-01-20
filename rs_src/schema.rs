@@ -216,6 +216,30 @@ impl Vs {
             _ => panic!("can only resolve slots or ref arrays"),
         }
     }
+    pub fn set(&self,d: bool,vs: Vs) -> V {
+        #[cfg(feature = "coz")]
+        coz::scope!("set");
+        match self {
+            Vs::Slot(env,id) => { let v = vs.into_v().unwrap(); env.set(d,*id,&v); v },
+            Vs::Ar(a) => {
+                let v = vs.into_v().unwrap();
+                let arr =
+                    match &v {
+                        V::A(arr) => arr.clone(),
+                        _ => panic!("can only set array of refs if value is an array"),
+                    };
+                a.r.iter().enumerate().for_each(|(i,e)|
+                    match e {
+                        Vr::Slot(env,id) => {
+                            env.set(d,*id,&arr.r[i]);
+                        },
+                    }
+                );
+                v
+            },
+            _ => panic!("can only set slots"),
+        }
+    }
 }
 impl Default for Vs {
     fn default() -> Self {
@@ -505,29 +529,6 @@ pub struct Compiler(pub Cc<BlockInst>);
 pub struct Prog(pub Cc<Code>);
 
 // Utility fns
-pub fn set(d: bool,is: Vs,vs: Vs) -> V {
-    #[cfg(feature = "coz")]
-    coz::scope!("set");
-    match (is,vs) {
-        (Vs::Slot(env,id),Vs::V(v)) => { env.set(d,id,&v); v },
-        (Vs::Ar(a),Vs::V(v)) => {
-            let arr =
-                match &v {
-                    V::A(arr) => arr.clone(),
-                    _ => panic!("can only set array of refs if value is an array"),
-                };
-            a.r.into_iter().enumerate().for_each(|(i,e)|
-                match e {
-                    Vr::Slot(env,id) => {
-                        env.set(d,id,&arr.r[i]);
-                    },
-                }
-            );
-            v
-        },
-        _ => panic!("can only set slots"),
-    }
-}
 pub fn new_scalar<T: Decoder>(n: T) -> V {
     #[cfg(feature = "coz")]
     coz::scope!("new_scalar");

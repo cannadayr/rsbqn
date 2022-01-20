@@ -1,4 +1,4 @@
-use crate::schema::{Env,V,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Stack,Body,A,Ar,Tr2,Tr3,Runtime,Compiler,Prog,set,D2,D1,Fn,new_scalar,new_string};
+use crate::schema::{Env,V,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Stack,Body,A,Ar,Tr2,Tr3,Runtime,Compiler,Prog,D2,D1,Fn,new_scalar,new_string};
 use crate::prim::{provide,decompose,prim_ind};
 use crate::code::{r0,r1,c};
 use crate::fmt::{dbg_stack_out,dbg_stack_in};
@@ -368,7 +368,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 dbg_stack_in("SETN",pos-1,"".to_string(),stack);
                 let i = stack.s.pop().unwrap();
                 let v = stack.s.pop().unwrap();
-                let r = set(true,i,v);
+                let r = i.set(true,v);
                 stack.s.push(Vs::V(r));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("SETN",pos-1,stack);
@@ -382,7 +382,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 dbg_stack_in("SETU",pos-1,"".to_string(),stack);
                 let i = stack.s.pop().unwrap();
                 let v = stack.s.pop().unwrap();
-                let r = set(false,i,v);
+                let r = i.set(false,v);
                 stack.s.push(Vs::V(r));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("SETU",pos-1,stack);
@@ -398,7 +398,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let f = stack.s.pop().unwrap();
                 let x = stack.s.pop().unwrap();
                 let v = call(&mut stack,2,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),Some(&i.get()));
-                let r = set(false,i,v);
+                let r = i.set(false,v);
                 stack.s.push(Vs::V(r));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("SETM",pos-1,stack);
@@ -413,7 +413,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let i = stack.s.pop().unwrap();
                 let f = stack.s.pop().unwrap();
                 let v = call(&mut stack,1,Some(&f.into_v().unwrap()),Some(&i.get()),None);
-                let r = set(false,i,v);
+                let r = i.set(false,v);
                 stack.s.push(Vs::V(r));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("SETC",pos-1,stack);
