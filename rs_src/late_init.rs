@@ -1,4 +1,4 @@
-use once_cell::sync::OnceCell;
+use once_cell::unsync::OnceCell;
 
 // https://docs.rs/once_cell/1.8.0/once_cell/#lateinit
 // https://github.com/rust-lang/rfcs/pull/2788
