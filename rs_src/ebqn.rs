@@ -327,7 +327,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let t = env.ge(x);
                 #[cfg(feature = "debug")]
                 dbg_stack_in("VARO",pos-3,format!("{} {}",&x,&w),stack);
-                stack.s.push(Vs::V(t.get(w).clone()));
+                stack.s.push(Vs::V(t.get(w)));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("VARO",pos-3,stack);
                 #[cfg(feature = "coz")]
@@ -341,7 +341,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let t = env.ge(x);
                 #[cfg(feature = "debug")]
                 dbg_stack_in("VARU",pos-3,format!("{} {}",&x,&w),stack);
-                stack.s.push(Vs::V(t.get_drop(w).clone()));
+                stack.s.push(Vs::V(t.get_drop(w)));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("VARU",pos-3,stack);
                 #[cfg(feature = "coz")]
