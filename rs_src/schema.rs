@@ -101,35 +101,23 @@ impl Calleable for V {
     fn call(&self,stack:&mut Stack,arity:usize,x: Vn,w: Vn) -> Vs {
         match self {
             V::UserMd1(b,mods,_prim) => {
-                #[cfg(feature = "coz")]
-                coz::begin!("call::UserMd1");
                 let D1(m,f) = mods.deref();
                 let args = vec![Some(self.clone()),x.none_or_clone(),w.none_or_clone(),Some(m.clone()),Some(f.clone())];
                 let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args));
                 let pos = body_pos(b,arity);
-                #[cfg(feature = "coz")]
-                coz::end!("call:UserMd1");
                 vm(&env,&b.def.code,pos,stack)
             },
             V::UserMd2(b,mods,_prim) => {
-                #[cfg(feature = "coz")]
-                coz::begin!("call::UserMd2");
                 let D2(m,f,g) = mods.deref();
                 let args = vec![Some(self.clone()),x.none_or_clone(),w.none_or_clone(),Some(m.clone()),Some(f.clone()),Some(g.clone())]; // cloning args is slow
                 let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args)); // creating a new env is slow
                 let pos = body_pos(b,arity);
-                #[cfg(feature = "coz")]
-                coz::end!("call:UserMd2");
                 vm(&env,&b.def.code,pos,stack)
             },
             V::BlockInst(b,_prim) => {
-                #[cfg(feature = "coz")]
-                coz::begin!("call::BlockInst");
                 let args = vec![Some(self.clone()),x.none_or_clone(),w.none_or_clone()];
                 let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args));
                 let pos = body_pos(b,arity);
-                #[cfg(feature = "coz")]
-                coz::end!("call:BlockInst");
                 vm(&env,&b.def.code,pos,stack)
             },
             V::Scalar(n) => Vs::V(V::Scalar(*n)),
@@ -138,44 +126,28 @@ impl Calleable for V {
             V::R1(_f,_prim) => panic!("can't call r1"),
             V::R2(_f,_prim) => panic!("can't call r2"),
             V::D1(d1,_prim) => {
-                #[cfg(feature = "coz")]
-                coz::begin!("call::D1");
                 let D1(m,f) = d1.deref();
                 let r =
                 match m {
                     V::R1(r1,_prim) => r1.0(stack,arity,Vn(Some(f)),x,w),
                     _ => panic!("can only call raw1 mods in derv1"),
                 };
-                #[cfg(feature = "coz")]
-                coz::end!("call:D1");
                 r
             },
             V::D2(d2,_prim) => {
-                #[cfg(feature = "coz")]
-                coz::begin!("call::D2");
                 let D2(m,f,g) = d2.deref();
-                #[cfg(feature = "coz")]
-                coz::end!("call:D2");
                 match m {
                     V::R2(r2,_prim) => r2.0(stack,arity,Vn(Some(f)),Vn(Some(g)),x,w),
                     _ => panic!("can only call raw2 mods in derv2"),
                 }
             },
             V::Tr2(tr,_prim) => {
-                #[cfg(feature = "coz")]
-                coz::begin!("call::Tr2");
                 let Tr2(g,h) = tr.deref();
-                #[cfg(feature = "coz")]
-                coz::end!("call:Tr2");
                 let r = h.call(stack,arity,x,w);
                 g.call(stack,1,Vn(*Some(&r.as_v()).unwrap()),Vn(None))
             },
             V::Tr3(tr,_prim) => {
-                #[cfg(feature = "coz")]
-                coz::begin!("call::Tr3");
                 let Tr3(f,g,h) = tr.deref();
-                #[cfg(feature = "coz")]
-                coz::end!("call:Tr3");
                 let r =
                     match arity { // TODO this match might not be necessary
                         1 => h.call(stack,arity,Vn(x.0),Vn(None)),
@@ -195,8 +167,6 @@ impl Calleable for V {
 pub struct Vn<'a>(pub Option<&'a V>);
 impl<'a> Vn<'a> {
     fn none_or_clone(&self) -> Vh {
-        #[cfg(feature = "coz")]
-        coz::scope!("none_or_clone");
         match self.deref().0 {
             None => Some(V::Nothing),
             Some(v) => Some(v.clone()),
@@ -215,8 +185,6 @@ pub enum Vs {
 }
 impl Vs {
     pub fn get(&self) -> V {
-        #[cfg(feature = "coz")]
-        coz::scope!("Vs::get");
         match self {
             Vs::Slot(env,id) => env.get(*id),
             Vs::Ar(a) => {
@@ -228,8 +196,6 @@ impl Vs {
         }
     }
     pub fn set(&self,d: bool,vs: Vs) -> V {
-        #[cfg(feature = "coz")]
-        coz::scope!("set");
         match self {
             Vs::Slot(env,id) => { let v = vs.into_v().unwrap(); env.set(d,*id,&v); v },
             Vs::Ar(a) => {
@@ -295,8 +261,6 @@ pub struct Code {
 }
 impl Code {
     pub fn new(bc: Vec<usize>,objs: Vec<V>,blocks_raw: Vec<(u8,bool,Body)>,bodies: Vec<(usize,usize)>) -> Cc<Self> {
-        #[cfg(feature = "coz")]
-        coz::scope!("Code::new");
         let code = Cc::new(Self {bc: bc, objs: objs, bodies: bodies, blocks: LateInit::default(), });
         let blocks_derv = blocks_raw.into_iter().map(|block|
             match block {
@@ -359,8 +323,6 @@ impl Env {
         Self(Cc::new(env))
     }
     pub fn get(&self,id: usize) -> V {
-        #[cfg(feature = "coz")]
-        coz::scope!("Env::get");
         match self {
             Env(e) => {
                 match &e.vars.borrow()[id] {
@@ -371,8 +333,6 @@ impl Env {
         }
     }
     pub fn set(&self,d: bool,id: usize,v: &V) {
-        #[cfg(feature = "coz")]
-        coz::scope!("Env::set");
         match self {
             Env(e) => {
                 assert_eq!(d,e.vars.borrow()[id].is_none());
@@ -381,8 +341,6 @@ impl Env {
         }
     }
     pub fn get_drop(&self,id: usize) -> V {
-        #[cfg(feature = "coz")]
-        coz::scope!("Env::get_drop");
         match self {
             Env(e) => {
                 let r =
@@ -396,8 +354,6 @@ impl Env {
         }
     }
     pub fn ge(&self,mut i: usize) -> &Env {
-        #[cfg(feature = "coz")]
-        coz::scope!("Env::ge");
         let mut cur = self;
         loop {
             match i {
@@ -423,16 +379,10 @@ impl BlockInst {
     pub fn call_md1(&self,stack:&mut Stack,arity:usize,args: D1) -> Vs {
         match self.def.imm {
             false => {
-                #[cfg(feature = "coz")]
-                coz::begin!("call_md1::non_imm");
                 let r = Vs::V(V::UserMd1(Cc::new(BlockInst::new(self.parent.clone(),self.def.clone())),Cc::new(args),None));
-                #[cfg(feature = "coz")]
-                coz::end!("call_md1::non_imm");
                 r
             },
             true => {
-                #[cfg(feature = "coz")]
-                coz::begin!("call_md1");
                 let pos = match self.def.body {
                    Body::Imm(b) => {
                         let (p,_l) = self.def.code.bodies[b];
@@ -442,8 +392,6 @@ impl BlockInst {
                 };
                 let D1(m,f) = args;
                 let env = Env::new(Some(self.parent.clone()),&self.def,arity,Some(vec![Some(m.clone()),Some(f.clone())]));
-                #[cfg(feature = "coz")]
-                coz::end!("call_md1");
                 vm(&env,&self.def.code,pos,stack)
             },
         }
@@ -451,16 +399,10 @@ impl BlockInst {
     pub fn call_md2(&self,stack:&mut Stack,arity:usize,args: D2) -> Vs {
         match self.def.imm {
             false => {
-                #[cfg(feature = "coz")]
-                coz::begin!("call_md2::non_imm");
                 let r = Vs::V(V::UserMd2(Cc::new(BlockInst::new(self.parent.clone(),self.def.clone())),Cc::new(args),None));
-                #[cfg(feature = "coz")]
-                coz::end!("call_md2::non_imm");
                 r
             },
             true => {
-                #[cfg(feature = "coz")]
-                coz::begin!("call_md1");
                 let pos = match self.def.body {
                    Body::Imm(b) => {
                         let (p,_l) = self.def.code.bodies[b];
@@ -470,8 +412,6 @@ impl BlockInst {
                 };
                 let D2(m,f,g) = args;
                 let env = Env::new(Some(self.parent.clone()),&self.def,arity,Some(vec![Some(m.clone()),Some(f.clone()),Some(g.clone())]));
-                #[cfg(feature = "coz")]
-                coz::end!("call_md1");
                 vm(&env,&self.def.code,pos,stack)
             },
         }
@@ -541,13 +481,9 @@ pub struct Prog(pub Cc<Code>);
 
 // Utility fns
 pub fn new_scalar<T: Decoder>(n: T) -> V {
-    #[cfg(feature = "coz")]
-    coz::scope!("new_scalar");
     V::Scalar(n.to_f64())
 }
 pub fn body_pos(b: &Cc<BlockInst>,arity: usize) -> usize {
-    #[cfg(feature = "coz")]
-    coz::scope!("body_pos");
     let (pos,_locals) =
         match &b.def.body {
             Body::Imm(body) => b.def.code.bodies[*body],
@@ -562,13 +498,9 @@ pub fn body_pos(b: &Cc<BlockInst>,arity: usize) -> usize {
     pos
 }
 pub fn new_char(n: char) -> V {
-    #[cfg(feature = "coz")]
-    coz::scope!("new_char");
     V::Char(n)
 }
 pub fn new_string(n: &str) -> V {
-    #[cfg(feature = "coz")]
-    coz::scope!("new_string");
     let ravel = n.to_string().chars().map(|c| V::Char(c)).collect::<Vec<V>>();
     let shape = vec![ravel.len() as usize];
     V::A(Cc::new(A::new(ravel,shape)))

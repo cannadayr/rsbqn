@@ -13,16 +13,12 @@ use itertools::Itertools;
 use num_traits::FromPrimitive;
 
 pub fn call(stack: &mut Stack,arity: usize,a: Vn,x: Vn, w: Vn) -> Vs {
-    #[cfg(feature = "coz")]
-    coz::scope!("call");
     match a.0 {
         Some(v) => v.call(stack,arity,x,w),
         _ => panic!("unimplemented call"),
     }
 }
 fn call1(stack: &mut Stack,m: V,f: V) -> Vs {
-    #[cfg(feature = "coz")]
-    coz::scope!("call1");
     match m {
         V::BlockInst(ref bl,_prim) => {
             assert_eq!(1,bl.def.typ);
@@ -33,8 +29,6 @@ fn call1(stack: &mut Stack,m: V,f: V) -> Vs {
     }
 }
 fn call2(stack: &mut Stack,m: V,f: V,g: V) -> Vs {
-    #[cfg(feature = "coz")]
-    coz::scope!("call2");
     match m {
         V::BlockInst(ref bl,_prim) => {
             assert_eq!(2,bl.def.typ);
@@ -46,8 +40,6 @@ fn call2(stack: &mut Stack,m: V,f: V,g: V) -> Vs {
 }
 
 fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>,stack: &mut Stack) -> Vs {
-    #[cfg(feature = "coz")]
-    coz::scope!("derv");
     match (block.typ,block.imm) {
         (0,true) => {
             let child = Env::new(Some(env.clone()),block,0,None);
@@ -69,8 +61,6 @@ fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>,stack: &mut Stack) -> Vs {
 }
 
 fn list(ravel: Vec<V>) -> Vs {
-    #[cfg(feature = "coz")]
-    coz::scope!("list");
     let shape = vec![ravel.len() as usize];
     Vs::V(V::A(Cc::new(A::new(ravel,shape))))
 }
@@ -88,7 +78,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
         let op = code.bc[pos];pos+=1;
         match op {
             0 => { // PUSH
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::begin!("PUSH");
                 let x = code.bc[pos];pos+=1;
                 let r = code.objs[x].clone();
@@ -97,11 +87,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 stack.s.push(Vs::V(r));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("PUSH",pos-2,stack);
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::end!("PUSH");
             },
             1 => { // DFND
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::begin!("DFND");
                 let x = code.bc[pos];pos+=1;
                 let r = derv(env.clone(),&code,&code.blocks[x],&mut stack);
@@ -110,28 +100,28 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 stack.s.push(r);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("DFND",pos-2,stack);
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::end!("DFND");
             },
             6 => { // POPS
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::begin!("POPS");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("POPS",pos-1,"".to_string(),stack);
                 let _ = stack.s.pop();
                 #[cfg(feature = "debug")]
                 dbg_stack_out("POPS",pos-1,stack);
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::end!("POPS");
             },
             7 => { // RETN
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::begin!("RETN");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("RETN",pos-1,"".to_string(),stack);
                 break match stack.s.pop() {
                     Some(rtn) => {
-                        #[cfg(feature = "coz")]
+                        #[cfg(feature = "coz-ops")]
                         coz::end!("RETN");
                         rtn
                     },
@@ -141,7 +131,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 };
             },
             11 => { // ARRO
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::begin!("ARRO");
                 let x = code.bc[pos];pos+=1;
                 #[cfg(feature = "debug")]
@@ -153,11 +143,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 stack.s.push(list(Vec::from(acc)));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("ARRO",pos-2,stack);
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::end!("ARRO");
             },
             12 => { // ARRM
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::begin!("ARRM");
                 let x = code.bc[pos];pos+=1;
                 let mut acc: VecDeque<Vr> = VecDeque::with_capacity(x);
@@ -172,11 +162,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 stack.s.push(Vs::Ar(Ar::new(Vec::from(acc))));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("ARRM",pos-2,stack);
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::end!("ARRM");
             },
             16 => { // FN1C
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::begin!("FN1C");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("FN1C",pos-1,"".to_string(),stack);
@@ -186,11 +176,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 stack.s.push(r);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("FN1C",pos-1,stack);
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::end!("FN1C");
             },
             18 => { // FN1O
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::begin!("FN1O");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("FN1O",pos-1,"".to_string(),stack);
@@ -204,11 +194,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 stack.s.push(r);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("FN1O",pos-1,stack);
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::end!("FN1O");
             },
             17 => { // FN2C
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::begin!("FN2C");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("FN2C",pos-1,"".to_string(),stack);
@@ -219,11 +209,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 stack.s.push(r);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("FN2C",pos-1,stack);
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::end!("FN2C");
             },
             19 => { // FN2O
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::begin!("FN2O");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("FN2O",pos-1,"".to_string(),stack);
@@ -239,11 +229,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 stack.s.push(r);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("FN2O",pos-1,stack);
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::end!("FN2O");
             },
             20 => { // TR2D
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::begin!("TR2D");
                 let g = stack.s.pop().unwrap();
                 let h = stack.s.pop().unwrap();
@@ -253,11 +243,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 stack.s.push(t);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("TR2D",pos-1,stack);
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::end!("TR2D");
             },
             21 => { // TR3D
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::begin!("TR3D");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("TR3D",pos-1,"".to_string(),stack);
@@ -268,11 +258,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 stack.s.push(t);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("TR3D",pos-1,stack);
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::end!("TR3D");
             },
             23 => { // TR3O
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::begin!("TR3O");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("TR3O",pos-1,"".to_string(),stack);
@@ -287,11 +277,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 stack.s.push(t);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("TR3O",pos-1,stack);
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::end!("TR3O");
             },
             26 => { // MD1C
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::begin!("MD1C");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("MD1C",pos-1,"".to_string(),stack);
@@ -301,11 +291,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 stack.s.push(r);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("MD1C",pos-1,stack);
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::end!("MD1C");
             },
             27 => { // MD2C
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::begin!("MD2C");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("MD2C",pos-1,"".to_string(),stack);
@@ -316,11 +306,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 stack.s.push(r);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("MD2C",pos-1,stack);
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::end!("MD2C");
             },
             32 => { // VARO
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::begin!("VARO");
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
@@ -330,11 +320,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 stack.s.push(Vs::V(t.get(w)));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("VARO",pos-3,stack);
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::end!("VARO");
             },
             34 => { // VARU
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::begin!("VARU");
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
@@ -344,11 +334,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 stack.s.push(Vs::V(t.get_drop(w)));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("VARU",pos-3,stack);
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::end!("VARU");
             },
             33 => { // VARM
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::begin!("VARM");
                 let x = code.bc[pos];pos+=1;
                 let w = code.bc[pos];pos+=1;
@@ -358,11 +348,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 stack.s.push(Vs::Slot(t.clone(),w));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("VARM",pos-3,stack);
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::end!("VARM");
             },
             48 => { // SETN
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::begin!("SETN");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("SETN",pos-1,"".to_string(),stack);
@@ -372,11 +362,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 stack.s.push(Vs::V(r));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("SETN",pos-1,stack);
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::end!("SETN");
             },
             49 => { // SETU
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::begin!("SETU");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("SETU",pos-1,"".to_string(),stack);
@@ -386,11 +376,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 stack.s.push(Vs::V(r));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("SETU",pos-1,stack);
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::end!("SETU");
             },
             50 => { // SETM
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::begin!("SETM");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("SETM",pos-1,"".to_string(),stack);
@@ -402,11 +392,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 stack.s.push(Vs::V(r));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("SETM",pos-1,stack);
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::end!("SETM");
             },
             51 => { // SETC
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::begin!("SETC");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("SETC",pos-1,"".to_string(),stack);
@@ -417,19 +407,19 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 stack.s.push(Vs::V(r));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("SETC",pos-1,stack);
-                #[cfg(feature = "coz")]
+                #[cfg(feature = "coz-ops")]
                 coz::end!("SETC");
             },
             _ => {
                 panic!("unreachable op: {}",op);
             }
         }
+        #[cfg(feature = "coz-loop")]
+        coz::progress!();
     }
 }
 
 pub fn runtime(stack: &mut Stack) -> V {
-    #[cfg(feature = "coz")]
-    coz::scope!("runtime");
     let builtin = provide();
     let runtime0 = run(stack,r0(&builtin));
     let runtime1 = run(stack,r1(&builtin,&runtime0));
@@ -471,8 +461,6 @@ pub fn runtime(stack: &mut Stack) -> V {
 }
 
 pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V) -> Cc<Code> {
-    #[cfg(feature = "coz")]
-    coz::scope!("prog");
     let mut prog = call(stack,2,Vn(Some(compiler)),Vn(Some(&src)),Vn(Some(runtime))).into_v().unwrap().into_a().unwrap();
     info!("prog count = {}",prog.strong_count());
     match prog.get_mut() {
@@ -541,8 +529,6 @@ pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V) -> Cc<Code> {
 }
 
 pub fn run(stack: &mut Stack,code: Cc<Code>) -> V {
-    #[cfg(feature = "coz")]
-    coz::scope!("run");
     let root = Env::new(None,&code.blocks[0],0,None);
     let (pos,_locals) =
         match code.blocks[0].body {

@@ -26,7 +26,7 @@ fn dbg_rtn(fun: &str,arity: usize, r: &Vs) {
 
 // Type
 fn typ(arity: usize, x: Vn, _w: Vn) -> Vs {
-    #[cfg(feature = "coz")]
+    #[cfg(feature = "coz-fns")]
     coz::scope!("typ");
     match arity {
         1 => match x.0.unwrap() {
@@ -50,7 +50,7 @@ fn typ(arity: usize, x: Vn, _w: Vn) -> Vs {
 }
 // Fill
 fn fill(arity: usize, x: Vn, _w: Vn) -> Vs {
-    #[cfg(feature = "coz")]
+    #[cfg(feature = "coz-fns")]
     coz::scope!("fill");
     match arity {
         1 => Vs::V(V::Scalar(0.0)),
@@ -60,7 +60,7 @@ fn fill(arity: usize, x: Vn, _w: Vn) -> Vs {
 }
 // Log
 fn log(arity: usize, x: Vn, w: Vn) -> Vs {
-    #[cfg(feature = "coz")]
+    #[cfg(feature = "coz-fns")]
     coz::scope!("log");
     match arity {
         1 => match x.0.unwrap() {
@@ -76,7 +76,7 @@ fn log(arity: usize, x: Vn, w: Vn) -> Vs {
 }
 // GroupLen
 fn group_len(arity: usize, x: Vn, w: Vn) -> Vs {
-    #[cfg(feature = "coz")]
+    #[cfg(feature = "coz-fns")]
     coz::scope!("group_len");
     match arity {
         1 => {
@@ -122,7 +122,7 @@ fn group_len(arity: usize, x: Vn, w: Vn) -> Vs {
 }
 // GroupOrd
 fn group_ord(arity: usize, x: Vn, w: Vn) -> Vs {
-    #[cfg(feature = "coz")]
+    #[cfg(feature = "coz-fns")]
     coz::scope!("group_ord");
     match arity {
         2 => {
@@ -145,9 +145,8 @@ fn group_ord(arity: usize, x: Vn, w: Vn) -> Vs {
 }
 // !
 fn assert_fn(arity: usize, x: Vn, w: Vn) -> Vs {
-    #[cfg(feature = "coz")]
-    coz::scope!("assert_fn");
-    //dbg_args("assert_fn",arity,&x,&w);
+    #[cfg(feature = "debug")]
+    dbg_args("assert_fn",arity,&x,&w);
     let r =
     match arity {
         1 => match x.0.unwrap().as_scalar() {
@@ -166,14 +165,16 @@ fn assert_fn(arity: usize, x: Vn, w: Vn) -> Vs {
         },
         _ => panic!("illegal assert arity"),
     };
-    //dbg_rtn("assert_fn",arity,&r);
+    #[cfg(feature = "debug")]
+    dbg_rtn("assert_fn",arity,&r);
     r
 }
 // +
 pub fn plus(arity:usize, x: Vn,w: Vn) -> Vs {
-    #[cfg(feature = "coz")]
+    #[cfg(feature = "coz-fns")]
     coz::scope!("plus");
-    //dbg_args("plus",arity,&x,&w);
+    #[cfg(feature = "debug")]
+    dbg_args("plus",arity,&x,&w);
     let r =
     match arity {
         1 => Vs::V(x.0.unwrap().clone()),
@@ -187,14 +188,16 @@ pub fn plus(arity:usize, x: Vn,w: Vn) -> Vs {
         },
         _ => panic!("illegal plus arity"),
     };
-    //dbg_rtn("plus",arity,&r);
+    #[cfg(feature = "debug")]
+    dbg_rtn("plus",arity,&r);
     r
 }
 // -
 fn minus(arity: usize, x: Vn, w: Vn) -> Vs {
-    #[cfg(feature = "coz")]
+    #[cfg(feature = "coz-fns")]
     coz::scope!("minus");
-    //dbg_args("minus",arity,&x,&w);
+    #[cfg(feature = "debug")]
+    dbg_args("minus",arity,&x,&w);
     let r =
     match arity {
         1 => match x.0.unwrap() {
@@ -210,14 +213,16 @@ fn minus(arity: usize, x: Vn, w: Vn) -> Vs {
         },
         _ => panic!("illegal minus arity"),
     };
-    //dbg_rtn("minus",arity,&r);
+    #[cfg(feature = "debug")]
+    dbg_rtn("minus",arity,&r);
     r
 }
 // ×
 fn times(arity: usize, x: Vn, w: Vn) -> Vs {
-    #[cfg(feature = "coz")]
+    #[cfg(feature = "coz-fns")]
     coz::scope!("times");
-    //dbg_args("times",arity,&x,&w);
+    #[cfg(feature = "debug")]
+    dbg_args("times",arity,&x,&w);
     match arity {
         2 => match (x.0.unwrap(),w.0.unwrap()) {
             (V::Scalar(xs),V::Scalar(ws)) => Vs::V(V::Scalar(ws * xs)),
@@ -228,9 +233,10 @@ fn times(arity: usize, x: Vn, w: Vn) -> Vs {
 }
 // ÷
 fn divide(arity: usize, x: Vn, w: Vn) -> Vs {
-    #[cfg(feature = "coz")]
+    #[cfg(feature = "coz-fns")]
     coz::scope!("divide");
-    //dbg_args("divide",arity,&x,&w);
+    #[cfg(feature = "debug")]
+    dbg_args("divide",arity,&x,&w);
     match arity {
         1 => match x.0.unwrap() {
             V::Scalar(xs) => Vs::V(V::Scalar(1.0 / xs)),
@@ -245,7 +251,7 @@ fn divide(arity: usize, x: Vn, w: Vn) -> Vs {
 }
 // ⋆
 fn power(arity: usize, x: Vn, w: Vn) -> Vs {
-    #[cfg(feature = "coz")]
+    #[cfg(feature = "coz-fns")]
     coz::scope!("power");
     match arity {
         1 => match x.0.unwrap() {
@@ -261,7 +267,7 @@ fn power(arity: usize, x: Vn, w: Vn) -> Vs {
 }
 // ⌊
 fn floor(arity: usize, x: Vn, _w: Vn) -> Vs {
-    #[cfg(feature = "coz")]
+    #[cfg(feature = "coz-fns")]
     coz::scope!("floor");
     match arity {
         1|2 => Vs::V(V::Scalar(x.0.unwrap().to_f64().floor())),
@@ -270,9 +276,10 @@ fn floor(arity: usize, x: Vn, _w: Vn) -> Vs {
 }
 // =
 fn equals(arity: usize, x: Vn, w: Vn) -> Vs {
-    #[cfg(feature = "coz")]
+    #[cfg(feature = "coz-fns")]
     coz::scope!("equals");
-    //dbg_args("equals",arity,&x,&w);
+    #[cfg(feature = "debug")]
+    dbg_args("equals",arity,&x,&w);
     let r =
     match arity {
         1 => match x.0.unwrap() {
@@ -290,14 +297,16 @@ fn equals(arity: usize, x: Vn, w: Vn) -> Vs {
         },
         _ => panic!("illegal equals arity"),
     };
-    //dbg_rtn("equals",arity,&r);
+    #[cfg(feature = "debug")]
+    dbg_rtn("equals",arity,&r);
     r
 }
 // ≤
 fn lesseq(arity: usize, x: Vn, w: Vn) -> Vs {
-    #[cfg(feature = "coz")]
+    #[cfg(feature = "coz-fns")]
     coz::scope!("lesseq");
-    //dbg_args("lesseq",arity,&x,&w);
+    #[cfg(feature = "debug")]
+    dbg_args("lesseq",arity,&x,&w);
     let r =
     match arity {
         2 => {
@@ -313,12 +322,13 @@ fn lesseq(arity: usize, x: Vn, w: Vn) -> Vs {
         },
         _ => panic!("illegal lesseq arity"),
     };
-    //dbg_rtn("lesseq",arity,&r);
+    #[cfg(feature = "debug")]
+    dbg_rtn("lesseq",arity,&r);
     r
 }
 // ≢
 fn shape(arity: usize, x: Vn, _w: Vn) -> Vs {
-    #[cfg(feature = "coz")]
+    #[cfg(feature = "coz-fns")]
     coz::scope!("shape");
     match arity {
         1 => match x.0.unwrap() {
@@ -334,7 +344,7 @@ fn shape(arity: usize, x: Vn, _w: Vn) -> Vs {
 }
 // ⥊
 fn reshape(arity: usize, x: Vn, w: Vn) -> Vs {
-    #[cfg(feature = "coz")]
+    #[cfg(feature = "coz-fns")]
     coz::scope!("reshape");
     match arity {
         1 => {
@@ -360,9 +370,10 @@ fn reshape(arity: usize, x: Vn, w: Vn) -> Vs {
 }
 // ⊑
 fn pick(arity: usize, x: Vn, w: Vn) -> Vs {
-    #[cfg(feature = "coz")]
+    #[cfg(feature = "coz-fns")]
     coz::scope!("pick");
-    //dbg_args("pick",arity,&x,&w);
+    #[cfg(feature = "debug")]
+    dbg_args("pick",arity,&x,&w);
     let r =
     match arity {
         2 => {
@@ -374,12 +385,13 @@ fn pick(arity: usize, x: Vn, w: Vn) -> Vs {
         },
         _ => panic!("illegal pick arity"),
     };
-    //dbg_rtn("pick",arity,&r);
+    #[cfg(feature = "debug")]
+    dbg_rtn("pick",arity,&r);
     r
 }
 // ↕
 fn windows(arity: usize, x: Vn, _w: Vn) -> Vs {
-    #[cfg(feature = "coz")]
+    #[cfg(feature = "coz-fns")]
     coz::scope!("windows");
     match arity {
         1 => match x.0.unwrap() {
@@ -392,7 +404,7 @@ fn windows(arity: usize, x: Vn, _w: Vn) -> Vs {
 }
 // ⌜
 fn table(stack: &mut Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
-    #[cfg(feature = "coz")]
+    #[cfg(feature = "coz-fns")]
     coz::scope!("table");
     match arity {
         1 => match x.0.unwrap() {
@@ -420,7 +432,7 @@ fn table(stack: &mut Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
 }
 // `
 fn scan(stack: &mut Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
-    #[cfg(feature = "coz")]
+    #[cfg(feature = "coz-fns")]
     coz::scope!("scan");
     match arity {
         1 => {
@@ -500,13 +512,13 @@ fn scan(stack: &mut Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
 }
 // _fillBy_
 fn fill_by(stack:&mut Stack,arity: usize, f: Vn, _g: Vn, x: Vn, w: Vn) -> Vs {
-    #[cfg(feature = "coz")]
+    #[cfg(feature = "coz-fns")]
     coz::scope!("fill_by");
     call(stack,arity,f,x,w)
 }
 // ⊘
 fn cases(stack:&mut Stack,arity: usize, f: Vn, g: Vn, x: Vn, w: Vn) -> Vs {
-    #[cfg(feature = "coz")]
+    #[cfg(feature = "coz-fns")]
     coz::scope!("cases");
     match arity {
         1 => call(stack,arity,f,x,Vn(None)),
@@ -516,15 +528,16 @@ fn cases(stack:&mut Stack,arity: usize, f: Vn, g: Vn, x: Vn, w: Vn) -> Vs {
 }
 // ⎊
 fn catches(_stack:&mut Stack,_arity: usize, _f: Vn, _g: Vn, _x: Vn, _w: Vn) -> Vs {
-    #[cfg(feature = "coz")]
+    #[cfg(feature = "coz-fns")]
     coz::scope!("catches");
     panic!("catches not implemented");
 }
 
 pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Vs {
-    #[cfg(feature = "coz")]
+    #[cfg(feature = "coz-fns")]
     coz::scope!("decompose");
-    //dbg_args("decompose",arity,&x,&w);
+    #[cfg(feature = "debug")]
+    dbg_args("decompose",arity,&x,&w);
     let r =
     match arity {
         1 => {
@@ -611,12 +624,13 @@ pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Vs {
         },
         _ => panic!("illegal decompose arity"),
     };
-    //dbg_rtn("decompose",arity,&r);
+    #[cfg(feature = "debug")]
+    dbg_rtn("decompose",arity,&r);
     r
 }
 
 pub fn prim_ind(arity:usize, x: Vn,_w: Vn) -> Vs {
-    #[cfg(feature = "coz")]
+    #[cfg(feature = "coz-fns")]
     coz::scope!("prim_ind");
     match arity {
         1 => match x.0.unwrap() {

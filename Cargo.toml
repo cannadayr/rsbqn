@@ -44,3 +44,6 @@ default-features = false
 default = []
 # enable stack debugging
 debug = []
+coz-fns = ["coz"]
+coz-ops = ["coz"]
+coz-loop = ["coz"]
