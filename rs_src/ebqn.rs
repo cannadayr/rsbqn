@@ -75,9 +75,13 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
     #[cfg(feature = "debug")]
     debug!("new eval");
     loop {
-        let op = code.bc[pos];pos+=1;
-        match op {
+        // we are making the following assumptions:
+        //  1. the BQN compiler is producing correct output
+        //  2. the BQN virtual machine is compatible with the loaded compiler
+        // using an unsafe function because this loop is performance critical
+        match unsafe { code.bc.get_unchecked(pos) } {
             0 => { // PUSH
+                pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("PUSH");
                 let x = code.bc[pos];pos+=1;
@@ -91,6 +95,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::end!("PUSH");
             },
             1 => { // DFND
+                pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("DFND");
                 let x = code.bc[pos];pos+=1;
@@ -104,6 +109,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::end!("DFND");
             },
             6 => { // POPS
+                pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("POPS");
                 #[cfg(feature = "debug")]
@@ -115,6 +121,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::end!("POPS");
             },
             7 => { // RETN
+                pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("RETN");
                 #[cfg(feature = "debug")]
@@ -131,6 +138,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 };
             },
             11 => { // ARRO
+                pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("ARRO");
                 let x = code.bc[pos];pos+=1;
@@ -147,6 +155,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::end!("ARRO");
             },
             12 => { // ARRM
+                pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("ARRM");
                 let x = code.bc[pos];pos+=1;
@@ -166,6 +175,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::end!("ARRM");
             },
             16 => { // FN1C
+                pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("FN1C");
                 #[cfg(feature = "debug")]
@@ -180,6 +190,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::end!("FN1C");
             },
             18 => { // FN1O
+                pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("FN1O");
                 #[cfg(feature = "debug")]
@@ -198,6 +209,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::end!("FN1O");
             },
             17 => { // FN2C
+                pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("FN2C");
                 #[cfg(feature = "debug")]
@@ -213,6 +225,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::end!("FN2C");
             },
             19 => { // FN2O
+                pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("FN2O");
                 #[cfg(feature = "debug")]
@@ -233,6 +246,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::end!("FN2O");
             },
             20 => { // TR2D
+                pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("TR2D");
                 let g = stack.s.pop().unwrap();
@@ -247,6 +261,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::end!("TR2D");
             },
             21 => { // TR3D
+                pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("TR3D");
                 #[cfg(feature = "debug")]
@@ -262,6 +277,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::end!("TR3D");
             },
             23 => { // TR3O
+                pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("TR3O");
                 #[cfg(feature = "debug")]
@@ -281,6 +297,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::end!("TR3O");
             },
             26 => { // MD1C
+                pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("MD1C");
                 #[cfg(feature = "debug")]
@@ -295,6 +312,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::end!("MD1C");
             },
             27 => { // MD2C
+                pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("MD2C");
                 #[cfg(feature = "debug")]
@@ -310,6 +328,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::end!("MD2C");
             },
             32 => { // VARO
+                pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("VARO");
                 let x = code.bc[pos];pos+=1;
@@ -324,6 +343,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::end!("VARO");
             },
             34 => { // VARU
+                pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("VARU");
                 let x = code.bc[pos];pos+=1;
@@ -338,6 +358,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::end!("VARU");
             },
             33 => { // VARM
+                pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("VARM");
                 let x = code.bc[pos];pos+=1;
@@ -352,6 +373,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::end!("VARM");
             },
             48 => { // SETN
+                pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("SETN");
                 #[cfg(feature = "debug")]
@@ -366,6 +388,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::end!("SETN");
             },
             49 => { // SETU
+                pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("SETU");
                 #[cfg(feature = "debug")]
@@ -380,6 +403,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::end!("SETU");
             },
             50 => { // SETM
+                pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("SETM");
                 #[cfg(feature = "debug")]
@@ -396,6 +420,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::end!("SETM");
             },
             51 => { // SETC
+                pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("SETC");
                 #[cfg(feature = "debug")]
@@ -411,7 +436,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::end!("SETC");
             },
             _ => {
-                panic!("unreachable op: {}",op);
+                panic!("unreachable op: {}",code.bc.get_unchecked(pos));
             }
         }
         #[cfg(feature = "coz-loop")]
