@@ -104,7 +104,7 @@ impl Calleable for V {
                 #[cfg(feature = "coz")]
                 coz::begin!("call::UserMd1");
                 let D1(m,f) = mods.deref();
-                let args = vec![Some(self.clone()),none_or_clone(&x),none_or_clone(&w),Some(m.clone()),Some(f.clone())];
+                let args = vec![Some(self.clone()),x.none_or_clone(),w.none_or_clone(),Some(m.clone()),Some(f.clone())];
                 let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args));
                 let pos = body_pos(b,arity);
                 #[cfg(feature = "coz")]
@@ -115,8 +115,8 @@ impl Calleable for V {
                 #[cfg(feature = "coz")]
                 coz::begin!("call::UserMd2");
                 let D2(m,f,g) = mods.deref();
-                let args = vec![Some(self.clone()),none_or_clone(&x),none_or_clone(&w),Some(m.clone()),Some(f.clone()),Some(g.clone())];
-                let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args));
+                let args = vec![Some(self.clone()),x.none_or_clone(),w.none_or_clone(),Some(m.clone()),Some(f.clone()),Some(g.clone())]; // cloning args is slow
+                let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args)); // creating a new env is slow
                 let pos = body_pos(b,arity);
                 #[cfg(feature = "coz")]
                 coz::end!("call:UserMd2");
@@ -125,7 +125,7 @@ impl Calleable for V {
             V::BlockInst(b,_prim) => {
                 #[cfg(feature = "coz")]
                 coz::begin!("call::BlockInst");
-                let args = vec![Some(self.clone()),none_or_clone(&x),none_or_clone(&w)];
+                let args = vec![Some(self.clone()),x.none_or_clone(),w.none_or_clone()];
                 let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args));
                 let pos = body_pos(b,arity);
                 #[cfg(feature = "coz")]
@@ -143,7 +143,7 @@ impl Calleable for V {
                 let D1(m,f) = d1.deref();
                 let r =
                 match m {
-                    V::R1(r1,_prim) => r1.0(stack,arity,Some(f),x,w),
+                    V::R1(r1,_prim) => r1.0(stack,arity,Vn(Some(f)),x,w),
                     _ => panic!("can only call raw1 mods in derv1"),
                 };
                 #[cfg(feature = "coz")]
@@ -157,7 +157,7 @@ impl Calleable for V {
                 #[cfg(feature = "coz")]
                 coz::end!("call:D2");
                 match m {
-                    V::R2(r2,_prim) => r2.0(stack,arity,Some(f),Some(g),x,w),
+                    V::R2(r2,_prim) => r2.0(stack,arity,Vn(Some(f)),Vn(Some(g)),x,w),
                     _ => panic!("can only call raw2 mods in derv2"),
                 }
             },
@@ -168,7 +168,7 @@ impl Calleable for V {
                 #[cfg(feature = "coz")]
                 coz::end!("call:Tr2");
                 let r = h.call(stack,arity,x,w);
-                g.call(stack,1,Some(&r.as_v().unwrap()),None)
+                g.call(stack,1,Vn(*Some(&r.as_v()).unwrap()),Vn(None))
             },
             V::Tr3(tr,_prim) => {
                 #[cfg(feature = "coz")]
@@ -177,13 +177,13 @@ impl Calleable for V {
                 #[cfg(feature = "coz")]
                 coz::end!("call:Tr3");
                 let r =
-                    match arity {
-                        1 => h.call(stack,arity,Some(*x.as_ref().unwrap()),None),
-                        2 => h.call(stack,arity,Some(*x.as_ref().unwrap()),Some(*w.as_ref().unwrap())),
+                    match arity { // TODO this match might not be necessary
+                        1 => h.call(stack,arity,Vn(x.0),Vn(None)),
+                        2 => h.call(stack,arity,Vn(x.0),Vn(w.0)),
                         _ => panic!("illegal arity"),
                     };
-                let l = f.call(stack,arity,x,w);
-                g.call(stack,2,Some(&r.as_v().unwrap()),Some(&l.as_v().unwrap()))
+                let l = f.call(stack,arity,Vn(x.0),Vn(w.0));
+                g.call(stack,2,Vn(Some(&r.as_v().unwrap())),Vn(Some(&l.as_v().unwrap())))
             },
             V::A(_) => Vs::V(self.clone()),
             V::Nothing => Vs::V(V::Nothing),
@@ -192,7 +192,18 @@ impl Calleable for V {
 }
 
 // Value (Optional)
-pub type Vn<'a> = Option<&'a V>;
+pub struct Vn<'a>(pub Option<&'a V>);
+impl<'a> Vn<'a> {
+    fn none_or_clone(&self) -> Vh {
+        #[cfg(feature = "coz")]
+        coz::scope!("none_or_clone");
+        match self.deref().0 {
+            None => Some(V::Nothing),
+            Some(v) => Some(v.clone()),
+        }
+
+    }
+}
 
 // Value (boxed on the stack)
 #[derive(Debug,Clone,EnumAsInner)]
@@ -533,14 +544,6 @@ pub fn new_scalar<T: Decoder>(n: T) -> V {
     #[cfg(feature = "coz")]
     coz::scope!("new_scalar");
     V::Scalar(n.to_f64())
-}
-pub fn none_or_clone(vn: &Vn) -> Vh {
-    #[cfg(feature = "coz")]
-    coz::scope!("none_or_clone");
-    match vn {
-        None => Some(V::Nothing),
-        Some(v) => Some(v.deref().clone()),
-    }
 }
 pub fn body_pos(b: &Cc<BlockInst>,arity: usize) -> usize {
     #[cfg(feature = "coz")]

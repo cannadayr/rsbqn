@@ -15,7 +15,7 @@ use num_traits::FromPrimitive;
 pub fn call(stack: &mut Stack,arity: usize,a: Vn,x: Vn, w: Vn) -> Vs {
     #[cfg(feature = "coz")]
     coz::scope!("call");
-    match a {
+    match a.0 {
         Some(v) => v.call(stack,arity,x,w),
         _ => panic!("unimplemented call"),
     }
@@ -182,7 +182,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 dbg_stack_in("FN1C",pos-1,"".to_string(),stack);
                 let f = stack.s.pop().unwrap();
                 let x = stack.s.pop().unwrap();
-                let r = call(&mut stack,1,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),None);
+                let r = call(&mut stack,1,Vn(Some(&f.into_v().unwrap())),Vn(Some(&x.into_v().unwrap())),Vn(None));
                 stack.s.push(r);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("FN1C",pos-1,stack);
@@ -199,7 +199,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let r =
                     match &x.as_v().unwrap() {
                         V::Nothing => x,
-                        _ => call(&mut stack,1,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),None),
+                        _ => call(&mut stack,1,Vn(Some(&f.into_v().unwrap())),Vn(Some(&x.into_v().unwrap())),Vn(None)),
                     };
                 stack.s.push(r);
                 #[cfg(feature = "debug")]
@@ -215,7 +215,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let w = stack.s.pop().unwrap();
                 let f = stack.s.pop().unwrap();
                 let x = stack.s.pop().unwrap();
-                let r = call(&mut stack,2,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),Some(&w.into_v().unwrap()));
+                let r = call(&mut stack,2,Vn(Some(&f.into_v().unwrap())),Vn(Some(&x.into_v().unwrap())),Vn(Some(&w.into_v().unwrap())));
                 stack.s.push(r);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("FN2C",pos-1,stack);
@@ -233,8 +233,8 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let r =
                     match (&x.as_v().unwrap(),&w.as_v().unwrap()) {
                         (V::Nothing,_) => x,
-                        (_,V::Nothing) => call(&mut stack,1,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),None),
-                        _ => call(&mut stack,2,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),Some(&w.into_v().unwrap()))
+                        (_,V::Nothing) => call(&mut stack,1,Vn(Some(&f.into_v().unwrap())),Vn(Some(&x.into_v().unwrap())),Vn(None)),
+                        _ => call(&mut stack,2,Vn(Some(&f.into_v().unwrap())),Vn(Some(&x.into_v().unwrap())),Vn(Some(&w.into_v().unwrap())))
                     };
                 stack.s.push(r);
                 #[cfg(feature = "debug")]
@@ -397,7 +397,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let i = stack.s.pop().unwrap();
                 let f = stack.s.pop().unwrap();
                 let x = stack.s.pop().unwrap();
-                let v = call(&mut stack,2,Some(&f.into_v().unwrap()),Some(&x.into_v().unwrap()),Some(&i.get()));
+                let v = call(&mut stack,2,Vn(Some(&f.into_v().unwrap())),Vn(Some(&x.into_v().unwrap())),Vn(Some(&i.get())));
                 let r = i.set(false,v);
                 stack.s.push(Vs::V(r));
                 #[cfg(feature = "debug")]
@@ -412,7 +412,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 dbg_stack_in("SETC",pos-1,"".to_string(),stack);
                 let i = stack.s.pop().unwrap();
                 let f = stack.s.pop().unwrap();
-                let v = call(&mut stack,1,Some(&f.into_v().unwrap()),Some(&i.get()),None);
+                let v = call(&mut stack,1,Vn(Some(&f.into_v().unwrap())),Vn(Some(&i.get())),Vn(None));
                 let r = i.set(false,v);
                 stack.s.push(Vs::V(r));
                 #[cfg(feature = "debug")]
@@ -463,7 +463,7 @@ pub fn runtime(stack: &mut Stack) -> V {
             }
             info!("runtime loaded");
             let prim_fns = V::A(Cc::new(A::new(vec![V::Fn(Fn(decompose),None),V::Fn(Fn(prim_ind),None)],vec![2])));
-            let _ = call(stack,1,Some(&set_prims),Some(&prim_fns),None);
+            let _ = call(stack,1,Vn(Some(&set_prims)),Vn(Some(&prim_fns)),Vn(None));
             V::A(prims)
         },
         None => panic!("cant get mutable runtime"),
@@ -473,7 +473,7 @@ pub fn runtime(stack: &mut Stack) -> V {
 pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V) -> Cc<Code> {
     #[cfg(feature = "coz")]
     coz::scope!("prog");
-    let mut prog = call(stack,2,Some(compiler),Some(&src),Some(runtime)).into_v().unwrap().into_a().unwrap();
+    let mut prog = call(stack,2,Vn(Some(compiler)),Vn(Some(&src)),Vn(Some(runtime))).into_v().unwrap().into_a().unwrap();
     info!("prog count = {}",prog.strong_count());
     match prog.get_mut() {
         Some(p) => {
