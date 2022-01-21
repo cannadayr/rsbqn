@@ -1,5 +1,5 @@
 use std::ops::Deref;
-use std::cell::RefCell;
+use std::cell::UnsafeCell;
 use bacon_rajan_cc::Cc;
 use crate::ebqn::vm;
 use crate::late_init::LateInit;
@@ -287,7 +287,7 @@ pub struct Block {
 #[derive(Default,Debug)]
 pub struct EnvUnboxed {
     pub parent:Option<Env>,
-    pub vars:   RefCell<Vec<Vh>>,
+    pub vars:   UnsafeCell<Vec<Vh>>,
 }
 
 #[derive(Clone,Debug)]
@@ -319,13 +319,16 @@ impl Env {
                     v
                 },
             };
-        let env = EnvUnboxed {parent: parent, vars: RefCell::new(vars) };
+        let env = EnvUnboxed {parent: parent, vars: UnsafeCell::new(vars) };
         Self(Cc::new(env))
     }
+    // get, set, and get_drop use unsafe code
+    // we are assuming that the compiler is correctly indexing locals
+    // we are using unsafe because interacting with the heap is in the hot-path of the vm
     pub fn get(&self,id: usize) -> V {
         match self {
             Env(e) => {
-                match &e.vars.borrow()[id] {
+                match unsafe { &(*e.vars.get()).get_unchecked(id) } {
                     Some(v) => v.clone(),
                     None => panic!("heap slot is undefined"),
                 }
@@ -335,8 +338,8 @@ impl Env {
     pub fn set(&self,d: bool,id: usize,v: &V) {
         match self {
             Env(e) => {
-                assert_eq!(d,e.vars.borrow()[id].is_none());
-                e.vars.borrow_mut()[id] = Some(v.clone());
+                assert_eq!(d,unsafe { &(*e.vars.get()).get_unchecked(id) }.is_none());
+                unsafe { *(*e.vars.get()).get_unchecked_mut(id) = Some(v.clone())};
             },
         }
     }
@@ -344,11 +347,11 @@ impl Env {
         match self {
             Env(e) => {
                 let r =
-                    match &e.vars.borrow()[id] {
+                    match unsafe { &(*e.vars.get()).get_unchecked(id) } {
                         Some(v) => v.clone(),
                         None => panic!("heap slot is undefined"),
                     };
-                e.vars.borrow_mut()[id] = None;
+                unsafe { *(*e.vars.get()).get_unchecked_mut(id) = None };
                 r
             },
         }
