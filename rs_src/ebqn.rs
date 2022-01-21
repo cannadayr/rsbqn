@@ -84,7 +84,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("PUSH");
-                let x = code.bc[pos];pos+=1;
+                let x = unsafe { *code.bc.get_unchecked(pos) };pos+=1;
                 let r = code.objs[x].clone();
                 #[cfg(feature = "debug")]
                 dbg_stack_in("PUSH",pos-2,format!("{} {}",&x,&r),stack);
@@ -98,7 +98,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("DFND");
-                let x = code.bc[pos];pos+=1;
+                let x = unsafe { *code.bc.get_unchecked(pos) };pos+=1;
                 let r = derv(env.clone(),&code,&code.blocks[x],&mut stack);
                 #[cfg(feature = "debug")]
                 dbg_stack_in("DFND",pos-2,format!("{} {}",&x,&r),stack);
@@ -141,7 +141,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("ARRO");
-                let x = code.bc[pos];pos+=1;
+                let x = unsafe { *code.bc.get_unchecked(pos) };pos+=1;
                 #[cfg(feature = "debug")]
                 dbg_stack_in("ARRO",pos-2,format!("{}",&x),stack);
                 let mut acc: VecDeque<V> = VecDeque::with_capacity(x);
@@ -158,7 +158,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("ARRM");
-                let x = code.bc[pos];pos+=1;
+                let x = unsafe { *code.bc.get_unchecked(pos) };pos+=1;
                 let mut acc: VecDeque<Vr> = VecDeque::with_capacity(x);
                 for i in 0..x {
                     acc.push_front(match stack.s.pop().unwrap() {
@@ -331,8 +331,8 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("VARO");
-                let x = code.bc[pos];pos+=1;
-                let w = code.bc[pos];pos+=1;
+                let x = unsafe { *code.bc.get_unchecked(pos) };pos+=1;
+                let w = unsafe { *code.bc.get_unchecked(pos) };pos+=1;
                 let t = env.ge(x);
                 #[cfg(feature = "debug")]
                 dbg_stack_in("VARO",pos-3,format!("{} {}",&x,&w),stack);
@@ -346,8 +346,8 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("VARU");
-                let x = code.bc[pos];pos+=1;
-                let w = code.bc[pos];pos+=1;
+                let x = unsafe { *code.bc.get_unchecked(pos) };pos+=1;
+                let w = unsafe { *code.bc.get_unchecked(pos) };pos+=1;
                 let t = env.ge(x);
                 #[cfg(feature = "debug")]
                 dbg_stack_in("VARU",pos-3,format!("{} {}",&x,&w),stack);
@@ -361,8 +361,8 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("VARM");
-                let x = code.bc[pos];pos+=1;
-                let w = code.bc[pos];pos+=1;
+                let x = unsafe { *code.bc.get_unchecked(pos) };pos+=1;
+                let w = unsafe { *code.bc.get_unchecked(pos) };pos+=1;
                 let t = env.ge(x);
                 #[cfg(feature = "debug")]
                 dbg_stack_in("VARM",pos-3,format!("{} {}",&x,&w),stack);
@@ -436,7 +436,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::end!("SETC");
             },
             _ => {
-                panic!("unreachable op: {}",code.bc.get_unchecked(pos));
+                panic!("unreachable op: {}",code.bc[pos]);
             }
         }
         #[cfg(feature = "coz-loop")]
