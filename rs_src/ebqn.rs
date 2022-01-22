@@ -7,6 +7,7 @@ use bacon_rajan_cc::Cc;
 use std::ops::Deref;
 use std::error::Error;
 use std::collections::VecDeque;
+use std::ptr;
 //use std::panic;
 use log::{debug, trace, error, log_enabled, info, Level};
 use itertools::Itertools;
@@ -180,8 +181,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::begin!("FN1C");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("FN1C",pos-1,"".to_string(),stack);
-                let f = stack.s.pop().unwrap();
-                let x = stack.s.pop().unwrap();
+                let l = stack.s.len();
+                let f = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
+                let x = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
+                unsafe { stack.s.set_len(l-2) };
                 let r = call(&mut stack,1,Vn(Some(&f.into_v().unwrap())),Vn(Some(&x.into_v().unwrap())),Vn(None));
                 stack.s.push(r);
                 #[cfg(feature = "debug")]
@@ -195,8 +198,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::begin!("FN1O");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("FN1O",pos-1,"".to_string(),stack);
-                let f = stack.s.pop().unwrap();
-                let x = stack.s.pop().unwrap();
+                let l = stack.s.len();
+                let f = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
+                let x = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
+                unsafe { stack.s.set_len(l-2) };
                 let r =
                     match &x.as_v().unwrap() {
                         V::Nothing => x,
@@ -214,9 +219,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::begin!("FN2C");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("FN2C",pos-1,"".to_string(),stack);
-                let w = stack.s.pop().unwrap();
-                let f = stack.s.pop().unwrap();
-                let x = stack.s.pop().unwrap();
+                let l = stack.s.len();
+                let w = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
+                let f = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
+                let x = unsafe { ptr::read(stack.s.as_ptr().add(l-3)) };
+                unsafe { stack.s.set_len(l-3) };
                 let r = call(&mut stack,2,Vn(Some(&f.into_v().unwrap())),Vn(Some(&x.into_v().unwrap())),Vn(Some(&w.into_v().unwrap())));
                 stack.s.push(r);
                 #[cfg(feature = "debug")]
@@ -230,9 +237,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::begin!("FN2O");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("FN2O",pos-1,"".to_string(),stack);
-                let w = stack.s.pop().unwrap();
-                let f = stack.s.pop().unwrap();
-                let x = stack.s.pop().unwrap();
+                let l = stack.s.len();
+                let w = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
+                let f = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
+                let x = unsafe { ptr::read(stack.s.as_ptr().add(l-3)) };
+                unsafe { stack.s.set_len(l-3) };
                 let r =
                     match (&x.as_v().unwrap(),&w.as_v().unwrap()) {
                         (V::Nothing,_) => x,
@@ -249,8 +258,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("TR2D");
-                let g = stack.s.pop().unwrap();
-                let h = stack.s.pop().unwrap();
+                let l = stack.s.len();
+                let g = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
+                let h = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
+                unsafe { stack.s.set_len(l-2) };
                 #[cfg(feature = "debug")]
                 dbg_stack_in("TR2D",pos-1,format!("{} {}",&g,&h),stack);
                 let t = Vs::V(V::Tr2(Cc::new(Tr2::new(g,h)),None));
@@ -266,9 +277,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::begin!("TR3D");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("TR3D",pos-1,"".to_string(),stack);
-                let f = stack.s.pop().unwrap();
-                let g = stack.s.pop().unwrap();
-                let h = stack.s.pop().unwrap();
+                let l = stack.s.len();
+                let f = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
+                let g = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
+                let h = unsafe { ptr::read(stack.s.as_ptr().add(l-3)) };
+                unsafe { stack.s.set_len(l-3) };
                 let t = Vs::V(V::Tr3(Cc::new(Tr3::new(f,g,h)),None));
                 stack.s.push(t);
                 #[cfg(feature = "debug")]
@@ -282,9 +295,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::begin!("TR3O");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("TR3O",pos-1,"".to_string(),stack);
-                let f = stack.s.pop().unwrap();
-                let g = stack.s.pop().unwrap();
-                let h = stack.s.pop().unwrap();
+                let l = stack.s.len();
+                let f = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
+                let g = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
+                let h = unsafe { ptr::read(stack.s.as_ptr().add(l-3)) };
+                unsafe { stack.s.set_len(l-3) };
                 let t =
                     match &f.as_v().unwrap() {
                         V::Nothing => Vs::V(V::Tr2(Cc::new(Tr2::new(g,h)),None)),
@@ -302,8 +317,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::begin!("MD1C");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("MD1C",pos-1,"".to_string(),stack);
-                let f = stack.s.pop().unwrap();
-                let m = stack.s.pop().unwrap();
+                let l = stack.s.len();
+                let f = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
+                let m = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
+                unsafe { stack.s.set_len(l-2) };
                 let r = call1(&mut stack,m.into_v().unwrap(),f.into_v().unwrap());
                 stack.s.push(r);
                 #[cfg(feature = "debug")]
@@ -317,9 +334,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::begin!("MD2C");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("MD2C",pos-1,"".to_string(),stack);
-                let f = stack.s.pop().unwrap();
-                let m = stack.s.pop().unwrap();
-                let g = stack.s.pop().unwrap();
+                let l = stack.s.len();
+                let f = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
+                let m = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
+                let g = unsafe { ptr::read(stack.s.as_ptr().add(l-3)) };
+                unsafe { stack.s.set_len(l-3) };
                 let r = call2(&mut stack,m.into_v().unwrap(),f.into_v().unwrap(),g.into_v().unwrap());
                 stack.s.push(r);
                 #[cfg(feature = "debug")]
@@ -378,8 +397,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::begin!("SETN");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("SETN",pos-1,"".to_string(),stack);
-                let i = stack.s.pop().unwrap();
-                let v = stack.s.pop().unwrap();
+                let l = stack.s.len();
+                let i = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
+                let v = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
+                unsafe { stack.s.set_len(l-2) };
                 let r = i.set(true,v);
                 stack.s.push(Vs::V(r));
                 #[cfg(feature = "debug")]
@@ -393,8 +414,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::begin!("SETU");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("SETU",pos-1,"".to_string(),stack);
-                let i = stack.s.pop().unwrap();
-                let v = stack.s.pop().unwrap();
+                let l = stack.s.len();
+                let i = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
+                let v = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
+                unsafe { stack.s.set_len(l-2) };
                 let r = i.set(false,v);
                 stack.s.push(Vs::V(r));
                 #[cfg(feature = "debug")]
@@ -408,9 +431,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::begin!("SETM");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("SETM",pos-1,"".to_string(),stack);
-                let i = stack.s.pop().unwrap();
-                let f = stack.s.pop().unwrap();
-                let x = stack.s.pop().unwrap();
+                let l = stack.s.len();
+                let i = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
+                let f = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
+                let x = unsafe { ptr::read(stack.s.as_ptr().add(l-3)) };
+                unsafe { stack.s.set_len(l-3) };
                 let v = call(&mut stack,2,Vn(Some(&f.into_v().unwrap())),Vn(Some(&x.into_v().unwrap())),Vn(Some(&i.get())));
                 let r = i.set(false,v);
                 stack.s.push(Vs::V(r));
@@ -425,8 +450,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::begin!("SETC");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("SETC",pos-1,"".to_string(),stack);
-                let i = stack.s.pop().unwrap();
-                let f = stack.s.pop().unwrap();
+                let l = stack.s.len();
+                let i = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
+                let f = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
+                unsafe { stack.s.set_len(l-2) };
                 let v = call(&mut stack,1,Vn(Some(&f.into_v().unwrap())),Vn(Some(&i.get())),Vn(None));
                 let r = i.set(false,v);
                 stack.s.push(Vs::V(r));
