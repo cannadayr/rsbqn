@@ -294,15 +294,18 @@ pub struct EnvUnboxed {
 pub struct Env(Cc<EnvUnboxed>);
 impl Env {
     pub fn new(parent: Option<Env>,block: &Cc<Block>,arity: usize,args: Option<Vec<Vh>>) -> Self {
-        #[cfg(feature = "coz")]
-        coz::scope!("Env::new");
+        // index into bodies with unsafe code.
+        // we are assuming the compiler has produced correct body indexing
+        // environment creation is in the outskirts of the hot-path.
+        // as such, this might be changed back to using safe code depending
+        // on how headers are implemented
         let (_pos,locals) =
             match &block.body {
-                Body::Imm(b) => block.code.bodies[*b],
+                Body::Imm(b) => unsafe {*block.code.bodies.get_unchecked(*b) },
                 Body::Defer(mon,dya) => {
                     match arity {
-                        1 => block.code.bodies[mon[0]],
-                        2 => block.code.bodies[dya[0]],
+                        1 => unsafe { *block.code.bodies.get_unchecked(mon[0]) },
+                        2 => unsafe { *block.code.bodies.get_unchecked(dya[0]) },
                         n => panic!("invalid arity for deferred block {}",n),
                     }
                 },
