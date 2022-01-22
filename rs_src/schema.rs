@@ -1,5 +1,6 @@
 use std::ops::Deref;
 use std::cell::UnsafeCell;
+use std::ptr;
 use bacon_rajan_cc::Cc;
 use crate::ebqn::vm;
 use crate::late_init::LateInit;
@@ -13,6 +14,9 @@ pub trait Calleable {
 }
 pub trait Decoder {
     fn to_f64(&self) -> f64;
+}
+pub trait Stacker {
+    fn push2(&mut self,v: Vs) -> &Self;
 }
 
 #[derive(Clone)]
@@ -240,7 +244,18 @@ pub struct Stack {
 }
 impl Stack {
     pub fn new() -> Self {
-        Self { s: Vec::new(), fp: 0 }
+        Self { s: Vec::with_capacity(128), fp: 0 }
+    }
+}
+impl Stacker for Vec<Vs> {
+    fn push2(&mut self,v: Vs) -> &Self {
+        unsafe {
+            let l = self.len();
+            let end = self.as_mut_ptr().add(l);
+            ptr::write(end,v);
+            self.set_len(l+1);
+            self
+        }
     }
 }
 

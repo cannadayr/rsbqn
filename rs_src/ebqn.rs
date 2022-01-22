@@ -1,4 +1,4 @@
-use crate::schema::{Env,V,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Stack,Body,A,Ar,Tr2,Tr3,Runtime,Compiler,Prog,D2,D1,Fn,new_scalar,new_string};
+use crate::schema::{Env,V,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Stacker,Stack,Body,A,Ar,Tr2,Tr3,Runtime,Compiler,Prog,D2,D1,Fn,new_scalar,new_string};
 use crate::prim::{provide,decompose,prim_ind};
 use crate::code::{r0,r1,c};
 use crate::fmt::{dbg_stack_out,dbg_stack_in};
@@ -89,7 +89,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let r = code.objs[x].clone();
                 #[cfg(feature = "debug")]
                 dbg_stack_in("PUSH",pos-2,format!("{} {}",&x,&r),stack);
-                stack.s.push(Vs::V(r));
+                stack.s.push2(Vs::V(r));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("PUSH",pos-2,stack);
                 #[cfg(feature = "coz-ops")]
@@ -103,7 +103,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let r = derv(env.clone(),&code,&code.blocks[x],&mut stack);
                 #[cfg(feature = "debug")]
                 dbg_stack_in("DFND",pos-2,format!("{} {}",&x,&r),stack);
-                stack.s.push(r);
+                stack.s.push2(r);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("DFND",pos-2,stack);
                 #[cfg(feature = "coz-ops")]
@@ -149,7 +149,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 for i in 0..x {
                     acc.push_front(stack.s.pop().unwrap().into_v().unwrap())
                 }
-                stack.s.push(list(Vec::from(acc)));
+                stack.s.push2(list(Vec::from(acc)));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("ARRO",pos-2,stack);
                 #[cfg(feature = "coz-ops")]
@@ -169,7 +169,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 }
                 #[cfg(feature = "debug")]
                 dbg_stack_in("ARRM",pos-2,format!("{}",&x),stack);
-                stack.s.push(Vs::Ar(Ar::new(Vec::from(acc))));
+                stack.s.push2(Vs::Ar(Ar::new(Vec::from(acc))));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("ARRM",pos-2,stack);
                 #[cfg(feature = "coz-ops")]
@@ -186,7 +186,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let x = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
                 unsafe { stack.s.set_len(l-2) };
                 let r = call(&mut stack,1,Vn(Some(&f.into_v().unwrap())),Vn(Some(&x.into_v().unwrap())),Vn(None));
-                stack.s.push(r);
+                stack.s.push2(r);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("FN1C",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
@@ -207,7 +207,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                         V::Nothing => x,
                         _ => call(&mut stack,1,Vn(Some(&f.into_v().unwrap())),Vn(Some(&x.into_v().unwrap())),Vn(None)),
                     };
-                stack.s.push(r);
+                stack.s.push2(r);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("FN1O",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
@@ -225,7 +225,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let x = unsafe { ptr::read(stack.s.as_ptr().add(l-3)) };
                 unsafe { stack.s.set_len(l-3) };
                 let r = call(&mut stack,2,Vn(Some(&f.into_v().unwrap())),Vn(Some(&x.into_v().unwrap())),Vn(Some(&w.into_v().unwrap())));
-                stack.s.push(r);
+                stack.s.push2(r);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("FN2C",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
@@ -248,7 +248,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                         (_,V::Nothing) => call(&mut stack,1,Vn(Some(&f.into_v().unwrap())),Vn(Some(&x.into_v().unwrap())),Vn(None)),
                         _ => call(&mut stack,2,Vn(Some(&f.into_v().unwrap())),Vn(Some(&x.into_v().unwrap())),Vn(Some(&w.into_v().unwrap())))
                     };
-                stack.s.push(r);
+                stack.s.push2(r);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("FN2O",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
@@ -265,7 +265,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 #[cfg(feature = "debug")]
                 dbg_stack_in("TR2D",pos-1,format!("{} {}",&g,&h),stack);
                 let t = Vs::V(V::Tr2(Cc::new(Tr2::new(g,h)),None));
-                stack.s.push(t);
+                stack.s.push2(t);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("TR2D",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
@@ -283,7 +283,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let h = unsafe { ptr::read(stack.s.as_ptr().add(l-3)) };
                 unsafe { stack.s.set_len(l-3) };
                 let t = Vs::V(V::Tr3(Cc::new(Tr3::new(f,g,h)),None));
-                stack.s.push(t);
+                stack.s.push2(t);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("TR3D",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
@@ -305,7 +305,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                         V::Nothing => Vs::V(V::Tr2(Cc::new(Tr2::new(g,h)),None)),
                         _ => Vs::V(V::Tr3(Cc::new(Tr3::new(f,g,h)),None)),
                     };
-                stack.s.push(t);
+                stack.s.push2(t);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("TR3O",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
@@ -322,7 +322,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let m = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
                 unsafe { stack.s.set_len(l-2) };
                 let r = call1(&mut stack,m.into_v().unwrap(),f.into_v().unwrap());
-                stack.s.push(r);
+                stack.s.push2(r);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("MD1C",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
@@ -340,7 +340,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let g = unsafe { ptr::read(stack.s.as_ptr().add(l-3)) };
                 unsafe { stack.s.set_len(l-3) };
                 let r = call2(&mut stack,m.into_v().unwrap(),f.into_v().unwrap(),g.into_v().unwrap());
-                stack.s.push(r);
+                stack.s.push2(r);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("MD2C",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
@@ -355,7 +355,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let t = env.ge(x);
                 #[cfg(feature = "debug")]
                 dbg_stack_in("VARO",pos-3,format!("{} {}",&x,&w),stack);
-                stack.s.push(Vs::V(t.get(w)));
+                stack.s.push2(Vs::V(t.get(w)));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("VARO",pos-3,stack);
                 #[cfg(feature = "coz-ops")]
@@ -370,7 +370,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let t = env.ge(x);
                 #[cfg(feature = "debug")]
                 dbg_stack_in("VARU",pos-3,format!("{} {}",&x,&w),stack);
-                stack.s.push(Vs::V(t.get_drop(w)));
+                stack.s.push2(Vs::V(t.get_drop(w)));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("VARU",pos-3,stack);
                 #[cfg(feature = "coz-ops")]
@@ -385,7 +385,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let t = env.ge(x);
                 #[cfg(feature = "debug")]
                 dbg_stack_in("VARM",pos-3,format!("{} {}",&x,&w),stack);
-                stack.s.push(Vs::Slot(t.clone(),w));
+                stack.s.push2(Vs::Slot(t.clone(),w));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("VARM",pos-3,stack);
                 #[cfg(feature = "coz-ops")]
@@ -402,7 +402,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let v = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
                 unsafe { stack.s.set_len(l-2) };
                 let r = i.set(true,v);
-                stack.s.push(Vs::V(r));
+                stack.s.push2(Vs::V(r));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("SETN",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
@@ -419,7 +419,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let v = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
                 unsafe { stack.s.set_len(l-2) };
                 let r = i.set(false,v);
-                stack.s.push(Vs::V(r));
+                stack.s.push2(Vs::V(r));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("SETU",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
@@ -438,7 +438,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 unsafe { stack.s.set_len(l-3) };
                 let v = call(&mut stack,2,Vn(Some(&f.into_v().unwrap())),Vn(Some(&x.into_v().unwrap())),Vn(Some(&i.get())));
                 let r = i.set(false,v);
-                stack.s.push(Vs::V(r));
+                stack.s.push2(Vs::V(r));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("SETM",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
@@ -456,7 +456,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 unsafe { stack.s.set_len(l-2) };
                 let v = call(&mut stack,1,Vn(Some(&f.into_v().unwrap())),Vn(Some(&i.get())),Vn(None));
                 let r = i.set(false,v);
-                stack.s.push(Vs::V(r));
+                stack.s.push2(Vs::V(r));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("SETC",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
