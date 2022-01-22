@@ -3,7 +3,7 @@ use core::f64::{INFINITY,NEG_INFINITY};
 use ebqn::init_log;
 use ebqn::ebqn::{run,call,runtime,prog};
 use ebqn::code::{r0,r1,c};
-use ebqn::schema::{new_string,new_char,V,Vs,Stack};
+use ebqn::schema::{new_string,new_char,V,Vs,Vn,Stack};
 use ebqn::prim::{provide,decompose,prim_ind};
 use ebqn::schema::Body;
 use ebqn::schema::new_scalar;
@@ -29,7 +29,7 @@ fn main() {
     let src = new_string("{×´1+↕𝕩}");
     let prog = prog(&mut stack,&compiler,src,&runtime);
     let exec = run(&mut stack,prog);
-    let result = call(&mut stack,1,Some(&exec),Some(&V::Scalar(10.0)),None);
+    let result = call(&mut stack,1,Vn(Some(&exec)),Vn(Some(&V::Scalar(10000.0))),Vn(None));
     println!("{}",result);
 
     // single line variations for copy-pasting
