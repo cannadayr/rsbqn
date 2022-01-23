@@ -1,4 +1,4 @@
-use crate::schema::{Env,V,Vs,Vr,Vn,Block,BlockInst,Code,Calleable,Stacker,Stack,Body,A,Ar,Tr2,Tr3,Runtime,Compiler,Prog,D2,D1,Fn,new_scalar,new_string};
+use crate::schema::{Env,V,Vs,Vn,Block,BlockInst,Code,Calleable,Stacker,Stack,Body,A,Ar,Tr2,Tr3,Runtime,Compiler,Prog,D2,D1,Fn,new_scalar,new_string};
 use crate::prim::{provide,decompose,prim_ind};
 use crate::code::{r0,r1,c};
 use crate::fmt::{dbg_stack_out,dbg_stack_in};
@@ -157,16 +157,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("ARRM");
                 let x = unsafe { *code.bc.get_unchecked(pos) };pos+=1;
-                let mut acc: VecDeque<Vr> = VecDeque::with_capacity(x);
-                for i in 0..x {
-                    acc.push_front(match stack.s.pop().unwrap() {
-                        Vs::Slot(env,slot) => Vr::Slot(env,slot),
-                        _ => panic!("illegal non-slot passed to list"),
-                    })
-                }
                 #[cfg(feature = "debug")]
                 dbg_stack_in("ARRM",pos-2,format!("{}",&x),stack);
-                stack.s.push_unchecked(Vs::Ar(Ar::new(Vec::from(acc))));
+                let v = stack.s.pop_ref_list_unchecked(x);
+                stack.s.push_unchecked(Vs::Ar(Ar::new(v)));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("ARRM",pos-2,stack);
                 #[cfg(feature = "coz-ops")]

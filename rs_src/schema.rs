@@ -18,6 +18,7 @@ pub trait Decoder {
 pub trait Stacker {
     fn push_unchecked(&mut self,v: Vs) -> &Self;
     fn pop_list_unchecked(&mut self,n: usize) -> Vec<V>;
+    fn pop_ref_list_unchecked(&mut self,n: usize) -> Vec<Vs>;
 }
 
 #[derive(Clone)]
@@ -194,7 +195,7 @@ impl Vs {
             Vs::Slot(env,id) => env.get(*id),
             Vs::Ar(a) => {
                 let shape = vec![a.r.len() as usize];
-                let ravel = a.r.iter().map(|e| match e { Vr::Slot(env,id) => env.get(*id), }).collect::<Vec<V>>();
+                let ravel = a.r.iter().map(|e| match e { Vs::Slot(env,id) => env.get(*id), _ => panic!("ref array contains a non-slot"), }).collect::<Vec<V>>();
                 V::A(Cc::new(A::new(ravel,shape)))
             },
             _ => panic!("can only resolve slots or ref arrays"),
@@ -212,9 +213,10 @@ impl Vs {
                     };
                 a.r.iter().enumerate().for_each(|(i,e)|
                     match e {
-                        Vr::Slot(env,id) => {
+                        Vs::Slot(env,id) => {
                             env.set(d,*id,&arr.r[i]);
                         },
+                        _ => panic!("cant set non-slot in ref array"),
                     }
                 );
                 v
@@ -231,12 +233,6 @@ impl Default for Vs {
 
 // Value (boxed on the heap)
 pub type Vh = Option<V>;
-
-// value reference
-#[derive(Debug,Clone)]
-pub enum Vr {
-    Slot(Env,usize),
-}
 
 // Stack
 pub struct Stack {
@@ -264,6 +260,20 @@ impl Stacker for Vec<Vs> {
         unsafe {
             for i in (0..x).rev() {
                 *acc.get_unchecked_mut(i) = ptr::read(self.as_ptr().add(l-x+i)).into_v().unwrap_unchecked();
+                let end = self.as_mut_ptr().add(l-x+i);
+                ptr::write(end,Vs::Nothing);
+            }
+            self.set_len(l-x);
+        }
+        acc
+    }
+    fn pop_ref_list_unchecked(&mut self,x: usize) -> Vec<Vs> {
+        let l = self.len();
+        let mut acc: Vec<Vs> = vec![Vs::Nothing;x];
+        unsafe {
+            acc.set_len(x);
+            for i in (0..x).rev() {
+                *acc.get_unchecked_mut(i) = ptr::read(self.as_ptr().add(l-x+i));
                 let end = self.as_mut_ptr().add(l-x+i);
                 ptr::write(end,Vs::Nothing);
             }
@@ -472,10 +482,10 @@ impl A {
 // array of references. rank-1 for now.
 #[derive(Debug,Clone)]
 pub struct Ar {
-    r: Vec<Vr>,
+    r: Vec<Vs>,
 }
 impl Ar {
-    pub fn new(r: Vec<Vr>) -> Self {
+    pub fn new(r: Vec<Vs>) -> Self {
         Self { r: r }
     }
 }
