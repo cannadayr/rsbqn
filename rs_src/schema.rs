@@ -16,7 +16,8 @@ pub trait Decoder {
     fn to_f64(&self) -> f64;
 }
 pub trait Stacker {
-    fn push2(&mut self,v: Vs) -> &Self;
+    fn push_unchecked(&mut self,v: Vs) -> &Self;
+    fn pop_list_unchecked(&mut self,n: usize) -> Vec<V>;
 }
 
 #[derive(Clone)]
@@ -248,7 +249,7 @@ impl Stack {
     }
 }
 impl Stacker for Vec<Vs> {
-    fn push2(&mut self,v: Vs) -> &Self {
+    fn push_unchecked(&mut self,v: Vs) -> &Self {
         unsafe {
             let l = self.len();
             let end = self.as_mut_ptr().add(l);
@@ -256,6 +257,19 @@ impl Stacker for Vec<Vs> {
             self.set_len(l+1);
             self
         }
+    }
+    fn pop_list_unchecked(&mut self,x: usize) -> Vec<V> {
+        let l = self.len();
+        let mut acc: Vec<V> = vec![V::Nothing;x];
+        unsafe {
+            for i in (0..x).rev() {
+                *acc.get_unchecked_mut(i) = ptr::read(self.as_ptr().add(l-x+i)).into_v().unwrap_unchecked();
+                let end = self.as_mut_ptr().add(l-x+i);
+                ptr::write(end,Vs::Nothing);
+            }
+            self.set_len(l-x);
+        }
+        acc
     }
 }
 
