@@ -115,7 +115,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::begin!("POPS");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("POPS",pos-1,"".to_string(),stack);
-                let _ = stack.s.pop();
+                let _ = stack.s.pop_unchecked();
                 #[cfg(feature = "debug")]
                 dbg_stack_out("POPS",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
@@ -127,16 +127,9 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 coz::begin!("RETN");
                 #[cfg(feature = "debug")]
                 dbg_stack_in("RETN",pos-1,"".to_string(),stack);
-                break match stack.s.pop() {
-                    Some(rtn) => {
-                        #[cfg(feature = "coz-ops")]
-                        coz::end!("RETN");
-                        rtn
-                    },
-                    _ => {
-                        panic!("non-unary stack frame on return")
-                    }
-                };
+                #[cfg(feature = "coz-ops")]
+                coz::end!("RETN");
+                break stack.s.pop_unchecked();
             },
             11 => { // ARRO
                 pos += 1;
