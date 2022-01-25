@@ -1,4 +1,4 @@
-use crate::schema::{Env,V,Vs,Vn,Block,BlockInst,Code,Calleable,Stacker,Stack,Body,A,Ar,Tr2,Tr3,Runtime,Compiler,Prog,D2,D1,Fun,new_scalar,new_string};
+use crate::schema::{Env,V,Vs,Vn,Block,BlockInst,Code,Calleable,Stacker,Stack,Body,A,Ar,Tr2,Tr3,Runtime,Compiler,Prog,D2,D1,Fun,FunH,new_scalar,new_string};
 use crate::prim::{provide,decompose,prim_ind};
 use crate::code::{r0,r1,c};
 use crate::fmt::{dbg_stack_out,dbg_stack_in};
@@ -488,7 +488,7 @@ pub fn runtime(stack: &mut Stack) -> V {
                 }
             }
             info!("runtime loaded");
-            let prim_fns = V::A(Cc::new(A::new(vec![V::Fun(Fun(decompose),None),V::Fun(Fun(prim_ind),None)],vec![2])));
+            let prim_fns = V::A(Cc::new(A::new(vec![V::Fun(FunH(decompose),None),V::Fun(FunH(prim_ind),None)],vec![2])));
             let _ = call(stack,1,Vn(Some(&set_prims)),Vn(Some(&prim_fns)),Vn(None));
             V::A(prims)
         },

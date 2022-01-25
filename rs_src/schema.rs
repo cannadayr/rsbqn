@@ -1,4 +1,4 @@
-use std::ops::Deref;
+use std::ops::{Deref,Fn};
 use std::cell::UnsafeCell;
 use std::ptr;
 use bacon_rajan_cc::Cc;
@@ -23,16 +23,17 @@ pub trait Stacker {
 }
 
 // 'Fun' Holder
+#[derive(Clone)]
 pub struct FunH<Fun>(pub Fun)
     where for<'a> Fun: Fn(usize,Vn<'a>,Vn<'a>) -> Vs;
+pub type Fun = fn(usize,Vn,Vn) -> Vs;
 
-#[derive(Clone)]
-pub struct Fun(pub fn(usize,Vn,Vn) -> Vs);
-impl PartialEq for Fun {
+impl PartialEq for FunH<Fun> {
     fn eq(&self, other: &Self) -> bool {
         self.0 as usize == other.0 as usize
     }
 }
+
 #[derive(Clone)]
 pub struct R1(pub fn(&mut Stack,usize,Vn,Vn,Vn) -> Vs);
 impl PartialEq for R1 {
@@ -58,7 +59,7 @@ pub enum V {
     UserMd2(Cc<BlockInst>,Cc<D2>,Option<usize>),
     Nothing,
     A(Cc<A>),
-    Fun(Fun,Option<usize>),                          // X, W
+    Fun(FunH<Fun>,Option<usize>),                          // X, W
     R1(R1,Option<usize>),                          // F, X, W
     R2(R2,Option<usize>),                          // F, G, X, W
     D1(Cc<D1>,Option<usize>),                      // M, F
