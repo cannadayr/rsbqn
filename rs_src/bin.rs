@@ -29,7 +29,7 @@ fn main() {
     let src = new_string("{×´1+↕𝕩}");
     let prog = prog(&mut stack,&compiler,src,&runtime);
     let exec = run(&mut stack,prog);
-    let result = call(&mut stack,1,Vn(Some(&exec)),Vn(Some(&V::Scalar(10000.0))),Vn(None));
+    let result = call(&mut stack,1,Vn(Some(&exec)),Vn(Some(&V::Scalar(10.0))),Vn(None));
     println!("{}",result);
 
     // single line variations for copy-pasting

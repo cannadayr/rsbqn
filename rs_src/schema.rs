@@ -23,8 +23,8 @@ pub trait Stacker {
 }
 
 #[derive(Clone)]
-pub struct Fn(pub fn(usize,Vn,Vn) -> Vs);
-impl PartialEq for Fn {
+pub struct Fun(pub fn(usize,Vn,Vn) -> Vs);
+impl PartialEq for Fun {
     fn eq(&self, other: &Self) -> bool {
         self.0 as usize == other.0 as usize
     }
@@ -54,7 +54,7 @@ pub enum V {
     UserMd2(Cc<BlockInst>,Cc<D2>,Option<usize>),
     Nothing,
     A(Cc<A>),
-    Fn(Fn,Option<usize>),                          // X, W
+    Fun(Fun,Option<usize>),                          // X, W
     R1(R1,Option<usize>),                          // F, X, W
     R2(R2,Option<usize>),                          // F, G, X, W
     D1(Cc<D1>,Option<usize>),                      // M, F
@@ -94,7 +94,7 @@ impl Decoder for V {
             V::UserMd2(_b,_a,_prim) => panic!("can't encode UserMd2 to BEAM"),
             V::Nothing => panic!("can't decode nothing to BEAM"),
             V::A(_a) => panic!("can't decode array to RUST"),
-            V::Fn(_a,_prim) => panic!("can't decode fn to RUST"),
+            V::Fun(_a,_prim) => panic!("can't decode fn to RUST"),
             V::R1(_f,_prim) => panic!("can't decode r1 to RUST"),
             V::R2(_f,_prim) => panic!("can't decode r2 to RUST"),
             V::D1(_d1,_prim) => panic!("can't decode d1 to BEAM"),
@@ -129,7 +129,7 @@ impl Calleable for V {
             },
             V::Scalar(n) => Vs::V(V::Scalar(*n)),
             V::Char(c) => Vs::V(V::Char(*c)),
-            V::Fn(f,_prim) => f.0(arity,x,w),
+            V::Fun(f,_prim) => f.0(arity,x,w),
             V::R1(_f,_prim) => panic!("can't call r1"),
             V::R2(_f,_prim) => panic!("can't call r2"),
             V::D1(d1,_prim) => {
