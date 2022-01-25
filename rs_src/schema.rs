@@ -22,6 +22,10 @@ pub trait Stacker {
     fn pop_ref_list_unchecked(&mut self,n: usize) -> Vec<Vs>;
 }
 
+// 'Fun' Holder
+pub struct FunH<Fun>(pub Fun)
+    where for<'a> Fun: Fn(usize,Vn<'a>,Vn<'a>) -> Vs;
+
 #[derive(Clone)]
 pub struct Fun(pub fn(usize,Vn,Vn) -> Vs);
 impl PartialEq for Fun {
