@@ -45,9 +45,14 @@ impl PartialEq for Md1<M1> {
         self.0 as usize == other.0 as usize
     }
 }
+
 #[derive(Clone)]
-pub struct R2(pub fn(&mut Stack,usize,Vn,Vn,Vn,Vn) -> Vs);
-impl PartialEq for R2 {
+pub struct Md2<M2>(pub M2)
+    where for<'a> M2: Fn(&mut Stack,usize,Vn<'a>,Vn<'a>,Vn<'a>,Vn<'a>) -> Vs;
+
+pub type M2 = fn(&mut Stack,usize,Vn,Vn,Vn,Vn) -> Vs;
+
+impl PartialEq for Md2<M2> {
     fn eq(&self, other: &Self) -> bool {
         self.0 as usize == other.0 as usize
     }
@@ -65,7 +70,7 @@ pub enum V {
     A(Cc<A>),
     Fun(Fun<F>,Option<usize>),                          // X, W
     Md1(Md1<M1>,Option<usize>),                          // F, X, W
-    R2(R2,Option<usize>),                          // F, G, X, W
+    Md2(Md2<M2>,Option<usize>),                          // F, G, X, W
     D1(Cc<D1>,Option<usize>),                      // M, F
     D2(Cc<D2>,Option<usize>),                      // M, F, G
     Tr2(Cc<Tr2>,Option<usize>),
@@ -105,7 +110,7 @@ impl Decoder for V {
             V::A(_a) => panic!("can't decode array to RUST"),
             V::Fun(_a,_prim) => panic!("can't decode fn to RUST"),
             V::Md1(_f,_prim) => panic!("can't decode r1 to RUST"),
-            V::R2(_f,_prim) => panic!("can't decode r2 to RUST"),
+            V::Md2(_f,_prim) => panic!("can't decode r2 to RUST"),
             V::D1(_d1,_prim) => panic!("can't decode d1 to BEAM"),
             V::D2(_d2,_prim) => panic!("can't decode d2 to BEAM"),
             V::Tr2(_tr2,_prim) => panic!("can't decode train2 to RUST"),
@@ -140,7 +145,7 @@ impl Calleable for V {
             V::Char(c) => Vs::V(V::Char(*c)),
             V::Fun(f,_prim) => f.0(arity,x,w),
             V::Md1(_f,_prim) => panic!("can't call r1"),
-            V::R2(_f,_prim) => panic!("can't call r2"),
+            V::Md2(_f,_prim) => panic!("can't call r2"),
             V::D1(d1,_prim) => {
                 let D1(m,f) = d1.deref();
                 let r =
@@ -153,7 +158,7 @@ impl Calleable for V {
             V::D2(d2,_prim) => {
                 let D2(m,f,g) = d2.deref();
                 match m {
-                    V::R2(r2,_prim) => r2.0(stack,arity,Vn(Some(f)),Vn(Some(g)),x,w),
+                    V::Md2(m2,_prim) => m2.0(stack,arity,Vn(Some(f)),Vn(Some(g)),x,w),
                     _ => panic!("can only call raw2 mods in derv2"),
                 }
             },
