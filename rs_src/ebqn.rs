@@ -25,7 +25,7 @@ fn call1(stack: &mut Stack,m: V,f: V) -> Vs {
             assert_eq!(1,bl.def.typ);
             bl.call_md1(stack,1,D1::new(m.clone(),f))
         },
-        V::R1(_,_prim) => Vs::V(V::D1(Cc::new(D1::new(m,f)),None)),
+        V::Md1(_,_prim) => Vs::V(V::D1(Cc::new(D1::new(m,f)),None)),
         _ => panic!("call1 with invalid type"),
     }
 }
@@ -478,7 +478,7 @@ pub fn runtime(stack: &mut Stack) -> V {
                     V::UserMd2(_b,_a,ref mut prim) => { *prim = Some(i) },
                     V::BlockInst(_b,ref mut prim) => { *prim = Some(i) },
                     V::Fun(_a,ref mut prim) => { *prim = Some(i) },
-                    V::R1(_r1,ref mut prim) => { *prim = Some(i) },
+                    V::Md1(_m1,ref mut prim) => { *prim = Some(i) },
                     V::R2(_r2,ref mut prim) => { *prim = Some(i) },
                     V::D1(_d1,ref mut prim) => { *prim = Some(i) },
                     V::D2(_d2,ref mut prim) => { *prim = Some(i) },

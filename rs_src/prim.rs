@@ -1,4 +1,4 @@
-use crate::schema::{A,V,Vn,Vs,Decoder,D1,D2,Tr2,Tr3,Fun,R1,R2,Stack};
+use crate::schema::{A,V,Vn,Vs,Decoder,D1,D2,Tr2,Tr3,Fun,Md1,R2,Stack};
 use crate::ebqn::{call};
 use bacon_rajan_cc::Cc;
 use std::cmp::max;
@@ -44,7 +44,7 @@ fn typ(arity: usize, x: Vn, _w: Vn) -> Vs {
             V::Tr2(_tr3,_prim) => Vs::V(V::Scalar(3.0)),
             V::Tr3(_tr3,_prim) => Vs::V(V::Scalar(3.0)),
             V::Fun(_fn,_prim) => Vs::V(V::Scalar(3.0)),
-            V::R1(_r1,_prim) => Vs::V(V::Scalar(4.0)),
+            V::Md1(_m1,_prim) => Vs::V(V::Scalar(4.0)),
             V::R2(_r2,_prim) => Vs::V(V::Scalar(5.0)),
             V::BlockInst(b,_prim) => Vs::V(V::Scalar(b.def.typ as f64 + 3.0)),
             _ => panic!("no matching value for typ"),
@@ -561,7 +561,7 @@ pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Vs {
                     V::UserMd1(_b,_a,Some(_prim)) => true,
                     V::UserMd2(_b,_a,Some(_prim)) => true,
                     V::Fun(_a,Some(_prim)) => true,
-                    V::R1(_f,Some(_prim)) => true,
+                    V::Md1(_f,Some(_prim)) => true,
                     V::R2(_f,Some(_prim)) => true,
                     V::D1(_d1,Some(_prim)) => true,
                     V::D2(_d2,Some(_prim)) => true,
@@ -641,7 +641,7 @@ pub fn prim_ind(arity:usize, x: Vn,_w: Vn) -> Vs {
             V::UserMd1(_b,_a,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
             V::UserMd2(_b,_a,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
             V::Fun(_a,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
-            V::R1(_f,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
+            V::Md1(_f,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
             V::R2(_f,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
             V::D1(_d1,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
             V::D2(_d2,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
@@ -672,8 +672,8 @@ pub fn provide() -> A {
                    V::Fun(Fun(reshape),None),
                    V::Fun(Fun(pick),None),
                    V::Fun(Fun(windows),None),
-                   V::R1(R1(table),None),
-                   V::R1(R1(scan),None),
+                   V::Md1(Md1(table),None),
+                   V::Md1(Md1(scan),None),
                    V::R2(R2(fill_by),None),
                    V::R2(R2(cases),None),
                    V::R2(R2(catches),None)];
