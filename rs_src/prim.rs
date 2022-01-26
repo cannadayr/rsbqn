@@ -1,4 +1,4 @@
-use crate::schema::{A,V,Vn,Vs,Decoder,D1,D2,Tr2,Tr3,Fun,R1,R2,Stack,FunH};
+use crate::schema::{A,V,Vn,Vs,Decoder,D1,D2,Tr2,Tr3,Fun,R1,R2,Stack};
 use crate::ebqn::{call};
 use bacon_rajan_cc::Cc;
 use std::cmp::max;
@@ -654,24 +654,24 @@ pub fn prim_ind(arity:usize, x: Vn,_w: Vn) -> Vs {
 }
 
 pub fn provide() -> A {
-    let fns = vec![V::Fun(FunH(typ),None),
-                   V::Fun(FunH(fill),None),
-                   V::Fun(FunH(log),None),
-                   V::Fun(FunH(group_len),None),
-                   V::Fun(FunH(group_ord),None),
-                   V::Fun(FunH(assert_fn),None),
-                   V::Fun(FunH(plus),None),
-                   V::Fun(FunH(minus),None),
-                   V::Fun(FunH(times),None),
-                   V::Fun(FunH(divide),None),
-                   V::Fun(FunH(power),None),
-                   V::Fun(FunH(floor),None),
-                   V::Fun(FunH(equals),None),
-                   V::Fun(FunH(lesseq),None),
-                   V::Fun(FunH(shape),None),
-                   V::Fun(FunH(reshape),None),
-                   V::Fun(FunH(pick),None),
-                   V::Fun(FunH(windows),None),
+    let fns = vec![V::Fun(Fun(typ),None),
+                   V::Fun(Fun(fill),None),
+                   V::Fun(Fun(log),None),
+                   V::Fun(Fun(group_len),None),
+                   V::Fun(Fun(group_ord),None),
+                   V::Fun(Fun(assert_fn),None),
+                   V::Fun(Fun(plus),None),
+                   V::Fun(Fun(minus),None),
+                   V::Fun(Fun(times),None),
+                   V::Fun(Fun(divide),None),
+                   V::Fun(Fun(power),None),
+                   V::Fun(Fun(floor),None),
+                   V::Fun(Fun(equals),None),
+                   V::Fun(Fun(lesseq),None),
+                   V::Fun(Fun(shape),None),
+                   V::Fun(Fun(reshape),None),
+                   V::Fun(Fun(pick),None),
+                   V::Fun(Fun(windows),None),
                    V::R1(R1(table),None),
                    V::R1(R1(scan),None),
                    V::R2(R2(fill_by),None),

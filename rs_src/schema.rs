@@ -24,11 +24,12 @@ pub trait Stacker {
 
 // 'Fun' Holder
 #[derive(Clone)]
-pub struct FunH<Fun>(pub Fun)
-    where for<'a> Fun: Fn(usize,Vn<'a>,Vn<'a>) -> Vs;
-pub type Fun = fn(usize,Vn,Vn) -> Vs;
+pub struct Fun<F>(pub F)
+    where for<'a> F: Fn(usize,Vn<'a>,Vn<'a>) -> Vs;
 
-impl PartialEq for FunH<Fun> {
+pub type F = fn(usize,Vn,Vn) -> Vs;
+
+impl PartialEq for Fun<F> {
     fn eq(&self, other: &Self) -> bool {
         self.0 as usize == other.0 as usize
     }
@@ -59,7 +60,7 @@ pub enum V {
     UserMd2(Cc<BlockInst>,Cc<D2>,Option<usize>),
     Nothing,
     A(Cc<A>),
-    Fun(FunH<Fun>,Option<usize>),                          // X, W
+    Fun(Fun<F>,Option<usize>),                          // X, W
     R1(R1,Option<usize>),                          // F, X, W
     R2(R2,Option<usize>),                          // F, G, X, W
     D1(Cc<D1>,Option<usize>),                      // M, F
