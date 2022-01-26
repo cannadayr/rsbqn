@@ -13,34 +13,34 @@ use log::{debug, trace, error, log_enabled, info, Level};
 use itertools::Itertools;
 use num_traits::FromPrimitive;
 
-pub fn call<'a>(stack: &mut Stack,arity: usize,a: Vn<'a>,x: Vn<'a>, w: Vn<'a>) -> Vs<'a> {
+pub fn call<'a>(stack: &'a mut Stack<'a>,arity: usize,a: Vn<'a>,x: Vn<'a>, w: Vn<'a>) -> Vs<'a> {
     match a.0 {
         Some(v) => v.call(stack,arity,x,w),
         _ => panic!("unimplemented call"),
     }
 }
-fn call1<'a>(stack: &mut Stack,m: V,f: V) -> Vs<'a> {
+fn call1<'a>(stack: &'a mut Stack<'a>,m: V,f: V) -> Vs<'a> {
     match m {
         V::BlockInst(ref bl,_prim) => {
             assert_eq!(1,bl.def.typ);
             bl.call_md1(stack,1,D1::new(m.clone(),f))
         },
-        V::Md1(_,_prim) => Vs::V(V::D1(Cc::new(D1::new(m,f)),None)),
+        V::Md1(_,_prim) => Vs::V(&V::D1(Cc::new(D1::new(m,f)),None)),
         _ => panic!("call1 with invalid type"),
     }
 }
-fn call2<'a>(stack: &mut Stack,m: V,f: V,g: V) -> Vs<'a> {
+fn call2<'a>(stack: &'a mut Stack<'a>,m: V,f: V,g: V) -> Vs<'a> {
     match m {
         V::BlockInst(ref bl,_prim) => {
             assert_eq!(2,bl.def.typ);
             bl.call_md2(stack,2,D2::new(m.clone(),f,g))
         },
-        V::Md2(_,_prim) => Vs::V(V::D2(Cc::new(D2::new(m,f,g)),None)),
+        V::Md2(_,_prim) => Vs::V(&V::D2(Cc::new(D2::new(m,f,g)),None)),
         _ => panic!("call2 with invalid type"),
     }
 }
 
-fn derv<'a>(env: Env,code: &Cc<Code>,block: &Cc<Block>,stack: &mut Stack) -> Vs<'a> {
+fn derv<'a>(env: Env,code: &Cc<Code>,block: &Cc<Block>,stack: &'a mut Stack<'a>) -> Vs<'a> {
     match (block.typ,block.imm) {
         (0,true) => {
             let child = Env::new(Some(env.clone()),block,0,None);
@@ -55,7 +55,7 @@ fn derv<'a>(env: Env,code: &Cc<Code>,block: &Cc<Block>,stack: &mut Stack) -> Vs<
         },
         (_typ,_imm) => {
             let block_inst = BlockInst::new(env.clone(),block.clone());
-            let r = Vs::V(V::BlockInst(Cc::new(block_inst),None));
+            let r = Vs::V(&V::BlockInst(Cc::new(block_inst),None));
             r
         },
     }
@@ -63,14 +63,14 @@ fn derv<'a>(env: Env,code: &Cc<Code>,block: &Cc<Block>,stack: &mut Stack) -> Vs<
 
 fn list<'a>(ravel: Vec<V>) -> Vs<'a> {
     let shape = vec![ravel.len() as usize];
-    Vs::V(V::A(Cc::new(A::new(ravel,shape))))
+    Vs::V(&V::A(Cc::new(A::new(ravel,shape))))
 }
 
 fn incr(stack: &mut Stack) {
     stack.fp = stack.s.len();
 }
 
-pub fn vm<'a>(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs<'a> {
+pub fn vm<'a>(env: &'a Env,code: &Cc<Code>,mut pos: usize,mut stack: &'a mut Stack<'a>) -> Vs<'a> {
     #[cfg(feature = "debug")]
     incr(stack);
     #[cfg(feature = "debug")]
@@ -89,7 +89,7 @@ pub fn vm<'a>(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) ->
                 let r = code.objs[x].clone();
                 #[cfg(feature = "debug")]
                 dbg_stack_in("PUSH",pos-2,format!("{} {}",&x,&r),stack);
-                stack.s.push_unchecked(Vs::V(r));
+                stack.s.push_unchecked(Vs::V(&r));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("PUSH",pos-2,stack);
                 #[cfg(feature = "coz-ops")]
@@ -248,7 +248,7 @@ pub fn vm<'a>(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) ->
                 unsafe { stack.s.set_len(l-2) };
                 #[cfg(feature = "debug")]
                 dbg_stack_in("TR2D",pos-1,format!("{} {}",&g,&h),stack);
-                let t = Vs::V(V::Tr2(Cc::new(Tr2::new(g,h)),None));
+                let t = Vs::V(&V::Tr2(Cc::new(Tr2::new(g,h)),None));
                 stack.s.push_unchecked(t);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("TR2D",pos-1,stack);
@@ -266,7 +266,7 @@ pub fn vm<'a>(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) ->
                 let g = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
                 let h = unsafe { ptr::read(stack.s.as_ptr().add(l-3)) };
                 unsafe { stack.s.set_len(l-3) };
-                let t = Vs::V(V::Tr3(Cc::new(Tr3::new(f,g,h)),None));
+                let t = Vs::V(&V::Tr3(Cc::new(Tr3::new(f,g,h)),None));
                 stack.s.push_unchecked(t);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("TR3D",pos-1,stack);
@@ -286,8 +286,8 @@ pub fn vm<'a>(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) ->
                 unsafe { stack.s.set_len(l-3) };
                 let t =
                     match &f.as_v().unwrap() {
-                        V::Nothing => Vs::V(V::Tr2(Cc::new(Tr2::new(g,h)),None)),
-                        _ => Vs::V(V::Tr3(Cc::new(Tr3::new(f,g,h)),None)),
+                        V::Nothing => Vs::V(&V::Tr2(Cc::new(Tr2::new(g,h)),None)),
+                        _ => Vs::V(&V::Tr3(Cc::new(Tr3::new(f,g,h)),None)),
                     };
                 stack.s.push_unchecked(t);
                 #[cfg(feature = "debug")]
@@ -305,7 +305,7 @@ pub fn vm<'a>(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) ->
                 let f = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
                 let m = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
                 unsafe { stack.s.set_len(l-2) };
-                let r = call1(&mut stack,m.into_v().unwrap(),f.into_v().unwrap());
+                let r = call1(&mut stack,*m.into_v().unwrap(),*f.into_v().unwrap());
                 stack.s.push_unchecked(r);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("MD1C",pos-1,stack);
@@ -323,7 +323,7 @@ pub fn vm<'a>(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) ->
                 let m = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
                 let g = unsafe { ptr::read(stack.s.as_ptr().add(l-3)) };
                 unsafe { stack.s.set_len(l-3) };
-                let r = call2(&mut stack,m.into_v().unwrap(),f.into_v().unwrap(),g.into_v().unwrap());
+                let r = call2(&mut stack,*m.into_v().unwrap(),*f.into_v().unwrap(),*g.into_v().unwrap());
                 stack.s.push_unchecked(r);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("MD2C",pos-1,stack);
@@ -339,7 +339,7 @@ pub fn vm<'a>(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) ->
                 let t = env.ge(x);
                 #[cfg(feature = "debug")]
                 dbg_stack_in("VARO",pos-3,format!("{} {}",&x,&w),stack);
-                stack.s.push_unchecked(Vs::V(t.get(w)));
+                stack.s.push_unchecked(Vs::V(&t.get(w)));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("VARO",pos-3,stack);
                 #[cfg(feature = "coz-ops")]
@@ -354,7 +354,7 @@ pub fn vm<'a>(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) ->
                 let t = env.ge(x);
                 #[cfg(feature = "debug")]
                 dbg_stack_in("VARU",pos-3,format!("{} {}",&x,&w),stack);
-                stack.s.push_unchecked(Vs::V(t.get_drop(w)));
+                stack.s.push_unchecked(Vs::V(&t.get_drop(w)));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("VARU",pos-3,stack);
                 #[cfg(feature = "coz-ops")]
@@ -455,7 +455,7 @@ pub fn vm<'a>(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) ->
     }
 }
 
-pub fn runtime(stack: &mut Stack) -> V {
+pub fn runtime<'a>(stack: &'a mut Stack<'a>) -> V {
     let builtin = provide();
     let runtime0 = run(stack,r0(&builtin));
     let runtime1 = run(stack,r1(&builtin,&runtime0));
@@ -496,7 +496,7 @@ pub fn runtime(stack: &mut Stack) -> V {
     }
 }
 
-pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V) -> Cc<Code> {
+pub fn prog<'a>(stack: &'a mut Stack<'a>,compiler: &'a V,src: V,runtime: &'a V) -> Cc<Code> {
     let mut prog = call(stack,2,Vn(Some(compiler)),Vn(Some(&src)),Vn(Some(runtime))).into_v().unwrap().into_a().unwrap();
     info!("prog count = {}",prog.strong_count());
     match prog.get_mut() {
@@ -564,12 +564,12 @@ pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V) -> Cc<Code> {
     }
 }
 
-pub fn run(stack: &mut Stack,code: Cc<Code>) -> V {
+pub fn run<'a>(stack: &'a mut Stack<'a>,code: Cc<Code>) -> V {
     let root = Env::new(None,&code.blocks[0],0,None);
     let (pos,_locals) =
         match code.blocks[0].body {
             Body::Imm(b) => code.bodies[b],
             Body::Defer(_,_) => panic!("cant run deferred block"),
         };
-    vm(&root,&code,pos,stack).into_v().unwrap()
+    *vm(&root,&code,pos,stack).into_v().unwrap()
 }

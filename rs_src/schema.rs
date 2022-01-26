@@ -9,8 +9,8 @@ use enum_as_inner::EnumAsInner;
 use num_traits::{cast::FromPrimitive};
 
 // Traits
-pub trait Calleable {
-    fn call<'a>(&'a self,stack:&mut Stack,arity:usize,x: Vn<'a>,w: Vn<'a>) -> Vs<'a>;
+pub trait Calleable<'a> {
+    fn call(&'a self,stack:&'a mut Stack<'a>,arity:usize,x: Vn<'a>,w: Vn<'a>) -> Vs<'a>;
 }
 pub trait Decoder {
     fn to_f64(&self) -> f64;
@@ -36,9 +36,9 @@ impl PartialEq for Fun<F> {
 
 #[derive(Clone)]
 pub struct Md1<M1>(pub M1)
-    where for<'a> M1: Fn(&mut Stack,usize,Vn<'a>,Vn<'a>,Vn<'a>) -> Vs<'a>;
+    where for<'a> M1: Fn(&'a mut Stack<'a>,usize,Vn<'a>,Vn<'a>,Vn<'a>) -> Vs<'a>;
 
-pub type M1 = for<'a> fn(&mut Stack,usize,Vn<'a>,Vn<'a>,Vn<'a>) -> Vs<'a>;
+pub type M1 = for<'a> fn(&'a mut Stack<'a>,usize,Vn<'a>,Vn<'a>,Vn<'a>) -> Vs<'a>;
 
 impl PartialEq for Md1<M1> {
     fn eq(&self, other: &Self) -> bool {
@@ -118,8 +118,8 @@ impl Decoder for V {
         }
     }
 }
-impl Calleable for V {
-    fn call<'a>(&'a self,stack:&mut Stack,arity:usize,x: Vn<'a>,w: Vn<'a>) -> Vs<'a> {
+impl<'a> Calleable<'a> for V {
+    fn call(&'a self,stack:&'a mut Stack<'a>,arity:usize,x: Vn<'a>,w: Vn<'a>) -> Vs<'a> {
         match self {
             V::UserMd1(b,mods,_prim) => {
                 let D1(m,f) = mods.deref();
@@ -141,8 +141,8 @@ impl Calleable for V {
                 let pos = body_pos(b,arity);
                 vm(&env,&b.def.code,pos,stack)
             },
-            V::Scalar(n) => Vs::V(V::Scalar(*n)),
-            V::Char(c) => Vs::V(V::Char(*c)),
+            V::Scalar(n) => Vs::V(&V::Scalar(*n)),
+            V::Char(c) => Vs::V(&V::Char(*c)),
             V::Fun(f,_prim) => f.0(arity,x,w),
             V::Md1(_f,_prim) => panic!("can't call r1"),
             V::Md2(_f,_prim) => panic!("can't call r2"),
@@ -165,7 +165,7 @@ impl Calleable for V {
             V::Tr2(tr,_prim) => {
                 let Tr2(g,h) = tr.deref();
                 let r = h.call(stack,arity,x,w);
-                g.call(stack,1,Vn(*Some(&r.as_v()).unwrap()),Vn(None))
+                g.call(stack,1,Vn(Some(r.as_v().unwrap())),Vn(None))
             },
             V::Tr3(tr,_prim) => {
                 let Tr3(f,g,h) = tr.deref();
@@ -178,8 +178,8 @@ impl Calleable for V {
                 let l = f.call(stack,arity,Vn(x.0),Vn(w.0));
                 g.call(stack,2,Vn(Some(&r.as_v().unwrap())),Vn(Some(&l.as_v().unwrap())))
             },
-            V::A(_) => Vs::V(self.clone()),
-            V::Nothing => Vs::V(V::Nothing),
+            V::A(_) => Vs::V(self),
+            V::Nothing => Vs::V(&V::Nothing),
         }
     }
 }
@@ -207,10 +207,10 @@ pub enum Vs<'a> {
 impl<'a> Vs<'a> {
     pub fn get(&self) -> V {
         match self {
-            Vs::Slot(env,id) => env.get(*id),
+            Vs::Slot(env,id) => *env.get(*id),
             Vs::Ar(a) => {
                 let shape = vec![a.r.len() as usize];
-                let ravel = a.r.iter().map(|e| match e { Vs::Slot(env,id) => env.get(*id), _ => panic!("ref array contains a non-slot"), }).collect::<Vec<V>>();
+                let ravel = a.r.iter().map(|e| match e { Vs::Slot(env,id) => *env.get(*id), _ => panic!("ref array contains a non-slot"), }).collect::<Vec<V>>();
                 V::A(Cc::new(A::new(ravel,shape)))
             },
             _ => panic!("can only resolve slots or ref arrays"),
@@ -279,7 +279,7 @@ impl<'a> Stacker<'a> for Vec<Vs<'a>> {
         let mut acc: Vec<V> = vec![V::Nothing;x];
         unsafe {
             for i in (0..x).rev() {
-                *acc.get_unchecked_mut(i) = ptr::read(self.as_ptr().add(l-x+i)).into_v().unwrap_unchecked();
+                *acc.get_unchecked_mut(i) = *ptr::read(self.as_ptr().add(l-x+i)).into_v().unwrap_unchecked();
                 let end = self.as_mut_ptr().add(l-x+i);
                 ptr::write(end,Vs::Nothing);
             }
@@ -387,11 +387,11 @@ impl Env {
     // get, set, and get_drop use unsafe code
     // we are assuming that the compiler is correctly indexing locals
     // we are using unsafe because interacting with the heap is in the hot-path of the vm
-    pub fn get(&self,id: usize) -> V {
+    pub fn get(&self,id: usize) -> &V {
         match self {
             Env(e) => {
                 match unsafe { &(*e.vars.get()).get_unchecked(id) } {
-                    Some(v) => v.clone(),
+                    Some(v) => v,
                     None => panic!("heap slot is undefined"),
                 }
             },
@@ -441,10 +441,10 @@ impl BlockInst {
     pub fn new(env: Env,block: Cc<Block>) -> Self {
         Self {def: block, parent: env }
     }
-    pub fn call_md1(&self,stack:&mut Stack,arity:usize,args: D1) -> Vs {
+    pub fn call_md1<'a>(&self,stack:&'a mut Stack<'a>,arity:usize,args: D1) -> Vs<'a> {
         match self.def.imm {
             false => {
-                let r = Vs::V(V::UserMd1(Cc::new(BlockInst::new(self.parent.clone(),self.def.clone())),Cc::new(args),None));
+                let r = Vs::V(&V::UserMd1(Cc::new(BlockInst::new(self.parent.clone(),self.def.clone())),Cc::new(args),None));
                 r
             },
             true => {
@@ -461,10 +461,10 @@ impl BlockInst {
             },
         }
     }
-    pub fn call_md2(&self,stack:&mut Stack,arity:usize,args: D2) -> Vs {
+    pub fn call_md2<'a>(&self,stack:&'a mut Stack<'a>,arity:usize,args: D2) -> Vs<'a> {
         match self.def.imm {
             false => {
-                let r = Vs::V(V::UserMd2(Cc::new(BlockInst::new(self.parent.clone(),self.def.clone())),Cc::new(args),None));
+                let r = Vs::V(&V::UserMd2(Cc::new(BlockInst::new(self.parent.clone(),self.def.clone())),Cc::new(args),None));
                 r
             },
             true => {
@@ -529,14 +529,14 @@ impl D2 {
 pub struct Tr2(pub V,pub V);
 impl Tr2 {
     pub fn new(g: Vs,h: Vs) -> Self {
-        Self(g.into_v().unwrap(),h.into_v().unwrap())
+        Self(g.into_v().unwrap().clone(),h.into_v().unwrap().clone())
     }
 }
 #[derive(Debug,Clone,PartialEq)]
 pub struct Tr3(pub V,pub V,pub V);
 impl Tr3 {
     pub fn new(f: Vs,g: Vs,h: Vs) -> Self {
-        Self(f.into_v().unwrap(),g.into_v().unwrap(),h.into_v().unwrap())
+        Self(*f.into_v().unwrap(),*g.into_v().unwrap(),*h.into_v().unwrap())
     }
 }
 
