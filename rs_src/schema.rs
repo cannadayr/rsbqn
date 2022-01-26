@@ -10,13 +10,13 @@ use num_traits::{cast::FromPrimitive};
 
 // Traits
 pub trait Calleable {
-    fn call(&self,stack:&mut Stack,arity:usize,x: Vn,w: Vn) -> Vs;
+    fn call<'a>(&'a self,stack:&mut Stack,arity:usize,x: Vn<'a>,w: Vn<'a>) -> Vs<'a>;
 }
 pub trait Decoder {
     fn to_f64(&self) -> f64;
 }
-pub trait Stacker {
-    fn push_unchecked(&mut self,v: Vs);
+pub trait Stacker<'a> {
+    fn push_unchecked(&'a mut self,v: Vs<'a>);
     fn pop_unchecked(&mut self) -> Vs;
     fn pop_list_unchecked(&mut self,n: usize) -> Vec<V>;
     fn pop_ref_list_unchecked(&mut self,n: usize) -> Vec<Vs>;
@@ -24,9 +24,9 @@ pub trait Stacker {
 
 #[derive(Clone)]
 pub struct Fun<F>(pub F)
-    where for<'a> F: Fn(usize,Vn<'a>,Vn<'a>) -> Vs;
+    where for<'a> F: Fn(usize,Vn<'a>,Vn<'a>) -> Vs<'a>;
 
-pub type F = fn(usize,Vn,Vn) -> Vs;
+pub type F = for<'a> fn(usize,Vn<'a>,Vn<'a>) -> Vs<'a>;
 
 impl PartialEq for Fun<F> {
     fn eq(&self, other: &Self) -> bool {
@@ -36,9 +36,9 @@ impl PartialEq for Fun<F> {
 
 #[derive(Clone)]
 pub struct Md1<M1>(pub M1)
-    where for<'a> M1: Fn(&mut Stack,usize,Vn<'a>,Vn<'a>,Vn<'a>) -> Vs;
+    where for<'a> M1: Fn(&mut Stack,usize,Vn<'a>,Vn<'a>,Vn<'a>) -> Vs<'a>;
 
-pub type M1 = fn(&mut Stack,usize,Vn,Vn,Vn) -> Vs;
+pub type M1 = for<'a> fn(&mut Stack,usize,Vn<'a>,Vn<'a>,Vn<'a>) -> Vs<'a>;
 
 impl PartialEq for Md1<M1> {
     fn eq(&self, other: &Self) -> bool {
@@ -48,9 +48,9 @@ impl PartialEq for Md1<M1> {
 
 #[derive(Clone)]
 pub struct Md2<M2>(pub M2)
-    where for<'a> M2: Fn(&mut Stack,usize,Vn<'a>,Vn<'a>,Vn<'a>,Vn<'a>) -> Vs;
+    where for<'a> M2: Fn(&mut Stack,usize,Vn<'a>,Vn<'a>,Vn<'a>,Vn<'a>) -> Vs<'a>;
 
-pub type M2 = fn(&mut Stack,usize,Vn,Vn,Vn,Vn) -> Vs;
+pub type M2 = for<'a> fn(&mut Stack,usize,Vn<'a>,Vn<'a>,Vn<'a>,Vn<'a>) -> Vs<'a>;
 
 impl PartialEq for Md2<M2> {
     fn eq(&self, other: &Self) -> bool {
@@ -119,7 +119,7 @@ impl Decoder for V {
     }
 }
 impl Calleable for V {
-    fn call(&self,stack:&mut Stack,arity:usize,x: Vn,w: Vn) -> Vs {
+    fn call<'a>(&'a self,stack:&mut Stack,arity:usize,x: Vn<'a>,w: Vn<'a>) -> Vs<'a> {
         match self {
             V::UserMd1(b,mods,_prim) => {
                 let D1(m,f) = mods.deref();
@@ -198,13 +198,13 @@ impl<'a> Vn<'a> {
 
 // Value (boxed on the stack)
 #[derive(Debug,Clone,EnumAsInner)]
-pub enum Vs {
-    V(V),
+pub enum Vs<'a> {
+    V(&'a V),
     Slot(Env,usize),
-    Ar(Ar),
+    Ar(Ar<'a>),
     Nothing
 }
-impl Vs {
+impl<'a> Vs<'a> {
     pub fn get(&self) -> V {
         match self {
             Vs::Slot(env,id) => env.get(*id),
@@ -216,7 +216,7 @@ impl Vs {
             _ => panic!("can only resolve slots or ref arrays"),
         }
     }
-    pub fn set(&self,d: bool,vs: Vs) -> V {
+    pub fn set(&self,d: bool,vs: Vs<'a>) -> &'a V {
         match self {
             Vs::Slot(env,id) => { let v = vs.into_v().unwrap(); env.set(d,*id,&v); v },
             Vs::Ar(a) => {
@@ -240,7 +240,7 @@ impl Vs {
         }
     }
 }
-impl Default for Vs {
+impl<'a> Default for Vs<'a> {
     fn default() -> Self {
         Vs::Nothing
     }
@@ -250,17 +250,17 @@ impl Default for Vs {
 pub type Vh = Option<V>;
 
 // Stack
-pub struct Stack {
-    pub s: Vec<Vs>,
+pub struct Stack<'a> {
+    pub s: Vec<Vs<'a>>,
     pub fp: usize,
 }
-impl Stack {
+impl<'a> Stack<'a> {
     pub fn new() -> Self {
         Self { s: Vec::with_capacity(128), fp: 0 }
     }
 }
-impl Stacker for Vec<Vs> {
-    fn push_unchecked(&mut self,v: Vs) {
+impl<'a> Stacker<'a> for Vec<Vs<'a>> {
+    fn push_unchecked(&'a mut self,v: Vs<'a>) {
         unsafe {
             let l = self.len();
             let end = self.as_mut_ptr().add(l);
@@ -501,11 +501,11 @@ impl A {
 
 // array of references. rank-1 for now.
 #[derive(Debug,Clone)]
-pub struct Ar {
-    r: Vec<Vs>,
+pub struct Ar<'a> {
+    r: Vec<Vs<'a>>,
 }
-impl Ar {
-    pub fn new(r: Vec<Vs>) -> Self {
+impl<'a> Ar<'a> {
+    pub fn new(r: Vec<Vs<'a>>) -> Self {
         Self { r: r }
     }
 }

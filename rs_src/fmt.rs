@@ -38,7 +38,7 @@ impl Display for V {
         }
     }
 }
-impl Display for Vs {
+impl<'a> Display for Vs<'a> {
     fn fmt(&self, f: &mut Formatter) -> Result {
         match self {
             Vs::V(v) => write!(f,"{}",v),

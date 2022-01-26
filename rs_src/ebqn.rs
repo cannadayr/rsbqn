@@ -13,13 +13,13 @@ use log::{debug, trace, error, log_enabled, info, Level};
 use itertools::Itertools;
 use num_traits::FromPrimitive;
 
-pub fn call(stack: &mut Stack,arity: usize,a: Vn,x: Vn, w: Vn) -> Vs {
+pub fn call<'a>(stack: &mut Stack,arity: usize,a: Vn<'a>,x: Vn<'a>, w: Vn<'a>) -> Vs<'a> {
     match a.0 {
         Some(v) => v.call(stack,arity,x,w),
         _ => panic!("unimplemented call"),
     }
 }
-fn call1(stack: &mut Stack,m: V,f: V) -> Vs {
+fn call1<'a>(stack: &mut Stack,m: V,f: V) -> Vs<'a> {
     match m {
         V::BlockInst(ref bl,_prim) => {
             assert_eq!(1,bl.def.typ);
@@ -29,7 +29,7 @@ fn call1(stack: &mut Stack,m: V,f: V) -> Vs {
         _ => panic!("call1 with invalid type"),
     }
 }
-fn call2(stack: &mut Stack,m: V,f: V,g: V) -> Vs {
+fn call2<'a>(stack: &mut Stack,m: V,f: V,g: V) -> Vs<'a> {
     match m {
         V::BlockInst(ref bl,_prim) => {
             assert_eq!(2,bl.def.typ);
@@ -40,7 +40,7 @@ fn call2(stack: &mut Stack,m: V,f: V,g: V) -> Vs {
     }
 }
 
-fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>,stack: &mut Stack) -> Vs {
+fn derv<'a>(env: Env,code: &Cc<Code>,block: &Cc<Block>,stack: &mut Stack) -> Vs<'a> {
     match (block.typ,block.imm) {
         (0,true) => {
             let child = Env::new(Some(env.clone()),block,0,None);
@@ -61,7 +61,7 @@ fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>,stack: &mut Stack) -> Vs {
     }
 }
 
-fn list(ravel: Vec<V>) -> Vs {
+fn list<'a>(ravel: Vec<V>) -> Vs<'a> {
     let shape = vec![ravel.len() as usize];
     Vs::V(V::A(Cc::new(A::new(ravel,shape))))
 }
@@ -70,7 +70,7 @@ fn incr(stack: &mut Stack) {
     stack.fp = stack.s.len();
 }
 
-pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs {
+pub fn vm<'a>(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs<'a> {
     #[cfg(feature = "debug")]
     incr(stack);
     #[cfg(feature = "debug")]

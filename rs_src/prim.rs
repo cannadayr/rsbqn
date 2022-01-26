@@ -29,7 +29,7 @@ fn dbg_rtn(fun: &str,arity: usize, r: &Vs) {
 }
 
 // Type
-fn typ(arity: usize, x: Vn, _w: Vn) -> Vs {
+fn typ<'a>(arity: usize, x: Vn<'a>, _w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("typ");
     match arity {
@@ -53,7 +53,7 @@ fn typ(arity: usize, x: Vn, _w: Vn) -> Vs {
     }
 }
 // Fill
-fn fill(arity: usize, x: Vn, _w: Vn) -> Vs {
+fn fill<'a>(arity: usize, x: Vn<'a>, _w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("fill");
     match arity {
@@ -63,7 +63,7 @@ fn fill(arity: usize, x: Vn, _w: Vn) -> Vs {
     }
 }
 // Log
-fn log(arity: usize, x: Vn, w: Vn) -> Vs {
+fn log<'a>(arity: usize, x: Vn<'a>, w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("log");
     match arity {
@@ -79,7 +79,7 @@ fn log(arity: usize, x: Vn, w: Vn) -> Vs {
     }
 }
 // GroupLen
-fn group_len(arity: usize, x: Vn, w: Vn) -> Vs {
+fn group_len<'a>(arity: usize, x: Vn<'a>, w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("group_len");
     match arity {
@@ -125,7 +125,7 @@ fn group_len(arity: usize, x: Vn, w: Vn) -> Vs {
     }
 }
 // GroupOrd
-fn group_ord(arity: usize, x: Vn, w: Vn) -> Vs {
+fn group_ord<'a>(arity: usize, x: Vn<'a>, w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("group_ord");
     match arity {
@@ -148,7 +148,7 @@ fn group_ord(arity: usize, x: Vn, w: Vn) -> Vs {
     }
 }
 // !
-fn assert_fn(arity: usize, x: Vn, w: Vn) -> Vs {
+fn assert_fn<'a>(arity: usize, x: Vn<'a>, w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "debug")]
     dbg_args("assert_fn",arity,&x,&w);
     let r =
@@ -174,7 +174,7 @@ fn assert_fn(arity: usize, x: Vn, w: Vn) -> Vs {
     r
 }
 // +
-pub fn plus(arity:usize, x: Vn,w: Vn) -> Vs {
+pub fn plus<'a>(arity:usize, x: Vn<'a>,w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("plus");
     #[cfg(feature = "debug")]
@@ -197,7 +197,7 @@ pub fn plus(arity:usize, x: Vn,w: Vn) -> Vs {
     r
 }
 // -
-fn minus(arity: usize, x: Vn, w: Vn) -> Vs {
+fn minus<'a>(arity: usize, x: Vn<'a>, w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("minus");
     #[cfg(feature = "debug")]
@@ -222,7 +222,7 @@ fn minus(arity: usize, x: Vn, w: Vn) -> Vs {
     r
 }
 // ×
-fn times(arity: usize, x: Vn, w: Vn) -> Vs {
+fn times<'a>(arity: usize, x: Vn<'a>, w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("times");
     #[cfg(feature = "debug")]
@@ -236,7 +236,7 @@ fn times(arity: usize, x: Vn, w: Vn) -> Vs {
     }
 }
 // ÷
-fn divide(arity: usize, x: Vn, w: Vn) -> Vs {
+fn divide<'a>(arity: usize, x: Vn<'a>, w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("divide");
     #[cfg(feature = "debug")]
@@ -254,7 +254,7 @@ fn divide(arity: usize, x: Vn, w: Vn) -> Vs {
     }
 }
 // ⋆
-fn power(arity: usize, x: Vn, w: Vn) -> Vs {
+fn power<'a>(arity: usize, x: Vn<'a>, w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("power");
     match arity {
@@ -270,7 +270,7 @@ fn power(arity: usize, x: Vn, w: Vn) -> Vs {
     }
 }
 // ⌊
-fn floor(arity: usize, x: Vn, _w: Vn) -> Vs {
+fn floor<'a>(arity: usize, x: Vn<'a>, _w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("floor");
     match arity {
@@ -279,7 +279,7 @@ fn floor(arity: usize, x: Vn, _w: Vn) -> Vs {
     }
 }
 // =
-fn equals(arity: usize, x: Vn, w: Vn) -> Vs {
+fn equals<'a>(arity: usize, x: Vn<'a>, w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("equals");
     #[cfg(feature = "debug")]
@@ -306,7 +306,7 @@ fn equals(arity: usize, x: Vn, w: Vn) -> Vs {
     r
 }
 // ≤
-fn lesseq(arity: usize, x: Vn, w: Vn) -> Vs {
+fn lesseq<'a>(arity: usize, x: Vn<'a>, w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("lesseq");
     #[cfg(feature = "debug")]
@@ -331,7 +331,7 @@ fn lesseq(arity: usize, x: Vn, w: Vn) -> Vs {
     r
 }
 // ≢
-fn shape(arity: usize, x: Vn, _w: Vn) -> Vs {
+fn shape<'a>(arity: usize, x: Vn<'a>, _w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("shape");
     match arity {
@@ -347,7 +347,7 @@ fn shape(arity: usize, x: Vn, _w: Vn) -> Vs {
     }
 }
 // ⥊
-fn reshape(arity: usize, x: Vn, w: Vn) -> Vs {
+fn reshape<'a>(arity: usize, x: Vn<'a>, w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("reshape");
     match arity {
@@ -373,7 +373,7 @@ fn reshape(arity: usize, x: Vn, w: Vn) -> Vs {
     }
 }
 // ⊑
-fn pick(arity: usize, x: Vn, w: Vn) -> Vs {
+fn pick<'a>(arity: usize, x: Vn<'a>, w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("pick");
     #[cfg(feature = "debug")]
@@ -394,7 +394,7 @@ fn pick(arity: usize, x: Vn, w: Vn) -> Vs {
     r
 }
 // ↕
-fn windows(arity: usize, x: Vn, _w: Vn) -> Vs {
+fn windows<'a>(arity: usize, x: Vn<'a>, _w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("windows");
     match arity {
@@ -407,7 +407,7 @@ fn windows(arity: usize, x: Vn, _w: Vn) -> Vs {
 
 }
 // ⌜
-fn table(stack: &mut Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
+fn table<'a>(stack: &mut Stack,arity: usize, f: Vn<'a>, x: Vn<'a>, w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("table");
     match arity {
@@ -435,7 +435,7 @@ fn table(stack: &mut Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
     }
 }
 // `
-fn scan(stack: &mut Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
+fn scan<'a>(stack: &mut Stack,arity: usize, f: Vn<'a>, x: Vn<'a>, w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("scan");
     match arity {
@@ -514,13 +514,13 @@ fn scan(stack: &mut Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
     }
 }
 // _fillBy_
-fn fill_by(stack:&mut Stack,arity: usize, f: Vn, _g: Vn, x: Vn, w: Vn) -> Vs {
+fn fill_by<'a>(stack:&mut Stack,arity: usize, f: Vn<'a>, _g: Vn<'a>, x: Vn<'a>, w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("fill_by");
     call(stack,arity,f,x,w)
 }
 // ⊘
-fn cases(stack:&mut Stack,arity: usize, f: Vn, g: Vn, x: Vn, w: Vn) -> Vs {
+fn cases<'a>(stack:&mut Stack,arity: usize, f: Vn<'a>, g: Vn<'a>, x: Vn<'a>, w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("cases");
     match arity {
@@ -530,13 +530,13 @@ fn cases(stack:&mut Stack,arity: usize, f: Vn, g: Vn, x: Vn, w: Vn) -> Vs {
     }
 }
 // ⎊
-fn catches(_stack:&mut Stack,_arity: usize, _f: Vn, _g: Vn, _x: Vn, _w: Vn) -> Vs {
+fn catches<'a>(_stack:&mut Stack,_arity: usize, _f: Vn<'a>, _g: Vn<'a>, _x: Vn<'a>, _w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("catches");
     panic!("catches not implemented");
 }
 
-pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Vs {
+pub fn decompose<'a>(arity:usize, x: Vn<'a>,_w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("decompose");
     #[cfg(feature = "debug")]
@@ -632,7 +632,7 @@ pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Vs {
     r
 }
 
-pub fn prim_ind(arity:usize, x: Vn,_w: Vn) -> Vs {
+pub fn prim_ind<'a>(arity:usize, x: Vn<'a>,_w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("prim_ind");
     match arity {
