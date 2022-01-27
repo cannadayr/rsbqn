@@ -40,7 +40,7 @@ fn call2(stack: &mut Stack,m: V,f: V,g: V) -> Vs {
     }
 }
 
-fn derv(env: Env,code: &Cc<Code>,block: &Cc<Block>,stack: &mut Stack) -> Vs {
+fn derv(env: &Env,code: &Cc<Code>,block: &Cc<Block>,stack: &mut Stack) -> Vs {
     match (block.typ,block.imm) {
         (0,true) => {
             let child = Env::new(Some(env.clone()),block,0,None);
@@ -100,7 +100,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("DFND");
                 let x = unsafe { *code.bc.get_unchecked(pos) };pos+=1;
-                let r = derv(env.clone(),&code,&code.blocks[x],&mut stack);
+                let r = derv(&env,&code,&code.blocks[x],&mut stack);
                 #[cfg(feature = "debug")]
                 dbg_stack_in("DFND",pos-2,format!("{} {}",&x,&r),stack);
                 stack.s.push_unchecked(r);
