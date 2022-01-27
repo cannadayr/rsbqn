@@ -407,13 +407,16 @@ fn windows<'a>(arity: usize, x: Vn<'a>, _w: Vn<'a>) -> Vs<'a> {
 
 }
 // ⌜
-fn table<'a,stack: 'a>(stack: &'a mut Stack<'a>,arity: usize, f: Vn<'a>, x: Vn<'a>, w: Vn<'a>) -> Vs<'a> {
+fn table<'a>(stack: &'a mut Stack<'a>,arity: usize, f: Vn<'a>, x: Vn<'a>, w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("table");
     match arity {
         1 => match unsafe { x.0.unwrap_unchecked() } {
             V::A(xa) => {
-                let ravel = (*xa).r.iter().map(|e| *call(stack,arity,Vn(f.0),Vn(Some(&e)),Vn(None)).into_v().unwrap() ).collect::<Vec<V>>();
+                let ravel : Vec<V> = Vec::new();
+                for i in (0..xa.r.len()-1) {
+                    ravel.push(*call(stack,arity,Vn(f.0),Vn(Some(&xa.r[i])),Vn(None)).into_v().unwrap());
+                }
                 let sh = (*xa).sh.clone();
                 Vs::V(&V::A(Cc::new(A::new(ravel,sh))))
             },
@@ -422,9 +425,12 @@ fn table<'a,stack: 'a>(stack: &'a mut Stack<'a>,arity: usize, f: Vn<'a>, x: Vn<'
         2 => {
             match (unsafe { x.0.unwrap_unchecked() },unsafe { w.0.unwrap_unchecked() }) {
                 (V::A(xa),V::A(wa)) => {
-                    let ravel = (*wa).r.iter().flat_map(|d| {
-                        (*xa).r.iter().map(|e| *call(stack,arity,Vn(f.0),Vn(Some(e)),Vn(Some(d))).into_v().unwrap() ).collect::<Vec<V>>()
-                    }).collect::<Vec<V>>();
+                    let ravel : Vec<V> = Vec::new();
+                    for i in 0..wa.r.len()-1 {
+                        for j in (0..xa.r.len()-1) {
+                            ravel.push(*call(stack,arity,Vn(f.0),Vn(Some(&xa.r[j])),Vn(Some(&wa.r[i]))).into_v().unwrap());
+                        }
+                    }
                     let sh = (*wa).sh.clone().into_iter().chain((*xa).sh.clone().into_iter()).collect();
                     Vs::V(&V::A(Cc::new(A::new(ravel,sh))))
                 },
@@ -435,7 +441,7 @@ fn table<'a,stack: 'a>(stack: &'a mut Stack<'a>,arity: usize, f: Vn<'a>, x: Vn<'
     }
 }
 // `
-fn scan<'a>(stack: &mut Stack,arity: usize, f: Vn<'a>, x: Vn<'a>, w: Vn<'a>) -> Vs<'a> {
+fn scan<'a>(stack: &'a mut Stack<'a>,arity: usize, f: Vn<'a>, x: Vn<'a>, w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("scan");
     match arity {
@@ -461,11 +467,11 @@ fn scan<'a>(stack: &mut Stack,arity: usize, f: Vn<'a>, x: Vn<'a>, w: Vn<'a>) -> 
                             i += 1;
                         }
                         while i < l {
-                            r[i] = call(stack,2,Vn(f.0),Vn(Some(&a.r[i])),Vn(Some(&r[i-c]))).as_v().unwrap().clone();
+                            r[i] = *call(stack,2,Vn(f.0),Vn(Some(&a.r[i])),Vn(Some(&r[i-c]))).as_v().unwrap().clone();
                             i += 1;
                         }
                     };
-                    Vs::V(V::A(Cc::new(A::new(r,s.to_vec()))))
+                    Vs::V(&V::A(Cc::new(A::new(r,s.to_vec()))))
                 },
                 _ => panic!("monadic scan x is not an array"),
             }
@@ -497,15 +503,15 @@ fn scan<'a>(stack: &mut Stack,arity: usize, f: Vn<'a>, x: Vn<'a>, w: Vn<'a>) -> 
                         }
                         i = 0;
                         while i < c {
-                            r[i] = call(stack,2,Vn(f.0),Vn(Some(&xa.r[i])),Vn(Some(&wa.r[i]))).as_v().unwrap().clone();
+                            r[i] = *call(stack,2,Vn(f.0),Vn(Some(&xa.r[i])),Vn(Some(&wa.r[i]))).as_v().unwrap().clone();
                             i += 1;
                         }
                         while i < l {
-                            r[i] = call(stack,2,Vn(f.0),Vn(Some(&xa.r[i])),Vn(Some(&r[i-c]))).as_v().unwrap().clone();
+                            r[i] = *call(stack,2,Vn(f.0),Vn(Some(&xa.r[i])),Vn(Some(&r[i-c]))).as_v().unwrap().clone();
                             i += 1;
                         }
                     };
-                    Vs::V(V::A(Cc::new(A::new(r,s.to_vec()))))
+                    Vs::V(&V::A(Cc::new(A::new(r,s.to_vec()))))
                 },
                 _ => panic!("dyadic scan x or w is not an array"),
             }
@@ -514,13 +520,13 @@ fn scan<'a>(stack: &mut Stack,arity: usize, f: Vn<'a>, x: Vn<'a>, w: Vn<'a>) -> 
     }
 }
 // _fillBy_
-fn fill_by<'a>(stack:&mut Stack,arity: usize, f: Vn<'a>, _g: Vn<'a>, x: Vn<'a>, w: Vn<'a>) -> Vs<'a> {
+fn fill_by<'a>(stack:&'a mut Stack<'a>,arity: usize, f: Vn<'a>, _g: Vn<'a>, x: Vn<'a>, w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("fill_by");
     call(stack,arity,f,x,w)
 }
 // ⊘
-fn cases<'a>(stack:&mut Stack,arity: usize, f: Vn<'a>, g: Vn<'a>, x: Vn<'a>, w: Vn<'a>) -> Vs<'a> {
+fn cases<'a>(stack:&'a mut Stack<'a>,arity: usize, f: Vn<'a>, g: Vn<'a>, x: Vn<'a>, w: Vn<'a>) -> Vs<'a> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("cases");
     match arity {
@@ -553,7 +559,7 @@ pub fn decompose<'a>(arity:usize, x: Vn<'a>,_w: Vn<'a>) -> Vs<'a> {
                     _ => false
                 }
             {
-                Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(-1.0),unsafe { x.0.unwrap_unchecked() }.clone()],vec![2]))))
+                Vs::V(&V::A(Cc::new(A::new(vec![V::Scalar(-1.0),unsafe { x.0.unwrap_unchecked() }.clone()],vec![2]))))
             }
             else if // primitives
                 match unsafe { (&x).0.as_ref().unwrap_unchecked() } {
@@ -570,7 +576,7 @@ pub fn decompose<'a>(arity:usize, x: Vn<'a>,_w: Vn<'a>) -> Vs<'a> {
                     _ => false,
                 }
             {
-                Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(0.0),unsafe { x.0.unwrap_unchecked() }.clone()],vec![2]))))
+                Vs::V(&V::A(Cc::new(A::new(vec![V::Scalar(0.0),unsafe { x.0.unwrap_unchecked() }.clone()],vec![2]))))
             }
             else if // repr
                 match unsafe { (&x).0.as_ref().unwrap_unchecked() } {
@@ -585,7 +591,7 @@ pub fn decompose<'a>(arity:usize, x: Vn<'a>,_w: Vn<'a>) -> Vs<'a> {
                         match t {
                             4 => {
                                 let D1(f,g) = a.deref();
-                                Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(4.0),g.clone(),f.clone()],vec![3]))))
+                                Vs::V(&V::A(Cc::new(A::new(vec![V::Scalar(4.0),g.clone(),f.clone()],vec![3]))))
                             },
                             _ => panic!("UserMd1 illegal decompose"),
                         }
@@ -595,7 +601,7 @@ pub fn decompose<'a>(arity:usize, x: Vn<'a>,_w: Vn<'a>) -> Vs<'a> {
                         match t {
                             5 => {
                                 let D2(f,g,h) = a.deref();
-                                Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(5.0),g.clone(),f.clone(),h.clone()],vec![4]))))
+                                Vs::V(&V::A(Cc::new(A::new(vec![V::Scalar(5.0),g.clone(),f.clone(),h.clone()],vec![4]))))
                             },
                             _ => panic!("UserMd2 illegal decompose"),
                         }
@@ -607,21 +613,21 @@ pub fn decompose<'a>(arity:usize, x: Vn<'a>,_w: Vn<'a>) -> Vs<'a> {
                 match unsafe { (&x).0.as_ref().unwrap_unchecked() } {
                     V::D1(d1,None) => {
                         let D1(m,f) = (*d1).deref();
-                        Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(4.0),f.clone(),m.clone()],vec![3]))))
+                        Vs::V(&V::A(Cc::new(A::new(vec![V::Scalar(4.0),f.clone(),m.clone()],vec![3]))))
                     },
                     V::D2(d2,None) => {
                         let D2(m,f,g) = (*d2).deref();
-                        Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(5.0),f.clone(),m.clone(),g.clone()],vec![4]))))
+                        Vs::V(&V::A(Cc::new(A::new(vec![V::Scalar(5.0),f.clone(),m.clone(),g.clone()],vec![4]))))
                     },
                     V::Tr2(tr2,None) => {
                         let Tr2(g,h) = (*tr2).deref();
-                        Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(2.0),g.clone(),h.clone()],vec![3]))))
+                        Vs::V(&V::A(Cc::new(A::new(vec![V::Scalar(2.0),g.clone(),h.clone()],vec![3]))))
                     },
                     V::Tr3(tr3,None) => {
                         let Tr3(f,g,h) = (*tr3).deref();
-                        Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(3.0),f.clone(),g.clone(),h.clone()],vec![4]))))
+                        Vs::V(&V::A(Cc::new(A::new(vec![V::Scalar(3.0),f.clone(),g.clone(),h.clone()],vec![4]))))
                     },
-                    _ => Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(1.0),x.0.unwrap().clone()],vec![2])))),
+                    _ => Vs::V(&V::A(Cc::new(A::new(vec![V::Scalar(1.0),x.0.unwrap().clone()],vec![2])))),
                 }
             }
         },
@@ -637,17 +643,17 @@ pub fn prim_ind<'a>(arity:usize, x: Vn<'a>,_w: Vn<'a>) -> Vs<'a> {
     coz::scope!("prim_ind");
     match arity {
         1 => match unsafe { x.0.unwrap_unchecked() } {
-            V::BlockInst(_b,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
-            V::UserMd1(_b,_a,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
-            V::UserMd2(_b,_a,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
-            V::Fun(_a,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
-            V::Md1(_f,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
-            V::Md2(_f,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
-            V::D1(_d1,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
-            V::D2(_d2,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
-            V::Tr2(_tr2,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
-            V::Tr3(_tr3,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
-            _ => Vs::V(V::Scalar(64 as f64)),
+            V::BlockInst(_b,Some(prim)) => Vs::V(&V::Scalar(*prim as f64)),
+            V::UserMd1(_b,_a,Some(prim)) => Vs::V(&V::Scalar(*prim as f64)),
+            V::UserMd2(_b,_a,Some(prim)) => Vs::V(&V::Scalar(*prim as f64)),
+            V::Fun(_a,Some(prim)) => Vs::V(&V::Scalar(*prim as f64)),
+            V::Md1(_f,Some(prim)) => Vs::V(&V::Scalar(*prim as f64)),
+            V::Md2(_f,Some(prim)) => Vs::V(&V::Scalar(*prim as f64)),
+            V::D1(_d1,Some(prim)) => Vs::V(&V::Scalar(*prim as f64)),
+            V::D2(_d2,Some(prim)) => Vs::V(&V::Scalar(*prim as f64)),
+            V::Tr2(_tr2,Some(prim)) => Vs::V(&V::Scalar(*prim as f64)),
+            V::Tr3(_tr3,Some(prim)) => Vs::V(&V::Scalar(*prim as f64)),
+            _ => Vs::V(&V::Scalar(64 as f64)),
         },
         _ => panic!("illegal plus arity"),
     }

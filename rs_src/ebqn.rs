@@ -51,7 +51,7 @@ fn derv<'a>(env: Env,code: &Cc<Code>,block: &Cc<Block>,stack: &'a mut Stack<'a>)
                 },
                 _ => panic!("body immediacy derivation doesnt match block definition"),
             };
-            vm(&child,code,pos,stack)
+            Vs::V(&vm(&child,code,pos,stack))
         },
         (_typ,_imm) => {
             let block_inst = BlockInst::new(env.clone(),block.clone());
@@ -70,7 +70,7 @@ fn incr(stack: &mut Stack) {
     stack.fp = stack.s.len();
 }
 
-pub fn vm<'a>(env: &'a Env,code: &Cc<Code>,mut pos: usize,mut stack: &'a mut Stack<'a>) -> Vs<'a> {
+pub fn vm<'a,'b: 'a>(env: &'b Env,code: &Cc<Code>,mut pos: usize,mut stack: &'a mut Stack<'a>) -> V {
     #[cfg(feature = "debug")]
     incr(stack);
     #[cfg(feature = "debug")]
@@ -129,7 +129,7 @@ pub fn vm<'a>(env: &'a Env,code: &Cc<Code>,mut pos: usize,mut stack: &'a mut Sta
                 dbg_stack_in("RETN",pos-1,"".to_string(),stack);
                 #[cfg(feature = "coz-ops")]
                 coz::end!("RETN");
-                break stack.s.pop_unchecked();
+                break *stack.s.pop_unchecked().into_v().unwrap();
             },
             11 => { // ARRO
                 pos += 1;
@@ -571,5 +571,5 @@ pub fn run<'a>(stack: &'a mut Stack<'a>,code: Cc<Code>) -> V {
             Body::Imm(b) => code.bodies[b],
             Body::Defer(_,_) => panic!("cant run deferred block"),
         };
-    *vm(&root,&code,pos,stack).into_v().unwrap()
+    vm(&root,&code,pos,stack)
 }

@@ -48,9 +48,9 @@ impl PartialEq for Md1<M1> {
 
 #[derive(Clone)]
 pub struct Md2<M2>(pub M2)
-    where for<'a> M2: Fn(&mut Stack,usize,Vn<'a>,Vn<'a>,Vn<'a>,Vn<'a>) -> Vs<'a>;
+    where for<'a> M2: Fn(&'a mut Stack<'a>,usize,Vn<'a>,Vn<'a>,Vn<'a>,Vn<'a>) -> Vs<'a>;
 
-pub type M2 = for<'a> fn(&mut Stack,usize,Vn<'a>,Vn<'a>,Vn<'a>,Vn<'a>) -> Vs<'a>;
+pub type M2 = for<'a> fn(&'a mut Stack<'a>,usize,Vn<'a>,Vn<'a>,Vn<'a>,Vn<'a>) -> Vs<'a>;
 
 impl PartialEq for Md2<M2> {
     fn eq(&self, other: &Self) -> bool {
@@ -124,22 +124,22 @@ impl<'a> Calleable<'a> for V {
             V::UserMd1(b,mods,_prim) => {
                 let D1(m,f) = mods.deref();
                 let args = vec![Some(self.clone()),x.none_or_clone(),w.none_or_clone(),Some(m.clone()),Some(f.clone())];
-                let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args));
+                let env = Box::new(Env::new(Some(b.parent.clone()),&b.def,arity,Some(args)));
                 let pos = body_pos(b,arity);
-                vm(&env,&b.def.code,pos,stack)
+                Vs::V(&vm(&env,&b.def.code,pos,stack))
             },
             V::UserMd2(b,mods,_prim) => {
                 let D2(m,f,g) = mods.deref();
                 let args = vec![Some(self.clone()),x.none_or_clone(),w.none_or_clone(),Some(m.clone()),Some(f.clone()),Some(g.clone())]; // cloning args is slow
                 let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args)); // creating a new env is slow
                 let pos = body_pos(b,arity);
-                vm(&env,&b.def.code,pos,stack)
+                Vs::V(&vm(&env,&b.def.code,pos,stack))
             },
             V::BlockInst(b,_prim) => {
                 let args = vec![Some(self.clone()),x.none_or_clone(),w.none_or_clone()];
                 let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args));
                 let pos = body_pos(b,arity);
-                vm(&env,&b.def.code,pos,stack)
+                Vs::V(&vm(&env,&b.def.code,pos,stack))
             },
             V::Scalar(n) => Vs::V(&V::Scalar(*n)),
             V::Char(c) => Vs::V(&V::Char(*c)),
@@ -190,7 +190,7 @@ impl<'a> Vn<'a> {
     fn none_or_clone(&self) -> Vh {
         match self.deref().0 {
             None => Some(V::Nothing),
-            Some(v) => Some(v.clone()),
+            Some(v) => Some(*v),
         }
 
     }
@@ -457,7 +457,7 @@ impl BlockInst {
                 };
                 let D1(m,f) = args;
                 let env = Env::new(Some(self.parent.clone()),&self.def,arity,Some(vec![Some(m.clone()),Some(f.clone())]));
-                vm(&env,&self.def.code,pos,stack)
+                Vs::V(&vm(&env,&self.def.code,pos,stack))
             },
         }
     }
@@ -477,7 +477,7 @@ impl BlockInst {
                 };
                 let D2(m,f,g) = args;
                 let env = Env::new(Some(self.parent.clone()),&self.def,arity,Some(vec![Some(m.clone()),Some(f.clone()),Some(g.clone())]));
-                vm(&env,&self.def.code,pos,stack)
+                Vs::V(&vm(&env,&self.def.code,pos,stack))
             },
         }
     }
