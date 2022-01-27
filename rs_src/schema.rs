@@ -206,21 +206,16 @@ impl Vs {
         match self {
             Vs::Slot(env,id) => { let v = vs.into_v().unwrap(); env.set(d,*id,&v); v },
             Vs::Ar(a) => {
-                let v = vs.into_v().unwrap();
-                let arr =
-                    match &v {
-                        V::A(arr) => arr.clone(),
-                        _ => panic!("can only set array of refs if value is an array"),
-                    };
+                let v = vs.into_v().unwrap().into_a().unwrap();
                 a.r.iter().enumerate().for_each(|(i,e)|
                     match e {
                         Vs::Slot(env,id) => {
-                            env.set(d,*id,&arr.r[i]);
+                            env.set(d,*id,&v.r[i]);
                         },
                         _ => panic!("cant set non-slot in ref array"),
                     }
                 );
-                v
+                V::A(v)
             },
             _ => panic!("can only set slots"),
         }
