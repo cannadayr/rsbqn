@@ -32,7 +32,7 @@ Test
 Causal Profiling
 -----
 
-    cargo build --profile bench --features coz
+    cargo build --profile bench --features coz-loop,coz-ops,coz-fns
     coz run --- ./target/release/bin
 
 Heap Analysis
@@ -46,3 +46,11 @@ Perf
 
     cargo build --profile bench
     perf stat -e instructions ./target/release/bin
+
+Profile Guided Optimiziation
+-----
+
+    RUSTFLAGS="-Cprofile-generate=/tmp/pgo-data" cargo build --release --target=x86_64-unknown-linux-gnu
+    for i in {1..1000}; do ./target/x86_64-unknown-linux-gnu/release/bin ; done
+    ${HOME}/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/bin/llvm-profdata merge -o /tmp/pgo-data/merged.profdata /tmp/pgo-data/
+    RUSTFLAGS="-Cprofile-use=/tmp/pgo-data/merged.profdata" cargo build --release --target=x86_64-unknown-linux-gnu
