@@ -114,19 +114,19 @@ template(Content,core) ->
     erlang:iolist_to_binary([
         <<"use log::{info};\n">>,
         <<"use core::f64::{INFINITY,NEG_INFINITY};\n">>,
-        <<"use ebqn::init_log;\n">>,
-        <<"use ebqn::ebqn::{run,call,runtime,prog};\n">>,
-        <<"use ebqn::schema::{Code,new_scalar,new_char,new_string,Body,A,Decoder,V,Stack};\n\n">>,
+        <<"use rsbqn::init_log;\n">>,
+        <<"use rsbqn::vm::{run,call,runtime,prog};\n">>,
+        <<"use rsbqn::schema::{Code,new_scalar,new_char,new_string,Body,A,Decoder,V,Stack};\n\n">>,
         <<"\n\n">>,Content,<<"\n\n">>
     ]);
 template(Content,compiler) ->
     erlang:iolist_to_binary([
         <<"use log::{info};\n">>,
         <<"use core::f64::{INFINITY,NEG_INFINITY};\n">>,
-        <<"use ebqn::init_log;\n">>,
-        <<"use ebqn::ebqn::{run,call,runtime,prog};\n">>,
-        <<"use ebqn::schema::{Code,new_scalar,new_char,new_string,Body,A,Decoder,V,Stack};\n">>,
-        <<"use ebqn::code::c;\n\n">>,
+        <<"use rsbqn::init_log;\n">>,
+        <<"use rsbqn::vm::{run,call,runtime,prog};\n">>,
+        <<"use rsbqn::schema::{Code,new_scalar,new_char,new_string,Body,A,Decoder,V,Stack};\n">>,
+        <<"use rsbqn::code::c;\n\n">>,
         Content,
         <<"\n\n">>
     ]).

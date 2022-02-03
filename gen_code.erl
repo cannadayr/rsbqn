@@ -41,10 +41,10 @@ main([Repo]) ->
     {ok,R1} = test(Repo,<<"r1">>),
     {ok,C}  = test(Repo,<<"c">>),
     %{ok,F}  = test(Repo,<<"f">>),
-    file:write_file("rs_src/code.rs",erlang:iolist_to_binary([
+    file:write_file("src/gen/code.rs",erlang:iolist_to_binary([
         <<"use log::{debug};\n">>,
         <<"use core::f64::{INFINITY,NEG_INFINITY};\n">>,
-        <<"use crate::ebqn::run;\n">>,
+        <<"use crate::vm::run;\n">>,
         <<"use crate::schema::{Code,new_scalar,new_char,new_string,Body,A,Decoder,V};\n">>,
         <<"use bacon_rajan_cc::Cc;\n">>,
         <<"pub fn r0(provide: &A) -> Cc<Code> {\nCode::new(">>,utf8(R0),<<")\n}\n\n">>,

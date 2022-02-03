@@ -1,13 +1,10 @@
 use log::{info};
 use core::f64::{INFINITY,NEG_INFINITY};
-use ebqn::init_log;
-use ebqn::ebqn::{run,call,runtime,prog};
-use ebqn::code::{r0,r1,c};
-use ebqn::schema::{new_string,new_char,V,Vs,Vn,Stack};
-use ebqn::prim::{provide,decompose,prim_ind};
-use ebqn::schema::Body;
-use ebqn::schema::new_scalar;
-use ebqn::schema::Code;
+use rsbqn::init_log;
+use rsbqn::vm::{run,call,runtime,prog};
+use rsbqn::gen::code::{r0,r1,c};
+use rsbqn::schema::{new_string,new_char,new_scalar,Body,Code,V,Vs,Vn,Stack};
+use rsbqn::provide::{provide,decompose,prim_ind};
 
 #[cfg(feature = "dhat")]
 use dhat::{Dhat, DhatAlloc};

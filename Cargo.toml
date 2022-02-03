@@ -1,5 +1,5 @@
 [package]
-name = "ebqn"
+name = "rsbqn"
 version = "0.1.0"
 authors = ["Rowan Cannaday <cannadayr@gmail.com>"]
 edition = "2018"
@@ -11,24 +11,21 @@ lto = true
 opt-level = 3
 
 [lib]
-name = "ebqn"
-path = "rs_src/lib.rs"
+name = "rsbqn"
+path = "src/lib.rs"
 crate-type = ["dylib","rlib"]
 
 [[bin]]
-name = "bin"
-path = "rs_src/bin.rs"
+name = "rsbqn"
+path = "src/rsbqn.rs"
 
 [profile.bench]
 debug = 1
 
 [dependencies]
-#rustler = "0.22.0"
 once_cell = "1.8.0"
 bacon_rajan_cc = { git = "https://github.com/fitzgen/bacon-rajan-cc", rev = "a30621ee3b1a8bc5358a5fb333b7a1dd309060be" }
 log = "0.4.14"
-syslog = "^4.0"
-log-panics = "2.0.0"
 env_logger = "0.9.0"
 enum-as-inner = "0.3.3"
 itertools = "0.10.3"

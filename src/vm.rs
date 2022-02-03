@@ -1,6 +1,6 @@
 use crate::schema::{Env,V,Vs,Vn,Block,BlockInst,Code,Calleable,Stacker,Stack,Body,A,Ar,Tr2,Tr3,Runtime,Compiler,Prog,D2,D1,Fn,new_scalar,new_string};
-use crate::prim::{provide,decompose,prim_ind};
-use crate::code::{r0,r1,c};
+use crate::provide::{provide,decompose,prim_ind};
+use crate::gen::code::{r0,r1,c};
 use crate::fmt::{dbg_stack_out,dbg_stack_in};
 use crate::init_log;
 use bacon_rajan_cc::Cc;

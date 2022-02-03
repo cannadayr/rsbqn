@@ -2,7 +2,7 @@ use std::ops::Deref;
 use std::cell::UnsafeCell;
 use std::ptr;
 use bacon_rajan_cc::Cc;
-use crate::ebqn::vm;
+use crate::vm::vm;
 use crate::late_init::LateInit;
 //use log::{debug, trace, error, log_enabled, info, Level};
 use enum_as_inner::EnumAsInner;
