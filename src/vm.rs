@@ -43,7 +43,7 @@ fn call2(stack: &mut Stack,m: V,f: V,g: V) -> Vs {
 fn derv(env: &Env,code: &Cc<Code>,block: &Cc<Block>,stack: &mut Stack) -> Vs {
     match (block.typ,block.imm) {
         (0,true) => {
-            let child = Env::new(Some(env.clone()),block,0,None);
+            let child = Env::new(Some(env),block,0,None);
             let pos = match block.body {
                 Body::Imm(b) => {
                     let (p,_l) = code.bodies[b];
@@ -455,10 +455,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
     }
 }
 
-pub fn runtime(stack: &mut Stack) -> V {
+pub fn runtime(root: Option<&Env>,stack: &mut Stack) -> V {
     let builtin = provide();
-    let runtime0 = run(stack,r0(&builtin));
-    let runtime1 = run(stack,r1(&builtin,&runtime0));
+    let runtime0 = run(root,stack,r0(&builtin));
+    let runtime1 = run(root,stack,r1(&builtin,&runtime0));
     info!("runtime0 loaded");
     match runtime1.into_a().unwrap().get_mut() {
         Some(full_runtime) => {
@@ -564,12 +564,12 @@ pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V) -> Cc<Code> {
     }
 }
 
-pub fn run(stack: &mut Stack,code: Cc<Code>) -> V {
-    let root = Env::new(None,&code.blocks[0],0,None);
+pub fn run(parent: Option<&Env>,stack: &mut Stack,code: Cc<Code>) -> V {
+    let child = Env::new(parent,&code.blocks[0],0,None);
     let (pos,_locals) =
         match code.blocks[0].body {
             Body::Imm(b) => code.bodies[b],
             Body::Defer(_,_) => panic!("cant run deferred block"),
         };
-    vm(&root,&code,pos,stack).into_v().unwrap()
+    vm(&child,&code,pos,stack).into_v().unwrap()
 }

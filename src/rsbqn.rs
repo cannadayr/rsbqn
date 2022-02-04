@@ -3,7 +3,7 @@ use core::f64::{INFINITY,NEG_INFINITY};
 use rsbqn::init_log;
 use rsbqn::vm::{run,call,runtime,prog};
 use rsbqn::gen::code::{r0,r1,c};
-use rsbqn::schema::{new_string,new_char,new_scalar,Body,Code,V,Vs,Vn,Stack};
+use rsbqn::schema::{new_string,new_char,new_scalar,Body,Code,Env,V,Vs,Vn,Stack};
 use rsbqn::provide::{provide,decompose,prim_ind};
 
 #[cfg(feature = "dhat")]
@@ -19,14 +19,15 @@ fn main() {
     let _dhat = Dhat::start_heap_profiling();
 
     let mut stack = Stack::new();
+    let root = Env::new_root();
 
     // each function one-at-a-time
-    let runtime = runtime(&mut stack);
-    let compiler = run(&mut stack,c(&runtime));
+    let runtime = runtime(Some(&root),&mut stack);
+    let compiler = run(Some(&root),&mut stack,c(&runtime));
     let src = new_string("{×´1+↕𝕩}");
     let prog = prog(&mut stack,&compiler,src,&runtime);
-    let exec = run(&mut stack,prog);
-    let result = call(&mut stack,1,Vn(Some(&exec)),Vn(Some(&V::Scalar(10000.0))),Vn(None));
+    let exec = run(Some(&root),&mut stack,prog);
+    let result = call(&mut stack,1,Vn(Some(&exec)),Vn(Some(&V::Scalar(10.0))),Vn(None));
     println!("{}",result);
 
     // single line variations for copy-pasting

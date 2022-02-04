@@ -110,20 +110,20 @@ impl Calleable for V {
             V::UserMd1(b,mods,_prim) => {
                 let D1(m,f) = mods.deref();
                 let args = vec![Some(self.clone()),x.none_or_clone(),w.none_or_clone(),Some(m.clone()),Some(f.clone())];
-                let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args));
+                let env = Env::new(Some(&b.parent),&b.def,arity,Some(args));
                 let pos = body_pos(b,arity);
                 vm(&env,&b.def.code,pos,stack)
             },
             V::UserMd2(b,mods,_prim) => {
                 let D2(m,f,g) = mods.deref();
                 let args = vec![Some(self.clone()),x.none_or_clone(),w.none_or_clone(),Some(m.clone()),Some(f.clone()),Some(g.clone())]; // cloning args is slow
-                let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args)); // creating a new env is slow
+                let env = Env::new(Some(&b.parent),&b.def,arity,Some(args)); // creating a new env is slow
                 let pos = body_pos(b,arity);
                 vm(&env,&b.def.code,pos,stack)
             },
             V::BlockInst(b,_prim) => {
                 let args = vec![Some(self.clone()),x.none_or_clone(),w.none_or_clone()];
-                let env = Env::new(Some(b.parent.clone()),&b.def,arity,Some(args));
+                let env = Env::new(Some(&b.parent),&b.def,arity,Some(args));
                 let pos = body_pos(b,arity);
                 vm(&env,&b.def.code,pos,stack)
             },
@@ -333,7 +333,7 @@ pub struct EnvUnboxed {
 #[derive(Clone,Debug)]
 pub struct Env(Cc<EnvUnboxed>);
 impl Env {
-    pub fn new(parent: Option<Env>,block: &Cc<Block>,arity: usize,args: Option<Vec<Vh>>) -> Self {
+    pub fn new(parent: Option<&Env>,block: &Cc<Block>,arity: usize,args: Option<Vec<Vh>>) -> Self {
         // index into bodies with unsafe code.
         // we are assuming the compiler has produced correct body indexing
         // environment creation is in the outskirts of the hot-path.
@@ -362,7 +362,11 @@ impl Env {
                     v
                 },
             };
-        let env = EnvUnboxed {parent: parent, vars: UnsafeCell::new(vars) };
+        let env = EnvUnboxed {parent: parent.cloned(), vars: UnsafeCell::new(vars) };
+        Self(Cc::new(env))
+    }
+    pub fn new_root() -> Self {
+        let env = EnvUnboxed {parent: None, vars: UnsafeCell::new(vec![]) };
         Self(Cc::new(env))
     }
     // get, set, and get_drop use unsafe code
@@ -437,7 +441,7 @@ impl BlockInst {
                     _ => panic!("body immediacy doesnt match block definition"),
                 };
                 let D1(m,f) = args;
-                let env = Env::new(Some(self.parent.clone()),&self.def,arity,Some(vec![Some(m.clone()),Some(f.clone())]));
+                let env = Env::new(Some(&self.parent),&self.def,arity,Some(vec![Some(m.clone()),Some(f.clone())]));
                 vm(&env,&self.def.code,pos,stack)
             },
         }
@@ -457,7 +461,7 @@ impl BlockInst {
                     _ => panic!("body immediacy doesnt match block definition"),
                 };
                 let D2(m,f,g) = args;
-                let env = Env::new(Some(self.parent.clone()),&self.def,arity,Some(vec![Some(m.clone()),Some(f.clone()),Some(g.clone())]));
+                let env = Env::new(Some(&self.parent),&self.def,arity,Some(vec![Some(m.clone()),Some(f.clone()),Some(g.clone())]));
                 vm(&env,&self.def.code,pos,stack)
             },
         }
