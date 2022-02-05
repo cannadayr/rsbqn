@@ -51,9 +51,7 @@ impl Display for Vs {
 impl Display for Ve {
     fn fmt(&self, f: &mut Formatter) -> Result {
         match self {
-            Ve::V(v) => {
-                panic!("cant fmt values yet");
-            },
+            Ve::V(v) => write!(f,"{}",v),
             Ve::S(s) => write!(f,"{}",s),
         }
     }
@@ -77,9 +75,7 @@ impl Debug for R2 {
 impl Debug for Ve {
     fn fmt(&self, f: &mut Formatter) -> Result {
         match self {
-            Ve::V(v) => {
-                panic!("cant debug values yet");
-            },
+            Ve::V(v) => write!(f,"{}",v),
             Ve::S(s) => write!(f,"{}",s),
         }
     }
