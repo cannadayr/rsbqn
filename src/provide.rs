@@ -29,57 +29,57 @@ fn dbg_rtn(fun: &str,arity: usize, r: &Vs) {
 }
 
 // Type
-fn typ(arity: usize, x: Vn, _w: Vn) -> Vs {
+fn typ(arity: usize, x: Vn, _w: Vn) -> Result<Vs,&'static str> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("typ");
     match arity {
         1 => match unsafe { x.0.unwrap_unchecked() } {
-            V::Scalar(_n) => Vs::V(V::Scalar(1.0)),
-            V::A(_a) => Vs::V(V::Scalar(0.0)),
-            V::Char(_c) => Vs::V(V::Scalar(2.0)),
-            V::UserMd1(_b,_a,_prim) => Vs::V(V::Scalar(3.0)),
-            V::UserMd2(_b,_a,_prim) => Vs::V(V::Scalar(3.0)),
-            V::D1(_d1,_prim) => Vs::V(V::Scalar(3.0)),
-            V::D2(_d2,_prim) => Vs::V(V::Scalar(3.0)),
-            V::Tr2(_tr3,_prim) => Vs::V(V::Scalar(3.0)),
-            V::Tr3(_tr3,_prim) => Vs::V(V::Scalar(3.0)),
-            V::Fn(_fn,_prim) => Vs::V(V::Scalar(3.0)),
-            V::R1(_r1,_prim) => Vs::V(V::Scalar(4.0)),
-            V::R2(_r2,_prim) => Vs::V(V::Scalar(5.0)),
-            V::BlockInst(b,_prim) => Vs::V(V::Scalar(b.def.typ as f64 + 3.0)),
+            V::Scalar(_n) => Ok(Vs::V(V::Scalar(1.0))),
+            V::A(_a) => Ok(Vs::V(V::Scalar(0.0))),
+            V::Char(_c) => Ok(Vs::V(V::Scalar(2.0))),
+            V::UserMd1(_b,_a,_prim) => Ok(Vs::V(V::Scalar(3.0))),
+            V::UserMd2(_b,_a,_prim) => Ok(Vs::V(V::Scalar(3.0))),
+            V::D1(_d1,_prim) => Ok(Vs::V(V::Scalar(3.0))),
+            V::D2(_d2,_prim) => Ok(Vs::V(V::Scalar(3.0))),
+            V::Tr2(_tr3,_prim) => Ok(Vs::V(V::Scalar(3.0))),
+            V::Tr3(_tr3,_prim) => Ok(Vs::V(V::Scalar(3.0))),
+            V::Fn(_fn,_prim) => Ok(Vs::V(V::Scalar(3.0))),
+            V::R1(_r1,_prim) => Ok(Vs::V(V::Scalar(4.0))),
+            V::R2(_r2,_prim) => Ok(Vs::V(V::Scalar(5.0))),
+            V::BlockInst(b,_prim) => Ok(Vs::V(V::Scalar(b.def.typ as f64 + 3.0))),
             _ => panic!("no matching value for typ"),
         },
         _ => panic!("typ not implemented"),
     }
 }
 // Fill
-fn fill(arity: usize, x: Vn, _w: Vn) -> Vs {
+fn fill(arity: usize, x: Vn, _w: Vn) -> Result<Vs,&'static str> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("fill");
     match arity {
-        1 => Vs::V(V::Scalar(0.0)),
-        2 => Vs::V(unsafe { x.0.unwrap_unchecked() }.clone() ),
+        1 => Ok(Vs::V(V::Scalar(0.0))),
+        2 => Ok(Vs::V(unsafe { x.0.unwrap_unchecked() }.clone() )),
         _ => panic!("illegal fill arity"),
     }
 }
 // Log
-fn log(arity: usize, x: Vn, w: Vn) -> Vs {
+fn log(arity: usize, x: Vn, w: Vn) -> Result<Vs,&'static str> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("log");
     match arity {
         1 => match unsafe { x.0.unwrap_unchecked() } {
-            V::Scalar(xs) => Vs::V(V::Scalar(xs.ln())),
+            V::Scalar(xs) => Ok(Vs::V(V::Scalar(xs.ln()))),
             _ => panic!("monadic log expected number"),
         },
         2 => match (unsafe { x.0.unwrap_unchecked() },unsafe { w.0.unwrap_unchecked() }) {
-            (V::Scalar(xs),V::Scalar(ws)) => Vs::V(V::Scalar(xs.ln() / ws.ln())),
+            (V::Scalar(xs),V::Scalar(ws)) => Ok(Vs::V(V::Scalar(xs.ln() / ws.ln()))),
             _ => panic!("dyadic log expected numbers"),
         },
         _ => panic!("illegal power arity"),
     }
 }
 // GroupLen
-fn group_len(arity: usize, x: Vn, w: Vn) -> Vs {
+fn group_len(arity: usize, x: Vn, w: Vn) -> Result<Vs,&'static str> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("group_len");
     match arity {
@@ -97,7 +97,7 @@ fn group_len(arity: usize, x: Vn, w: Vn) -> Vs {
                         }
                         i += 1;
                     }
-                    Vs::V(V::A(Cc::new(A::new(r.clone(),vec![r.len() as usize]))))
+                    Ok(Vs::V(V::A(Cc::new(A::new(r.clone(),vec![r.len() as usize])))))
                 },
                 _ => panic!("group_len 𝕩 is not an array"),
             }
@@ -116,7 +116,7 @@ fn group_len(arity: usize, x: Vn, w: Vn) -> Vs {
                         }
                         i += 1;
                     }
-                    Vs::V(V::A(Cc::new(A::new(r.clone(),vec![r.len() as usize]))))
+                    Ok(Vs::V(V::A(Cc::new(A::new(r.clone(),vec![r.len() as usize])))))
                 },
                 _ => panic!("group_len 𝕩 is not an array"),
             }
@@ -125,7 +125,7 @@ fn group_len(arity: usize, x: Vn, w: Vn) -> Vs {
     }
 }
 // GroupOrd
-fn group_ord(arity: usize, x: Vn, w: Vn) -> Vs {
+fn group_ord(arity: usize, x: Vn, w: Vn) -> Result<Vs,&'static str> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("group_ord");
     match arity {
@@ -139,7 +139,7 @@ fn group_ord(arity: usize, x: Vn, w: Vn) -> Vs {
                         s[e.to_f64() as usize] += 1.0;
                     });
                     let shape = vec![r.len().clone()];
-                    Vs::V(V::A(Cc::new(A::new(r.clone(),shape))))
+                    Ok(Vs::V(V::A(Cc::new(A::new(r.clone(),shape)))))
                 },
                 _ => panic!("dyadic group_ord x is not an array"),
             }
@@ -148,7 +148,7 @@ fn group_ord(arity: usize, x: Vn, w: Vn) -> Vs {
     }
 }
 // !
-fn assert_fn(arity: usize, x: Vn, w: Vn) -> Vs {
+fn assert_fn(arity: usize, x: Vn, w: Vn) -> Result<Vs,&'static str> {
     #[cfg(feature = "debug")]
     dbg_args("assert_fn",arity,&x,&w);
     let r =
@@ -171,10 +171,10 @@ fn assert_fn(arity: usize, x: Vn, w: Vn) -> Vs {
     };
     #[cfg(feature = "debug")]
     dbg_rtn("assert_fn",arity,&r);
-    r
+    Ok(r)
 }
 // +
-pub fn plus(arity:usize, x: Vn,w: Vn) -> Vs {
+pub fn plus(arity:usize, x: Vn,w: Vn) -> Result<Vs,&'static str> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("plus");
     #[cfg(feature = "debug")]
@@ -194,10 +194,10 @@ pub fn plus(arity:usize, x: Vn,w: Vn) -> Vs {
     };
     #[cfg(feature = "debug")]
     dbg_rtn("plus",arity,&r);
-    r
+    Ok(r)
 }
 // -
-fn minus(arity: usize, x: Vn, w: Vn) -> Vs {
+fn minus(arity: usize, x: Vn, w: Vn) -> Result<Vs,&'static str> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("minus");
     #[cfg(feature = "debug")]
@@ -219,67 +219,67 @@ fn minus(arity: usize, x: Vn, w: Vn) -> Vs {
     };
     #[cfg(feature = "debug")]
     dbg_rtn("minus",arity,&r);
-    r
+    Ok(r)
 }
 // ×
-fn times(arity: usize, x: Vn, w: Vn) -> Vs {
+fn times(arity: usize, x: Vn, w: Vn) -> Result<Vs,&'static str> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("times");
     #[cfg(feature = "debug")]
     dbg_args("times",arity,&x,&w);
     match arity {
         2 => match (unsafe { x.0.unwrap_unchecked() },unsafe { w.0.unwrap_unchecked() }) {
-            (V::Scalar(xs),V::Scalar(ws)) => Vs::V(V::Scalar(ws * xs)),
+            (V::Scalar(xs),V::Scalar(ws)) => Ok(Vs::V(V::Scalar(ws * xs))),
             _ => panic!("dyadic times illegal arguments"),
         },
         _ => panic!("illegal times arity"),
     }
 }
 // ÷
-fn divide(arity: usize, x: Vn, w: Vn) -> Vs {
+fn divide(arity: usize, x: Vn, w: Vn) -> Result<Vs,&'static str> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("divide");
     #[cfg(feature = "debug")]
     dbg_args("divide",arity,&x,&w);
     match arity {
         1 => match unsafe { x.0.unwrap_unchecked() } {
-            V::Scalar(xs) => Vs::V(V::Scalar(1.0 / xs)),
+            V::Scalar(xs) => Ok(Vs::V(V::Scalar(1.0 / xs))),
             _ => panic!("monadic divide expected number"),
         },
         2 => match (unsafe { x.0.unwrap_unchecked() },unsafe { w.0.unwrap_unchecked() }) {
-            (V::Scalar(xs),V::Scalar(ws)) => Vs::V(V::Scalar(ws / xs)),
+            (V::Scalar(xs),V::Scalar(ws)) => Ok(Vs::V(V::Scalar(ws / xs))),
             _ => panic!("dyadic divide expected number"),
         },
         _ => panic!("illegal divide arity"),
     }
 }
 // ⋆
-fn power(arity: usize, x: Vn, w: Vn) -> Vs {
+fn power(arity: usize, x: Vn, w: Vn) -> Result<Vs,&'static str> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("power");
     match arity {
         1 => match unsafe { x.0.unwrap_unchecked() } {
-            V::Scalar(xs) => Vs::V(V::Scalar(xs.exp())),
+            V::Scalar(xs) => Ok(Vs::V(V::Scalar(xs.exp()))),
             _ => panic!("monadic power expected number"),
         },
         2 => match (unsafe { x.0.unwrap_unchecked() },unsafe { w.0.unwrap_unchecked() }) {
-            (V::Scalar(xs),V::Scalar(ws)) => Vs::V(V::Scalar(ws.powf(*xs))),
+            (V::Scalar(xs),V::Scalar(ws)) => Ok(Vs::V(V::Scalar(ws.powf(*xs)))),
             _ => panic!("dyadic power expected numbers"),
         },
         _ => panic!("illegal power arity"),
     }
 }
 // ⌊
-fn floor(arity: usize, x: Vn, _w: Vn) -> Vs {
+fn floor(arity: usize, x: Vn, _w: Vn) -> Result<Vs,&'static str> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("floor");
     match arity {
-        1|2 => Vs::V(V::Scalar(unsafe { x.0.unwrap_unchecked() }.to_f64().floor())),
+        1|2 => Ok(Vs::V(V::Scalar(unsafe { x.0.unwrap_unchecked() }.to_f64().floor()))),
         _ => panic!("illegal divide arity"),
     }
 }
 // =
-fn equals(arity: usize, x: Vn, w: Vn) -> Vs {
+fn equals(arity: usize, x: Vn, w: Vn) -> Result<Vs,&'static str> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("equals");
     #[cfg(feature = "debug")]
@@ -303,10 +303,10 @@ fn equals(arity: usize, x: Vn, w: Vn) -> Vs {
     };
     #[cfg(feature = "debug")]
     dbg_rtn("equals",arity,&r);
-    r
+    Ok(r)
 }
 // ≤
-fn lesseq(arity: usize, x: Vn, w: Vn) -> Vs {
+fn lesseq(arity: usize, x: Vn, w: Vn) -> Result<Vs,&'static str> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("lesseq");
     #[cfg(feature = "debug")]
@@ -314,8 +314,8 @@ fn lesseq(arity: usize, x: Vn, w: Vn) -> Vs {
     let r =
     match arity {
         2 => {
-            let t = typ(1,Vn(x.0),Vn(None)).as_v().unwrap().to_f64();
-            let s = typ(1,Vn(w.0),Vn(None)).as_v().unwrap().to_f64();
+            let t = typ(1,Vn(x.0),Vn(None))?.as_v().unwrap().to_f64();
+            let s = typ(1,Vn(w.0),Vn(None))?.as_v().unwrap().to_f64();
             if (&x.0).as_ref().unwrap().is_fn() || (&w.0).as_ref().unwrap().is_fn() {
                 panic!("cannot compare operations")
             };
@@ -328,10 +328,10 @@ fn lesseq(arity: usize, x: Vn, w: Vn) -> Vs {
     };
     #[cfg(feature = "debug")]
     dbg_rtn("lesseq",arity,&r);
-    r
+    Ok(r)
 }
 // ≢
-fn shape(arity: usize, x: Vn, _w: Vn) -> Vs {
+fn shape(arity: usize, x: Vn, _w: Vn) -> Result<Vs,&'static str> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("shape");
     match arity {
@@ -339,7 +339,7 @@ fn shape(arity: usize, x: Vn, _w: Vn) -> Vs {
             V::A(xa) => {
                 let ravel = xa.sh.iter().map(|n| V::Scalar(*n as i64 as f64)).collect::<Vec<V>>();
                 let shape = vec![ravel.len()];
-                Vs::V(V::A(Cc::new(A::new(ravel,shape))))
+                Ok(Vs::V(V::A(Cc::new(A::new(ravel,shape)))))
             },
             _ => panic!("shape 𝕩 is not an array"),
         },
@@ -347,13 +347,13 @@ fn shape(arity: usize, x: Vn, _w: Vn) -> Vs {
     }
 }
 // ⥊
-fn reshape(arity: usize, x: Vn, w: Vn) -> Vs {
+fn reshape(arity: usize, x: Vn, w: Vn) -> Result<Vs,&'static str> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("reshape");
     match arity {
         1 => {
             match unsafe { x.0.unwrap_unchecked() } {
-                V::A(xa) => Vs::V(V::A(Cc::new(A::new(xa.r.clone(),vec![xa.r.len()])))),
+                V::A(xa) => Ok(Vs::V(V::A(Cc::new(A::new(xa.r.clone(),vec![xa.r.len()]))))),
                 _ => panic!("monadic reshape no arr"),
             }
         },
@@ -364,7 +364,7 @@ fn reshape(arity: usize, x: Vn, w: Vn) -> Vs {
                         V::Scalar(n) => *n as usize,
                         _ => panic!("W ravel is not a num"),
                     }).collect::<Vec<usize>>();
-                    Vs::V(V::A(Cc::new(A::new(ax.r.clone(),sh))))
+                    Ok(Vs::V(V::A(Cc::new(A::new(ax.r.clone(),sh)))))
                 },
                 _ => panic!("dydic reshape no match"),
             }
@@ -373,7 +373,7 @@ fn reshape(arity: usize, x: Vn, w: Vn) -> Vs {
     }
 }
 // ⊑
-fn pick(arity: usize, x: Vn, w: Vn) -> Vs {
+fn pick(arity: usize, x: Vn, w: Vn) -> Result<Vs,&'static str> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("pick");
     #[cfg(feature = "debug")]
@@ -391,15 +391,15 @@ fn pick(arity: usize, x: Vn, w: Vn) -> Vs {
     };
     #[cfg(feature = "debug")]
     dbg_rtn("pick",arity,&r);
-    r
+    Ok(r)
 }
 // ↕
-fn windows(arity: usize, x: Vn, _w: Vn) -> Vs {
+fn windows(arity: usize, x: Vn, _w: Vn) -> Result<Vs,&'static str> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("windows");
     match arity {
         1 => match unsafe { x.0.unwrap_unchecked() } {
-            V::Scalar(n) => Vs::V(V::A(Cc::new(A::new((0..*n as i64).map(|v| V::Scalar(v as f64)).collect::<Vec<V>>(),vec![*n as usize])))),
+            V::Scalar(n) => Ok(Vs::V(V::A(Cc::new(A::new((0..*n as i64).map(|v| V::Scalar(v as f64)).collect::<Vec<V>>(),vec![*n as usize]))))),
             _ => panic!("x is not a number"),
         },
         _ => panic!("illegal windows arity"),
@@ -407,15 +407,15 @@ fn windows(arity: usize, x: Vn, _w: Vn) -> Vs {
 
 }
 // ⌜
-fn table(stack: &mut Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
+fn table(stack: &mut Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Result<Vs,&'static str> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("table");
     match arity {
         1 => match unsafe { x.0.unwrap_unchecked() } {
             V::A(xa) => {
-                let ravel = (*xa).r.iter().map(|e| call(stack,arity,Vn(f.0),Vn(Some(e)),Vn(None)).into_v().unwrap() ).collect::<Vec<V>>();
+                let ravel = (*xa).r.iter().map(|e| match call(stack,arity,Vn(f.0),Vn(Some(e)),Vn(None)) { Ok(r) => r.into_v().unwrap(),Err(e) => panic!("calling fn in table failed") } ).collect::<Vec<V>>();
                 let sh = (*xa).sh.clone();
-                Vs::V(V::A(Cc::new(A::new(ravel,sh))))
+                Ok(Vs::V(V::A(Cc::new(A::new(ravel,sh)))))
             },
             _ => panic!("monadic table x is not an array"),
         },
@@ -423,10 +423,10 @@ fn table(stack: &mut Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
             match (unsafe { x.0.unwrap_unchecked() },unsafe { w.0.unwrap_unchecked() }) {
                 (V::A(xa),V::A(wa)) => {
                     let ravel = (*wa).r.iter().flat_map(|d| {
-                        (*xa).r.iter().map(|e| call(stack,arity,Vn(f.0),Vn(Some(e)),Vn(Some(d))).into_v().unwrap() ).collect::<Vec<V>>()
+                        (*xa).r.iter().map(|e| match call(stack,arity,Vn(f.0),Vn(Some(e)),Vn(Some(d))) { Ok(r) => r.into_v().unwrap(),Err(e) => panic!("calling fn in dyadic table failed") } ).collect::<Vec<V>>()
                     }).collect::<Vec<V>>();
                     let sh = (*wa).sh.clone().into_iter().chain((*xa).sh.clone().into_iter()).collect();
-                    Vs::V(V::A(Cc::new(A::new(ravel,sh))))
+                    Ok(Vs::V(V::A(Cc::new(A::new(ravel,sh)))))
                 },
                 _ => panic!("dyadic table not an array"),
             }
@@ -435,7 +435,7 @@ fn table(stack: &mut Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
     }
 }
 // `
-fn scan(stack: &mut Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
+fn scan(stack: &mut Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Result<Vs,&'static str> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("scan");
     match arity {
@@ -461,11 +461,11 @@ fn scan(stack: &mut Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
                             i += 1;
                         }
                         while i < l {
-                            r[i] = call(stack,2,Vn(f.0),Vn(Some(&a.r[i])),Vn(Some(&r[i-c]))).as_v().unwrap().clone();
+                            r[i] = match call(stack,2,Vn(f.0),Vn(Some(&a.r[i])),Vn(Some(&r[i-c]))) { Ok(v) => v.as_v().unwrap().clone(),Err(e) => panic!("monadic scan call failed"), };
                             i += 1;
                         }
                     };
-                    Vs::V(V::A(Cc::new(A::new(r,s.to_vec()))))
+                    Ok(Vs::V(V::A(Cc::new(A::new(r,s.to_vec())))))
                 },
                 _ => panic!("monadic scan x is not an array"),
             }
@@ -497,15 +497,15 @@ fn scan(stack: &mut Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
                         }
                         i = 0;
                         while i < c {
-                            r[i] = call(stack,2,Vn(f.0),Vn(Some(&xa.r[i])),Vn(Some(&wa.r[i]))).as_v().unwrap().clone();
+                            r[i] = match call(stack,2,Vn(f.0),Vn(Some(&xa.r[i])),Vn(Some(&wa.r[i]))) { Ok(v) => v.as_v().unwrap().clone(), Err(e) => panic!("dyadic scan call failed"),};
                             i += 1;
                         }
                         while i < l {
-                            r[i] = call(stack,2,Vn(f.0),Vn(Some(&xa.r[i])),Vn(Some(&r[i-c]))).as_v().unwrap().clone();
+                            r[i] = match call(stack,2,Vn(f.0),Vn(Some(&xa.r[i])),Vn(Some(&r[i-c]))) { Ok(v) => v.as_v().unwrap().clone(),Err(e) => panic!("dyadic scan call failed"), };
                             i += 1;
                         }
                     };
-                    Vs::V(V::A(Cc::new(A::new(r,s.to_vec()))))
+                    Ok(Vs::V(V::A(Cc::new(A::new(r,s.to_vec())))))
                 },
                 _ => panic!("dyadic scan x or w is not an array"),
             }
@@ -514,13 +514,13 @@ fn scan(stack: &mut Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Vs {
     }
 }
 // _fillBy_
-fn fill_by(stack:&mut Stack,arity: usize, f: Vn, _g: Vn, x: Vn, w: Vn) -> Vs {
+fn fill_by(stack:&mut Stack,arity: usize, f: Vn, _g: Vn, x: Vn, w: Vn) -> Result<Vs,&'static str> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("fill_by");
     call(stack,arity,f,x,w)
 }
 // ⊘
-fn cases(stack:&mut Stack,arity: usize, f: Vn, g: Vn, x: Vn, w: Vn) -> Vs {
+fn cases(stack:&mut Stack,arity: usize, f: Vn, g: Vn, x: Vn, w: Vn) -> Result<Vs,&'static str> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("cases");
     match arity {
@@ -530,13 +530,13 @@ fn cases(stack:&mut Stack,arity: usize, f: Vn, g: Vn, x: Vn, w: Vn) -> Vs {
     }
 }
 // ⎊
-fn catches(_stack:&mut Stack,_arity: usize, _f: Vn, _g: Vn, _x: Vn, _w: Vn) -> Vs {
+fn catches(_stack:&mut Stack,_arity: usize, _f: Vn, _g: Vn, _x: Vn, _w: Vn) -> Result<Vs,&'static str> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("catches");
     panic!("catches not implemented");
 }
 
-pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Vs {
+pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Result<Vs,&'static str> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("decompose");
     #[cfg(feature = "debug")]
@@ -629,25 +629,25 @@ pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Vs {
     };
     #[cfg(feature = "debug")]
     dbg_rtn("decompose",arity,&r);
-    r
+    Ok(r)
 }
 
-pub fn prim_ind(arity:usize, x: Vn,_w: Vn) -> Vs {
+pub fn prim_ind(arity:usize, x: Vn,_w: Vn) -> Result<Vs,&'static str> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("prim_ind");
     match arity {
         1 => match unsafe { x.0.unwrap_unchecked() } {
-            V::BlockInst(_b,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
-            V::UserMd1(_b,_a,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
-            V::UserMd2(_b,_a,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
-            V::Fn(_a,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
-            V::R1(_f,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
-            V::R2(_f,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
-            V::D1(_d1,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
-            V::D2(_d2,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
-            V::Tr2(_tr2,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
-            V::Tr3(_tr3,Some(prim)) => Vs::V(V::Scalar(*prim as f64)),
-            _ => Vs::V(V::Scalar(64 as f64)),
+            V::BlockInst(_b,Some(prim)) => Ok(Vs::V(V::Scalar(*prim as f64))),
+            V::UserMd1(_b,_a,Some(prim)) => Ok(Vs::V(V::Scalar(*prim as f64))),
+            V::UserMd2(_b,_a,Some(prim)) => Ok(Vs::V(V::Scalar(*prim as f64))),
+            V::Fn(_a,Some(prim)) => Ok(Vs::V(V::Scalar(*prim as f64))),
+            V::R1(_f,Some(prim)) => Ok(Vs::V(V::Scalar(*prim as f64))),
+            V::R2(_f,Some(prim)) => Ok(Vs::V(V::Scalar(*prim as f64))),
+            V::D1(_d1,Some(prim)) => Ok(Vs::V(V::Scalar(*prim as f64))),
+            V::D2(_d2,Some(prim)) => Ok(Vs::V(V::Scalar(*prim as f64))),
+            V::Tr2(_tr2,Some(prim)) => Ok(Vs::V(V::Scalar(*prim as f64))),
+            V::Tr3(_tr3,Some(prim)) => Ok(Vs::V(V::Scalar(*prim as f64))),
+            _ => Ok(Vs::V(V::Scalar(64 as f64))),
         },
         _ => panic!("illegal plus arity"),
     }

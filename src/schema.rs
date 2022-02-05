@@ -10,7 +10,7 @@ use num_traits::{cast::FromPrimitive};
 
 // Traits
 pub trait Calleable {
-    fn call(&self,stack:&mut Stack,arity:usize,x: Vn,w: Vn) -> Vs;
+    fn call(&self,stack:&mut Stack,arity:usize,x: Vn,w: Vn) -> Result<Vs,&'static str> ;
 }
 pub trait Decoder {
     fn to_f64(&self) -> f64;
@@ -23,21 +23,21 @@ pub trait Stacker {
 }
 
 #[derive(Clone)]
-pub struct Fn(pub fn(usize,Vn,Vn) -> Vs);
+pub struct Fn(pub fn(usize,Vn,Vn) -> Result<Vs,&'static str>);
 impl PartialEq for Fn {
     fn eq(&self, other: &Self) -> bool {
         self.0 as usize == other.0 as usize
     }
 }
 #[derive(Clone)]
-pub struct R1(pub fn(&mut Stack,usize,Vn,Vn,Vn) -> Vs);
+pub struct R1(pub fn(&mut Stack,usize,Vn,Vn,Vn) -> Result<Vs,&'static str> );
 impl PartialEq for R1 {
     fn eq(&self, other: &Self) -> bool {
         self.0 as usize == other.0 as usize
     }
 }
 #[derive(Clone)]
-pub struct R2(pub fn(&mut Stack,usize,Vn,Vn,Vn,Vn) -> Vs);
+pub struct R2(pub fn(&mut Stack,usize,Vn,Vn,Vn,Vn) -> Result<Vs,&'static str> );
 impl PartialEq for R2 {
     fn eq(&self, other: &Self) -> bool {
         self.0 as usize == other.0 as usize
@@ -90,22 +90,22 @@ impl Decoder for V {
             V::Scalar(n) => *n,
             V::Char(c) => f64::from(u32::from(*c)),
             V::BlockInst(_b,_prim) => panic!("can't decode blockinst to RUST"),
-            V::UserMd1(_b,_a,_prim) => panic!("can't encode UserMd1 to BEAM"),
-            V::UserMd2(_b,_a,_prim) => panic!("can't encode UserMd2 to BEAM"),
-            V::Nothing => panic!("can't decode nothing to BEAM"),
+            V::UserMd1(_b,_a,_prim) => panic!("can't encode UserMd1 to RUST"),
+            V::UserMd2(_b,_a,_prim) => panic!("can't encode UserMd2 to RUST"),
+            V::Nothing => panic!("can't decode nothing to RUST"),
             V::A(_a) => panic!("can't decode array to RUST"),
             V::Fn(_a,_prim) => panic!("can't decode fn to RUST"),
             V::R1(_f,_prim) => panic!("can't decode r1 to RUST"),
             V::R2(_f,_prim) => panic!("can't decode r2 to RUST"),
-            V::D1(_d1,_prim) => panic!("can't decode d1 to BEAM"),
-            V::D2(_d2,_prim) => panic!("can't decode d2 to BEAM"),
+            V::D1(_d1,_prim) => panic!("can't decode d1 to RUST"),
+            V::D2(_d2,_prim) => panic!("can't decode d2 to RUST"),
             V::Tr2(_tr2,_prim) => panic!("can't decode train2 to RUST"),
             V::Tr3(_tr3,_prim) => panic!("can't decode train3 to RUST"),
         }
     }
 }
 impl Calleable for V {
-    fn call(&self,stack:&mut Stack,arity:usize,x: Vn,w: Vn) -> Vs {
+    fn call(&self,stack:&mut Stack,arity:usize,x: Vn,w: Vn) -> Result<Vs,&'static str>  {
         match self {
             V::UserMd1(b,mods,_prim) => {
                 let D1(m,f) = mods.deref();
@@ -127,8 +127,8 @@ impl Calleable for V {
                 let pos = body_pos(b,arity);
                 vm(&env,&b.def.code,pos,stack)
             },
-            V::Scalar(n) => Vs::V(V::Scalar(*n)),
-            V::Char(c) => Vs::V(V::Char(*c)),
+            V::Scalar(n) => Ok(Vs::V(V::Scalar(*n))),
+            V::Char(c) => Ok(Vs::V(V::Char(*c))),
             V::Fn(f,_prim) => f.0(arity,x,w),
             V::R1(_f,_prim) => panic!("can't call r1"),
             V::R2(_f,_prim) => panic!("can't call r2"),
@@ -150,22 +150,25 @@ impl Calleable for V {
             },
             V::Tr2(tr,_prim) => {
                 let Tr2(g,h) = tr.deref();
-                let r = h.call(stack,arity,x,w);
-                g.call(stack,1,Vn(*Some(&r.as_v()).unwrap()),Vn(None))
+                match h.call(stack,arity,x,w) {
+                    Ok(r) => g.call(stack,1,Vn(*Some(&r.as_v()).unwrap()),Vn(None)),
+                    Err(e) => Err(e),
+                }
             },
             V::Tr3(tr,_prim) => {
                 let Tr3(f,g,h) = tr.deref();
-                let r =
-                    match arity { // TODO this match might not be necessary
-                        1 => h.call(stack,arity,Vn(x.0),Vn(None)),
-                        2 => h.call(stack,arity,Vn(x.0),Vn(w.0)),
-                        _ => panic!("illegal arity"),
-                    };
-                let l = f.call(stack,arity,Vn(x.0),Vn(w.0));
-                g.call(stack,2,Vn(Some(&r.as_v().unwrap())),Vn(Some(&l.as_v().unwrap())))
+                match h.call(stack,arity,Vn(x.0),Vn(w.0)) {
+                    Ok(r) => {
+                        match f.call(stack,arity,Vn(x.0),Vn(w.0)) {
+                            Ok(l) => g.call(stack,2,Vn(Some(&r.as_v().unwrap())),Vn(Some(&l.as_v().unwrap()))),
+                            Err(e) => Err(e),
+                        }
+                    },
+                    Err(e) => Err(e),
+                }
             },
-            V::A(_) => Vs::V(self.clone()),
-            V::Nothing => Vs::V(V::Nothing),
+            V::A(_) => Ok(Vs::V(self.clone())),
+            V::Nothing => Ok(Vs::V(V::Nothing)),
         }
     }
 }
@@ -426,11 +429,11 @@ impl BlockInst {
     pub fn new(env: Env,block: Cc<Block>) -> Self {
         Self {def: block, parent: env }
     }
-    pub fn call_md1(&self,stack:&mut Stack,arity:usize,args: D1) -> Vs {
+    pub fn call_md1(&self,stack:&mut Stack,arity:usize,args: D1) -> Result<Vs,&'static str>  {
         match self.def.imm {
             false => {
                 let r = Vs::V(V::UserMd1(Cc::new(BlockInst::new(self.parent.clone(),self.def.clone())),Cc::new(args),None));
-                r
+                Ok(r)
             },
             true => {
                 let pos = match self.def.body {
@@ -446,11 +449,11 @@ impl BlockInst {
             },
         }
     }
-    pub fn call_md2(&self,stack:&mut Stack,arity:usize,args: D2) -> Vs {
+    pub fn call_md2(&self,stack:&mut Stack,arity:usize,args: D2) -> Result<Vs,&'static str>  {
         match self.def.imm {
             false => {
                 let r = Vs::V(V::UserMd2(Cc::new(BlockInst::new(self.parent.clone(),self.def.clone())),Cc::new(args),None));
-                r
+                Ok(r)
             },
             true => {
                 let pos = match self.def.body {

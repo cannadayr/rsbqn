@@ -13,34 +13,34 @@ use log::{debug, trace, error, log_enabled, info, Level};
 use itertools::Itertools;
 use num_traits::FromPrimitive;
 
-pub fn call(stack: &mut Stack,arity: usize,a: Vn,x: Vn, w: Vn) -> Vs {
+pub fn call(stack: &mut Stack,arity: usize,a: Vn,x: Vn, w: Vn) -> Result<Vs,&'static str> {
     match a.0 {
         Some(v) => v.call(stack,arity,x,w),
         _ => panic!("unimplemented call"),
     }
 }
-fn call1(stack: &mut Stack,m: V,f: V) -> Vs {
+fn call1(stack: &mut Stack,m: V,f: V) -> Result<Vs,&'static str> {
     match m {
         V::BlockInst(ref bl,_prim) => {
             assert_eq!(1,bl.def.typ);
             bl.call_md1(stack,1,D1::new(m.clone(),f))
         },
-        V::R1(_,_prim) => Vs::V(V::D1(Cc::new(D1::new(m,f)),None)),
+        V::R1(_,_prim) => Ok(Vs::V(V::D1(Cc::new(D1::new(m,f)),None))),
         _ => panic!("call1 with invalid type"),
     }
 }
-fn call2(stack: &mut Stack,m: V,f: V,g: V) -> Vs {
+fn call2(stack: &mut Stack,m: V,f: V,g: V) -> Result<Vs,&'static str> {
     match m {
         V::BlockInst(ref bl,_prim) => {
             assert_eq!(2,bl.def.typ);
             bl.call_md2(stack,2,D2::new(m.clone(),f,g))
         },
-        V::R2(_,_prim) => Vs::V(V::D2(Cc::new(D2::new(m,f,g)),None)),
+        V::R2(_,_prim) => Ok(Vs::V(V::D2(Cc::new(D2::new(m,f,g)),None))),
         _ => panic!("call2 with invalid type"),
     }
 }
 
-fn derv(env: &Env,code: &Cc<Code>,block: &Cc<Block>,stack: &mut Stack) -> Vs {
+fn derv(env: &Env,code: &Cc<Code>,block: &Cc<Block>,stack: &mut Stack) -> Result<Vs,&'static str> {
     match (block.typ,block.imm) {
         (0,true) => {
             let child = Env::new(Some(env),block,0,None);
@@ -56,7 +56,7 @@ fn derv(env: &Env,code: &Cc<Code>,block: &Cc<Block>,stack: &mut Stack) -> Vs {
         (_typ,_imm) => {
             let block_inst = BlockInst::new(env.clone(),block.clone());
             let r = Vs::V(V::BlockInst(Cc::new(block_inst),None));
-            r
+            Ok(r)
         },
     }
 }
@@ -70,7 +70,7 @@ fn incr(stack: &mut Stack) {
     stack.fp = stack.s.len();
 }
 
-pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs {
+pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Result<Vs,&'static str>  {
     #[cfg(feature = "debug")]
     incr(stack);
     #[cfg(feature = "debug")]
@@ -100,7 +100,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("DFND");
                 let x = unsafe { *code.bc.get_unchecked(pos) };pos+=1;
-                let r = derv(&env,&code,&code.blocks[x],&mut stack);
+                let r =
+                match derv(&env,&code,&code.blocks[x],&mut stack) {
+                    Ok(r) => r,
+                    Err(e) => break Err(e),
+                };
                 #[cfg(feature = "debug")]
                 dbg_stack_in("DFND",pos-2,format!("{} {}",&x,&r),stack);
                 stack.s.push_unchecked(r);
@@ -129,7 +133,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 dbg_stack_in("RETN",pos-1,"".to_string(),stack);
                 #[cfg(feature = "coz-ops")]
                 coz::end!("RETN");
-                break stack.s.pop_unchecked();
+                break Ok(stack.s.pop_unchecked());
             },
             11 => { // ARRO
                 pos += 1;
@@ -169,7 +173,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let f = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
                 let x = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
                 unsafe { stack.s.set_len(l-2) };
-                let r = call(&mut stack,1,Vn(Some(&f.into_v().unwrap())),Vn(Some(&x.into_v().unwrap())),Vn(None));
+                let r =
+                match call(&mut stack,1,Vn(Some(&f.into_v().unwrap())),Vn(Some(&x.into_v().unwrap())),Vn(None)) {
+                    Ok(r) => r,
+                    Err(e) => break Err(e),
+                };
                 stack.s.push_unchecked(r);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("FN1C",pos-1,stack);
@@ -189,7 +197,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let r =
                     match &x.as_v().unwrap() {
                         V::Nothing => x,
-                        _ => call(&mut stack,1,Vn(Some(&f.into_v().unwrap())),Vn(Some(&x.into_v().unwrap())),Vn(None)),
+                        _ => match call(&mut stack,1,Vn(Some(&f.into_v().unwrap())),Vn(Some(&x.into_v().unwrap())),Vn(None)) {
+                            Ok(r) => r,
+                            Err(e) => break Err(e),
+                        },
                     };
                 stack.s.push_unchecked(r);
                 #[cfg(feature = "debug")]
@@ -208,7 +219,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let f = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
                 let x = unsafe { ptr::read(stack.s.as_ptr().add(l-3)) };
                 unsafe { stack.s.set_len(l-3) };
-                let r = call(&mut stack,2,Vn(Some(&f.into_v().unwrap())),Vn(Some(&x.into_v().unwrap())),Vn(Some(&w.into_v().unwrap())));
+                let r =
+                match call(&mut stack,2,Vn(Some(&f.into_v().unwrap())),Vn(Some(&x.into_v().unwrap())),Vn(Some(&w.into_v().unwrap()))) {
+                    Ok(r) => r,
+                    Err(e) => break Err(e),
+                };
                 stack.s.push_unchecked(r);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("FN2C",pos-1,stack);
@@ -229,8 +244,14 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let r =
                     match (&x.as_v().unwrap(),&w.as_v().unwrap()) {
                         (V::Nothing,_) => x,
-                        (_,V::Nothing) => call(&mut stack,1,Vn(Some(&f.into_v().unwrap())),Vn(Some(&x.into_v().unwrap())),Vn(None)),
-                        _ => call(&mut stack,2,Vn(Some(&f.into_v().unwrap())),Vn(Some(&x.into_v().unwrap())),Vn(Some(&w.into_v().unwrap())))
+                        (_,V::Nothing) => match call(&mut stack,1,Vn(Some(&f.into_v().unwrap())),Vn(Some(&x.into_v().unwrap())),Vn(None)) {
+                            Ok(r) => r,
+                            Err(e) => break Err(e),
+                        },
+                        _ => match call(&mut stack,2,Vn(Some(&f.into_v().unwrap())),Vn(Some(&x.into_v().unwrap())),Vn(Some(&w.into_v().unwrap()))) {
+                            Ok(r) => r,
+                            Err(e) => break Err(e),
+                        },
                     };
                 stack.s.push_unchecked(r);
                 #[cfg(feature = "debug")]
@@ -305,7 +326,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let f = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
                 let m = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
                 unsafe { stack.s.set_len(l-2) };
-                let r = call1(&mut stack,m.into_v().unwrap(),f.into_v().unwrap());
+                let r = match call1(&mut stack,m.into_v().unwrap(),f.into_v().unwrap()) {
+                    Ok(r) => r,
+                    Err(e) => break Err(e),
+                };
                 stack.s.push_unchecked(r);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("MD1C",pos-1,stack);
@@ -323,7 +347,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let m = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
                 let g = unsafe { ptr::read(stack.s.as_ptr().add(l-3)) };
                 unsafe { stack.s.set_len(l-3) };
-                let r = call2(&mut stack,m.into_v().unwrap(),f.into_v().unwrap(),g.into_v().unwrap());
+                let r = match call2(&mut stack,m.into_v().unwrap(),f.into_v().unwrap(),g.into_v().unwrap()) {
+                    Ok(r) => r,
+                    Err(e) => break Err(e),
+                };
                 stack.s.push_unchecked(r);
                 #[cfg(feature = "debug")]
                 dbg_stack_out("MD2C",pos-1,stack);
@@ -420,7 +447,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let f = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
                 let x = unsafe { ptr::read(stack.s.as_ptr().add(l-3)) };
                 unsafe { stack.s.set_len(l-3) };
-                let v = call(&mut stack,2,Vn(Some(&f.into_v().unwrap())),Vn(Some(&x.into_v().unwrap())),Vn(Some(&i.get())));
+                let v = match call(&mut stack,2,Vn(Some(&f.into_v().unwrap())),Vn(Some(&x.into_v().unwrap())),Vn(Some(&i.get()))) {
+                    Ok(r) => r,
+                    Err(e) => break Err(e),
+                };
                 let r = i.set(false,v);
                 stack.s.push_unchecked(Vs::V(r));
                 #[cfg(feature = "debug")]
@@ -438,7 +468,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Vs 
                 let i = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
                 let f = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
                 unsafe { stack.s.set_len(l-2) };
-                let v = call(&mut stack,1,Vn(Some(&f.into_v().unwrap())),Vn(Some(&i.get())),Vn(None));
+                let v = match call(&mut stack,1,Vn(Some(&f.into_v().unwrap())),Vn(Some(&i.get())),Vn(None)) {
+                    Ok(r) => r,
+                    Err(e) => break Err(e),
+                };
                 let r = i.set(false,v);
                 stack.s.push_unchecked(Vs::V(r));
                 #[cfg(feature = "debug")]
@@ -496,8 +529,8 @@ pub fn runtime(root: Option<&Env>,stack: &mut Stack) -> V {
     }
 }
 
-pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V) -> Cc<Code> {
-    let mut prog = call(stack,2,Vn(Some(compiler)),Vn(Some(&src)),Vn(Some(runtime))).into_v().unwrap().into_a().unwrap();
+pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V) -> Result<Cc<Code>,&'static str> {
+    let mut prog = call(stack,2,Vn(Some(compiler)),Vn(Some(&src)),Vn(Some(runtime)))?.into_v().unwrap().into_a().unwrap();
     info!("prog count = {}",prog.strong_count());
     match prog.get_mut() {
         Some(p) => {
@@ -508,57 +541,56 @@ pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V) -> Cc<Code> {
             let objects       = p.r.pop().unwrap();
             let bytecode      = p.r.pop().unwrap();
 
-            Code::new(
-                bytecode.as_a().unwrap().r.iter().map(|e| match e {
-                    V::Scalar(n) => usize::from_f64(*n).unwrap(),
-                    _ => panic!("bytecode not a number"),
-                }).collect::<Vec<usize>>(),
-                match objects.into_a().unwrap().try_unwrap() {
-                    Ok(o) => o.r,
-                    Err(_o) => panic!("objects not unique"),
-                },
-                match blocks.into_a().unwrap().try_unwrap() {
-                    Ok(b) => {
-                        b.r.iter().map(|e| match e.as_a().unwrap().r.iter().collect_tuple() {
-                            Some((V::Scalar(typ),V::Scalar(imm),V::Scalar(body))) =>
-                                (
-                                    u8::from_f64(*typ).unwrap(),
-                                    if 1.0 == *imm { true } else { false },
-                                    Body::Imm(usize::from_f64(*body).unwrap())
-                                ),
-                            Some((V::Scalar(typ),V::Scalar(imm),V::A(bodies))) => {
-                                let (mon,dya) = bodies.r.iter().collect_tuple().unwrap();
-                                (
-                                    u8::from_f64(*typ).unwrap(),
-                                    if 1.0 == *imm { true } else { false },
-                                    Body::Defer(
-                                        mon.as_a().unwrap().r.iter().map(|e| match e {
-                                            V::Scalar(n) => usize::from_f64(*n).unwrap(),
-                                            _ => panic!("bytecode not a number"),
-                                        }).collect::<Vec<usize>>(),
-                                        dya.as_a().unwrap().r.iter().map(|e| match e {
-                                            V::Scalar(n) => usize::from_f64(*n).unwrap(),
-                                            _ => panic!("bytecode not a number"),
-                                        }).collect::<Vec<usize>>()
-                                    )
+            let bc = bytecode.as_a().unwrap().r.iter().map(|e| match e {
+                V::Scalar(n) => usize::from_f64(*n).unwrap(),
+                _ => panic!("bytecode not a number"),
+            }).collect::<Vec<usize>>();
+            let objs = match objects.into_a().unwrap().try_unwrap() {
+                Ok(o) => o.r,
+                Err(_o) => panic!("objects not unique"),
+            };
+            let blocks_raw = match blocks.into_a().unwrap().try_unwrap() {
+                Ok(b) => {
+                    b.r.iter().map(|e| match e.as_a().unwrap().r.iter().collect_tuple() {
+                        Some((V::Scalar(typ),V::Scalar(imm),V::Scalar(body))) =>
+                            (
+                                u8::from_f64(*typ).unwrap(),
+                                if 1.0 == *imm { true } else { false },
+                                Body::Imm(usize::from_f64(*body).unwrap())
+                            ),
+                        Some((V::Scalar(typ),V::Scalar(imm),V::A(bodies))) => {
+                            let (mon,dya) = bodies.r.iter().collect_tuple().unwrap();
+                            (
+                                u8::from_f64(*typ).unwrap(),
+                                if 1.0 == *imm { true } else { false },
+                                Body::Defer(
+                                    mon.as_a().unwrap().r.iter().map(|e| match e {
+                                        V::Scalar(n) => usize::from_f64(*n).unwrap(),
+                                        _ => panic!("bytecode not a number"),
+                                    }).collect::<Vec<usize>>(),
+                                    dya.as_a().unwrap().r.iter().map(|e| match e {
+                                        V::Scalar(n) => usize::from_f64(*n).unwrap(),
+                                        _ => panic!("bytecode not a number"),
+                                    }).collect::<Vec<usize>>()
                                 )
-                            },
-                            _ => panic!("couldn't load compiled block"),
-                        }).collect::<Vec<(u8, bool, Body)>>()
-                    },
-                    Err(_b) => panic!("cant get unique ref to program blocks"),
+                            )
+                        },
+                        _ => panic!("couldn't load compiled block"),
+                    }).collect::<Vec<(u8, bool, Body)>>()
                 },
-                match bodies.into_a().unwrap().try_unwrap() {
-                    Ok(b) => {
-                        b.r.iter().map(|e| match e.as_a().unwrap().r.iter().collect_tuple() {
-                            Some((V::Scalar(pos),V::Scalar(local),_name_id,_export_mask)) =>
-                                (usize::from_f64(*pos).unwrap(),usize::from_f64(*local).unwrap()),
-                            _x => panic!("couldn't load compiled body"),
-                        }).collect::<Vec<(usize,usize)>>()
-                    },
-                    Err(_b) => panic!("cant get unique ref to program blocks"),
-                }
-            )
+                Err(_b) => panic!("cant get unique ref to program blocks"),
+            };
+            let bods = match bodies.into_a().unwrap().try_unwrap() {
+                Ok(b) => {
+                    b.r.iter().map(|e| match e.as_a().unwrap().r.iter().collect_tuple() {
+                        Some((V::Scalar(pos),V::Scalar(local),_name_id,_export_mask)) =>
+                            (usize::from_f64(*pos).unwrap(),usize::from_f64(*local).unwrap()),
+                        _x => panic!("couldn't load compiled body"),
+                    }).collect::<Vec<(usize,usize)>>()
+                },
+                Err(_b) => panic!("cant get unique ref to program blocks"),
+            };
+            Ok(Code::new(bc,objs,blocks_raw,bods))
         },
         None => panic!("cant get unique ref to blocks"),
     }
@@ -571,5 +603,8 @@ pub fn run(parent: Option<&Env>,stack: &mut Stack,code: Cc<Code>) -> V {
             Body::Imm(b) => code.bodies[b],
             Body::Defer(_,_) => panic!("cant run deferred block"),
         };
-    vm(&child,&code,pos,stack).into_v().unwrap()
+    match vm(&child,&code,pos,stack) {
+        Ok(r) => r.into_v().unwrap(),
+        Err(e) => panic!("{}",e),
+    }
 }

@@ -25,10 +25,15 @@ fn main() {
     let runtime = runtime(Some(&root),&mut stack);
     let compiler = run(Some(&root),&mut stack,c(&runtime));
     let src = new_string("{×´1+↕𝕩}");
-    let prog = prog(&mut stack,&compiler,src,&runtime);
+    let prog = match prog(&mut stack,&compiler,src,&runtime) {
+        Ok(p) => p,
+        Err(e) => panic!("couldn't load prog"),
+    };
     let exec = run(Some(&root),&mut stack,prog);
-    let result = call(&mut stack,1,Vn(Some(&exec)),Vn(Some(&V::Scalar(10.0))),Vn(None));
-    println!("{}",result);
+    let result = match call(&mut stack,1,Vn(Some(&exec)),Vn(Some(&V::Scalar(10.0))),Vn(None)) {
+        Ok(r) => println!("{}",r),
+        Err(e) => panic!("something went wrong"),
+    };
 
     // single line variations for copy-pasting
     //{ let result = call(1,Some(&run(prog(&compiler,new_string("{×´1+↕𝕩}"),&runtime))),Some(&V::Scalar(10.0)),None); println!("{}",result); }
