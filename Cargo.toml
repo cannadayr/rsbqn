@@ -30,6 +30,7 @@ env_logger = "0.9.0"
 enum-as-inner = "0.3.3"
 itertools = "0.10.3"
 num-traits = "0.2.14"
+rustyline = "9.1.2"
 
 [dependencies.coz]
 version = "0.1"

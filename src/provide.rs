@@ -416,7 +416,13 @@ fn table(stack: &mut Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Result<Vs,Ve> {
     match arity {
         1 => match unsafe { x.0.unwrap_unchecked() } {
             V::A(xa) => {
-                let ravel = (*xa).r.iter().map(|e| match call(stack,arity,Vn(f.0),Vn(Some(e)),Vn(None)) { Ok(r) => r.into_v().unwrap(),Err(e) => panic!("calling fn in table failed") } ).collect::<Vec<V>>();
+                let mut ravel: Vec<V> = Vec::with_capacity(xa.r.len());
+                for i in 0..xa.r.len() {
+                    ravel.push(match call(stack,arity,Vn(f.0),Vn(Some(&xa.r[i])),Vn(None)) {
+                        Ok(r) => r.into_v().unwrap(),
+                        Err(e) => return Err(e),
+                    })
+                }
                 let sh = (*xa).sh.clone();
                 Ok(Vs::V(V::A(Cc::new(A::new(ravel,sh)))))
             },

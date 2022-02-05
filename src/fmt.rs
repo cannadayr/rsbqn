@@ -74,3 +74,13 @@ impl Debug for R2 {
         write!(f, "{:?}", self)
     }
 }
+impl Debug for Ve {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        match self {
+            Ve::V(v) => {
+                panic!("cant debug values yet");
+            },
+            Ve::S(s) => write!(f,"{}",s),
+        }
+    }
+}
