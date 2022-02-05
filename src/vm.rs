@@ -1,4 +1,4 @@
-use crate::schema::{Env,V,Vs,Vn,Block,BlockInst,Code,Calleable,Stacker,Stack,Body,A,Ar,Tr2,Tr3,Runtime,Compiler,Prog,D2,D1,Fn,new_scalar,new_string};
+use crate::schema::{Env,V,Vs,Vn,Ve,Block,BlockInst,Code,Calleable,Stacker,Stack,Body,A,Ar,Tr2,Tr3,Runtime,Compiler,Prog,D2,D1,Fn,new_scalar,new_string};
 use crate::provide::{provide,decompose,prim_ind};
 use crate::gen::code::{r0,r1,c};
 use crate::fmt::{dbg_stack_out,dbg_stack_in};
@@ -13,13 +13,13 @@ use log::{debug, trace, error, log_enabled, info, Level};
 use itertools::Itertools;
 use num_traits::FromPrimitive;
 
-pub fn call(stack: &mut Stack,arity: usize,a: Vn,x: Vn, w: Vn) -> Result<Vs,&'static str> {
+pub fn call(stack: &mut Stack,arity: usize,a: Vn,x: Vn, w: Vn) -> Result<Vs,Ve> {
     match a.0 {
         Some(v) => v.call(stack,arity,x,w),
         _ => panic!("unimplemented call"),
     }
 }
-fn call1(stack: &mut Stack,m: V,f: V) -> Result<Vs,&'static str> {
+fn call1(stack: &mut Stack,m: V,f: V) -> Result<Vs,Ve> {
     match m {
         V::BlockInst(ref bl,_prim) => {
             assert_eq!(1,bl.def.typ);
@@ -29,7 +29,7 @@ fn call1(stack: &mut Stack,m: V,f: V) -> Result<Vs,&'static str> {
         _ => panic!("call1 with invalid type"),
     }
 }
-fn call2(stack: &mut Stack,m: V,f: V,g: V) -> Result<Vs,&'static str> {
+fn call2(stack: &mut Stack,m: V,f: V,g: V) -> Result<Vs,Ve> {
     match m {
         V::BlockInst(ref bl,_prim) => {
             assert_eq!(2,bl.def.typ);
@@ -40,7 +40,7 @@ fn call2(stack: &mut Stack,m: V,f: V,g: V) -> Result<Vs,&'static str> {
     }
 }
 
-fn derv(env: &Env,code: &Cc<Code>,block: &Cc<Block>,stack: &mut Stack) -> Result<Vs,&'static str> {
+fn derv(env: &Env,code: &Cc<Code>,block: &Cc<Block>,stack: &mut Stack) -> Result<Vs,Ve> {
     match (block.typ,block.imm) {
         (0,true) => {
             let child = Env::new(Some(env),block,0,None);
@@ -70,7 +70,7 @@ fn incr(stack: &mut Stack) {
     stack.fp = stack.s.len();
 }
 
-pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Result<Vs,&'static str>  {
+pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Result<Vs,Ve>  {
     #[cfg(feature = "debug")]
     incr(stack);
     #[cfg(feature = "debug")]
@@ -529,7 +529,7 @@ pub fn runtime(root: Option<&Env>,stack: &mut Stack) -> V {
     }
 }
 
-pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V) -> Result<Cc<Code>,&'static str> {
+pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V) -> Result<Cc<Code>,Ve> {
     let mut prog = call(stack,2,Vn(Some(compiler)),Vn(Some(&src)),Vn(Some(runtime)))?.into_v().unwrap().into_a().unwrap();
     info!("prog count = {}",prog.strong_count());
     match prog.get_mut() {

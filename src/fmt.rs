@@ -1,5 +1,5 @@
 use std::fmt::{Debug,Display,Formatter,Result};
-use crate::schema::{V,Vs,Fn,R1,R2,Stack};
+use crate::schema::{V,Vs,Ve,Fn,R1,R2,Stack};
 use log::{debug, trace, error, log_enabled, info, Level};
 
 pub fn fmt_stack(stack: &mut Stack) -> String {
@@ -45,6 +45,16 @@ impl Display for Vs {
             Vs::Slot(_env,_size) => write!(f,"Slot"),
             Vs::Ar(_ar) => write!(f,"ArrayRef"),
             Vs::Nothing => panic!("can't fmt nothing"),
+        }
+    }
+}
+impl Display for Ve {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        match self {
+            Ve::V(v) => {
+                panic!("cant fmt values yet");
+            },
+            Ve::S(s) => write!(f,"{}",s),
         }
     }
 }

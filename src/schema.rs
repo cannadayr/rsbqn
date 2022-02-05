@@ -10,7 +10,7 @@ use num_traits::{cast::FromPrimitive};
 
 // Traits
 pub trait Calleable {
-    fn call(&self,stack:&mut Stack,arity:usize,x: Vn,w: Vn) -> Result<Vs,&'static str> ;
+    fn call(&self,stack:&mut Stack,arity:usize,x: Vn,w: Vn) -> Result<Vs,Ve> ;
 }
 pub trait Decoder {
     fn to_f64(&self) -> f64;
@@ -23,21 +23,21 @@ pub trait Stacker {
 }
 
 #[derive(Clone)]
-pub struct Fn(pub fn(usize,Vn,Vn) -> Result<Vs,&'static str>);
+pub struct Fn(pub fn(usize,Vn,Vn) -> Result<Vs,Ve>);
 impl PartialEq for Fn {
     fn eq(&self, other: &Self) -> bool {
         self.0 as usize == other.0 as usize
     }
 }
 #[derive(Clone)]
-pub struct R1(pub fn(&mut Stack,usize,Vn,Vn,Vn) -> Result<Vs,&'static str> );
+pub struct R1(pub fn(&mut Stack,usize,Vn,Vn,Vn) -> Result<Vs,Ve> );
 impl PartialEq for R1 {
     fn eq(&self, other: &Self) -> bool {
         self.0 as usize == other.0 as usize
     }
 }
 #[derive(Clone)]
-pub struct R2(pub fn(&mut Stack,usize,Vn,Vn,Vn,Vn) -> Result<Vs,&'static str> );
+pub struct R2(pub fn(&mut Stack,usize,Vn,Vn,Vn,Vn) -> Result<Vs,Ve> );
 impl PartialEq for R2 {
     fn eq(&self, other: &Self) -> bool {
         self.0 as usize == other.0 as usize
@@ -105,7 +105,7 @@ impl Decoder for V {
     }
 }
 impl Calleable for V {
-    fn call(&self,stack:&mut Stack,arity:usize,x: Vn,w: Vn) -> Result<Vs,&'static str>  {
+    fn call(&self,stack:&mut Stack,arity:usize,x: Vn,w: Vn) -> Result<Vs,Ve>  {
         match self {
             V::UserMd1(b,mods,_prim) => {
                 let D1(m,f) = mods.deref();
@@ -232,6 +232,12 @@ impl Default for Vs {
 
 // Value (boxed on the heap)
 pub type Vh = Option<V>;
+
+// Value error
+pub enum Ve {
+    S(&'static str),
+    V(V),
+}
 
 // Stack
 pub struct Stack {
@@ -429,7 +435,7 @@ impl BlockInst {
     pub fn new(env: Env,block: Cc<Block>) -> Self {
         Self {def: block, parent: env }
     }
-    pub fn call_md1(&self,stack:&mut Stack,arity:usize,args: D1) -> Result<Vs,&'static str>  {
+    pub fn call_md1(&self,stack:&mut Stack,arity:usize,args: D1) -> Result<Vs,Ve>  {
         match self.def.imm {
             false => {
                 let r = Vs::V(V::UserMd1(Cc::new(BlockInst::new(self.parent.clone(),self.def.clone())),Cc::new(args),None));
@@ -449,7 +455,7 @@ impl BlockInst {
             },
         }
     }
-    pub fn call_md2(&self,stack:&mut Stack,arity:usize,args: D2) -> Result<Vs,&'static str>  {
+    pub fn call_md2(&self,stack:&mut Stack,arity:usize,args: D2) -> Result<Vs,Ve>  {
         match self.def.imm {
             false => {
                 let r = Vs::V(V::UserMd2(Cc::new(BlockInst::new(self.parent.clone(),self.def.clone())),Cc::new(args),None));
