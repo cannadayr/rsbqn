@@ -1,7 +1,8 @@
-use crate::schema::{A,V,Vn,Vs,Ve,Decoder,D1,D2,Tr2,Tr3,Fn,R1,R2,Stack,new_string};
+use crate::schema::{A,V,Vn,Vs,Ve,Decoder,D1,D2,Tr2,Tr3,Fn,R1,R2,Stack,new_string,new_char};
 use crate::vm::{call};
 use bacon_rajan_cc::Cc;
 use std::cmp::max;
+use std::ops::Mul;
 use log::{debug, trace, error, log_enabled, info, Level};
 use std::iter::FromIterator;
 use std::ops::Deref;
@@ -29,7 +30,7 @@ fn dbg_rtn(fun: &str,arity: usize, r: &Vs) {
 }
 
 // Type
-fn typ(arity: usize, x: Vn, _w: Vn) -> Result<Vs,Ve> {
+pub fn typ(arity: usize, x: Vn, _w: Vn) -> Result<Vs,Ve> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("typ");
     match arity {
@@ -431,9 +432,15 @@ fn table(stack: &mut Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Result<Vs,Ve> {
         2 => {
             match (unsafe { x.0.unwrap_unchecked() },unsafe { w.0.unwrap_unchecked() }) {
                 (V::A(xa),V::A(wa)) => {
-                    let ravel = (*wa).r.iter().flat_map(|d| {
-                        (*xa).r.iter().map(|e| match call(stack,arity,Vn(f.0),Vn(Some(e)),Vn(Some(d))) { Ok(r) => r.into_v().unwrap(),Err(e) => panic!("calling fn in dyadic table failed") } ).collect::<Vec<V>>()
-                    }).collect::<Vec<V>>();
+                    let mut ravel: Vec<V> = Vec::with_capacity(xa.r.len().mul(wa.r.len()));
+                    for i in 0..wa.r.len() {
+                        for j in 0..xa.r.len() {
+                            ravel.push(match call(stack,arity,Vn(f.0),Vn(Some(&xa.r[j])),Vn(Some(&wa.r[i]))) {
+                                Ok(r) => r.into_v().unwrap(),
+                                Err(e) => return Err(e),
+                            })
+                        }
+                    }
                     let sh = (*wa).sh.clone().into_iter().chain((*xa).sh.clone().into_iter()).collect();
                     Ok(Vs::V(V::A(Cc::new(A::new(ravel,sh)))))
                 },
@@ -659,6 +666,35 @@ pub fn prim_ind(arity:usize, x: Vn,_w: Vn) -> Result<Vs,Ve> {
             _ => Ok(Vs::V(V::Scalar(64 as f64))),
         },
         _ => panic!("illegal plus arity"),
+    }
+}
+
+pub fn glyph(arity:usize, x: Vn,w: Vn) -> Result<Vs,Ve> {
+    let glyphs = "+-×÷⋆√⌊⌈|¬∧∨<>≠=≤≥≡≢⊣⊢⥊∾≍⋈↑↓↕«»⌽⍉/⍋⍒⊏⊑⊐⊒∊⍷⊔!˙˜˘¨⌜⁼´˝`∘○⊸⟜⌾⊘◶⎉⚇⍟⎊";
+    let prim =
+        match x.0.unwrap() {
+            V::BlockInst(_b,Some(prim)) => *prim,
+            V::UserMd1(_b,_a,Some(prim)) => *prim,
+            V::UserMd2(_b,_a,Some(prim)) => *prim,
+            V::Fn(_a,Some(prim)) => *prim,
+            V::R1(_f,Some(prim)) => *prim,
+            V::R2(_f,Some(prim)) => *prim,
+            V::D1(_d1,Some(prim)) => *prim,
+            V::D2(_d2,Some(prim)) => *prim,
+            V::Tr2(_tr2,Some(prim)) => *prim,
+            V::Tr3(_tr3,Some(prim)) => *prim,
+            _ => panic!("something went wrong in glyph"),
+        };
+    Ok(Vs::V(new_char(glyphs.chars().nth(prim).unwrap())))
+}
+
+pub fn fmtnum(arity:usize, x: Vn,w: Vn) -> Result<Vs,Ve> {
+    match arity {
+        1 => match unsafe { x.0.unwrap_unchecked() } {
+            V::Scalar(n) => Ok(Vs::V(new_string(&*format!("{}",*n)))),
+            _ => Err(Ve::S("no matching value for fmtnum")),
+        },
+        _ => panic!("typ arity not implemented"),
     }
 }
 

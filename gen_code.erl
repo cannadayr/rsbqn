@@ -40,6 +40,7 @@ main([Repo]) ->
     {ok,R0} = test(Repo,<<"r0">>),
     {ok,R1} = test(Repo,<<"r1">>),
     {ok,C}  = test(Repo,<<"c">>),
+    {ok,F}  = test(Repo,<<"f">>),
     %{ok,F}  = test(Repo,<<"f">>),
     file:write_file("src/gen/code.rs",erlang:iolist_to_binary([
         <<"use log::{debug};\n">>,
@@ -49,8 +50,8 @@ main([Repo]) ->
         <<"use bacon_rajan_cc::Cc;\n">>,
         <<"pub fn r0(provide: &A) -> Cc<Code> {\nCode::new(">>,utf8(R0),<<")\n}\n\n">>,
         <<"pub fn r1(provide: &A,runtime_0v: &V) -> Cc<Code> {let runtime_0 = runtime_0v.as_a().unwrap();\nCode::new(">>,utf8(R1),<<")\n}\n\n">>,
-        <<"pub fn c(runtimev: &V) -> Cc<Code> {\nlet runtime = runtimev.as_a().unwrap();Code::new(">>,utf8(C),<<")\n}\n\n">>
-        %<<"pub fn c(runtime: &V) -> V {\nrun(Code::new(">>,utf8(F),<<"))\n}\n\n">>
+        <<"pub fn c(runtimev: &V) -> Cc<Code> {\nlet runtime = runtimev.as_a().unwrap();Code::new(">>,utf8(C),<<")\n}\n\n">>,
+        <<"pub fn f(runtimev: &V) -> Cc<Code> {\nlet runtime = runtimev.as_a().unwrap();Code::new(">>,utf8(F),<<")\n}\n\n">>
     ]));
 main(_Args) ->
     io:format("bad arguments~n"),

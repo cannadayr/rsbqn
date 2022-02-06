@@ -1,6 +1,6 @@
 use crate::schema::{Env,V,Vs,Vn,Ve,Block,BlockInst,Code,Calleable,Stacker,Stack,Body,A,Ar,Tr2,Tr3,Runtime,Compiler,Prog,D2,D1,Fn,new_scalar,new_string};
-use crate::provide::{provide,decompose,prim_ind};
-use crate::gen::code::{r0,r1,c};
+use crate::provide::{provide,decompose,prim_ind,typ,glyph,fmtnum};
+use crate::gen::code::{r0,r1,c,f};
 use crate::fmt::{dbg_stack_out,dbg_stack_in};
 use crate::init_log;
 use bacon_rajan_cc::Cc;
@@ -594,6 +594,16 @@ pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V) -> Result<Cc<Code
         },
         None => panic!("cant get unique ref to blocks"),
     }
+}
+
+pub fn formatter(root: Option<&Env>,stack: &mut Stack,runtime: &V) -> Result<V,Ve> {
+    let formatter = run(root,stack,f(&runtime)).expect("couldnt load fmt");
+    let fmt_fns = V::A(Cc::new(A::new(vec![V::Fn(Fn(typ),None),V::Fn(Fn(decompose),None),V::Fn(Fn(glyph),None),V::Fn(Fn(fmtnum),None)],vec![4])));
+    let mut fmt = call(stack,1,Vn(Some(&formatter)),Vn(Some(&fmt_fns)),Vn(None)).expect("fmt malformed").into_v().unwrap().into_a().unwrap();
+    let mut fmt1 = fmt.make_unique();
+    let repr = fmt1.r.pop().unwrap();
+    let fmt1 = fmt1.r.pop().unwrap();
+    Ok(fmt1)
 }
 
 pub fn run(parent: Option<&Env>,stack: &mut Stack,code: Cc<Code>) -> Result<V,Ve> {

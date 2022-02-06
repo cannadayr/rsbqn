@@ -4,7 +4,7 @@ mod trace;
 pub mod vm;
 pub mod provide;
 pub mod gen { pub mod code; }
-mod fmt;
+pub mod fmt;
 
 // https://docs.rs/env_logger/0.7.1/env_logger/#capturing-logs-in-tests
 pub fn init_log() {

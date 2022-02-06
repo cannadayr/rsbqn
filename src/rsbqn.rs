@@ -1,10 +1,11 @@
 use log::{info};
 use core::f64::{INFINITY,NEG_INFINITY};
 use rsbqn::init_log;
-use rsbqn::vm::{run,call,runtime,prog};
-use rsbqn::gen::code::{r0,r1,c};
+use rsbqn::vm::{run,call,runtime,prog,formatter};
+use rsbqn::gen::code::{r0,r1,c,f};
 use rsbqn::schema::{new_string,new_char,new_scalar,Body,Code,Env,V,Vs,Vn,Stack};
 use rsbqn::provide::{provide,decompose,prim_ind};
+use rsbqn::fmt::{fmt_result};
 use rustyline::{Editor, Result};
 use rustyline::error::ReadlineError;
 
@@ -25,6 +26,7 @@ fn main() -> Result<()> {
 
     let runtime = runtime(Some(&root),&mut stack).expect("couldnt load runtime");
     let compiler = run(Some(&root),&mut stack,c(&runtime)).expect("couldnt load compiler");
+    let fmt = formatter(Some(&root),&mut stack,&runtime).expect("couldnt load formatter");
 
     let mut rl = Editor::<()>::new();
     loop {
@@ -38,7 +40,12 @@ fn main() -> Result<()> {
                         match run(Some(&root),&mut stack,prog) {
                             Ok(exec) => {
                                 match call(&mut stack,0,Vn(Some(&exec)),Vn(None),Vn(None)) {
-                                    Ok(r) => println!("{}",r),
+                                    Ok(r) => {
+                                        match call(&mut stack,1,Vn(Some(&fmt)),Vn(Some(&r.into_v().unwrap())),Vn(None)) {
+                                            Ok(f) => println!("{}",fmt_result(&f.into_v().unwrap().into_a().unwrap())),
+                                            Err(e) => println!("{}",e),
+                                        }
+                                    },
                                     Err(e) => println!("{}",e),
                                 };
                             },

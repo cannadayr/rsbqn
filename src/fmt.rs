@@ -1,5 +1,5 @@
 use std::fmt::{Debug,Display,Formatter,Result};
-use crate::schema::{V,Vs,Ve,Fn,R1,R2,Stack};
+use crate::schema::{V,Vs,Ve,Fn,R1,R2,Stack,A};
 use log::{debug, trace, error, log_enabled, info, Level};
 
 pub fn fmt_stack(stack: &mut Stack) -> String {
@@ -10,6 +10,17 @@ pub fn fmt_array(a: &Vec<V>) -> String {
     a.iter().fold(String::new(), |acc, num| acc + &num.to_string() + ",")
 }
 
+pub fn fmt_result(a: &A) -> String {
+    let mut acc = String::new();
+    for i in 0..a.r.len() {
+        acc.push(match &a.r[i] {
+            V::Char(c) => *c,
+            V::Scalar(0.0) => ' ',
+            _ => panic!("cant fmt type"),
+        })
+    }
+    acc
+}
 pub fn dbg_stack_in(op: &str, pos: usize, args: String, stack: &mut Stack) {
     debug!("{:<22}  in: {}",format!("{:<16} @{}",format!("{} {}",op,args),pos),fmt_stack(stack));
 }
