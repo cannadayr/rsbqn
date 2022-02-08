@@ -156,7 +156,7 @@ fn assert_fn(arity: usize, x: Vn, w: Vn) -> Result<Vs,Ve> {
     match arity {
         1 => match unsafe { x.0.unwrap_unchecked() }.as_scalar()  {
             Some(n) if *n == 1.0 => Ok(Vs::V(V::Scalar(1.0))),
-            _ => Err(Ve::S("assert failed")),
+            _ => Err(Ve::V(x.0.unwrap().clone())),
         },
         2 => match unsafe { x.0.unwrap_unchecked() }.as_scalar()  {
             Some(n) if *n == 1.0 => Ok(Vs::V(V::Scalar(1.0))),
