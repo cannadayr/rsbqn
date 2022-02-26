@@ -559,8 +559,26 @@ pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V,vars: &V,names: &V
 
             let mut namestmp = names.as_a().unwrap().clone();
             let namesmut = namestmp.make_unique();
-            let mut addition = newv.iter().map(|i| pnames[usize::from_f64(*i.as_scalar().unwrap()).unwrap()].clone()).collect::<Vec<V>>();
-            namesmut.r.append(&mut addition);
+            let mut newnames = newv.iter().map(|i| pnames[usize::from_f64(*i.as_scalar().unwrap()).unwrap()].clone()).collect::<Vec<V>>();
+            namesmut.r.append(&mut newnames);
+            namesmut.sh = vec![namesmut.r.len()];
+            info!("namesmut = {:?}",&namesmut);
+
+            let mut redeftmp = redef.as_a().unwrap().clone();
+            let redefmut = redeftmp.make_unique();
+            // use -1 as default for now
+            let mut newredef = newv.iter().map(|_i| V::Scalar(-1.0)).collect::<Vec<V>>();
+            redefmut.r.append(&mut newredef);
+            redefmut.sh = vec![redefmut.r.len()];
+            info!("redefmut = {:?}",&redefmut);
+
+            let mut varstmp = vars.as_a().unwrap().clone();
+            let varsmut = varstmp.make_unique();
+            let mut newvars = newv.iter().map(|_i| V::Nothing).collect::<Vec<V>>();
+            varsmut.r.append(&mut newvars);
+            varsmut.sh = vec![varsmut.r.len()];
+            info!("varsmut = {:?}",&varsmut);
+
             // end repl stuff
 
             let bc = bytecode.as_a().unwrap().r.iter().map(|e| match e {
