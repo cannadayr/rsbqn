@@ -533,13 +533,13 @@ pub fn sysfns(arity: usize,x: Vn,w:Vn) -> Result<Vs,Ve> {
     Ok(Vs::V(V::A(Cc::new(A::new(vec![],vec![0])))))
 }
 
-pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V,vars: &V,names: &V,redef: &V) -> Result<Cc<Code>,Ve> {
+pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V,vars: &V,names: &V,redef: &V) -> Result<(Cc<Code>,A,A,A),Ve> {
     // an array ravel is a vector of owned values
     // because we are passing the vars/names/redefs as elements in an array, they must be moved to the new prog
     // this will likely result in excess clones
     let env = V::A(Cc::new(A::new(vec![runtime.clone(),V::Fn(Fn(sysfns),None),vars.clone(),redef.clone()],vec![4])));
     let mut prog = call(stack,2,Vn(Some(compiler)),Vn(Some(&src)),Vn(Some(&env)))?.into_v().unwrap().into_a().unwrap();
-    info!("prog count = {}",prog.strong_count());
+    //info!("prog count = {}",prog.strong_count());
     match prog.get_mut() {
         Some(p) => {
             let tokenization = p.r.pop().unwrap();
@@ -551,11 +551,11 @@ pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V,vars: &V,names: &V
 
             // repl stuff
             let varlen = vars.as_a().unwrap().r.len();
-            info!("varlen = {}",&varlen);
+            //info!("varlen = {}",&varlen);
             let pnames = &tokenization.as_a().unwrap().r[2].as_a().unwrap().r[0].as_a().unwrap().r;
-            info!("pnames = {:?}",&pnames);
+            //info!("pnames = {:?}",&pnames);
             let newv = &bodies.as_a().unwrap().r[0].as_a().unwrap().r[2].as_a().unwrap().r[varlen..];
-            info!("newv = {:?}",newv);
+            //info!("newv = {:?}",newv);
 
             let mut namestmp = names.as_a().unwrap().clone();
             let namesmut = namestmp.make_unique();
@@ -630,7 +630,7 @@ pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V,vars: &V,names: &V
                 },
                 Err(_b) => panic!("cant get unique ref to program blocks"),
             };
-            Ok(Code::new(bc,objs,blocks_raw,bods))
+            Ok((Code::new(bc,objs,blocks_raw,bods),varsmut.to_owned(),namesmut.to_owned(),redefmut.to_owned()))
         },
         None => panic!("cant get unique ref to blocks"),
     }

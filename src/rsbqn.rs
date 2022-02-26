@@ -41,7 +41,7 @@ fn main() -> Result<()> {
                 rl.add_history_entry(line.as_str());
                 let src = new_string(&line);
                 match prog(&mut stack,&compiler,src,&runtime,&vars,&names,&redef) {
-                    Ok(prog) => {
+                    Ok((prog,newvars,newnames,newredef)) => {
                         match run(Some(&root),&mut stack,prog) {
                             Ok(exec) => {
                                 match call(&mut stack,0,Vn(Some(&exec)),Vn(None),Vn(None)) {
