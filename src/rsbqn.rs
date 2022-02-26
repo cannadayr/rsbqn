@@ -3,11 +3,12 @@ use core::f64::{INFINITY,NEG_INFINITY};
 use rsbqn::init_log;
 use rsbqn::vm::{run,call,runtime,prog,formatter};
 use rsbqn::gen::code::{r0,r1,c,f};
-use rsbqn::schema::{new_string,new_char,new_scalar,Body,Code,Env,V,Vs,Vn,Stack};
+use rsbqn::schema::{new_string,new_char,new_scalar,Body,Code,Env,V,Vs,Vn,Stack,A};
 use rsbqn::provide::{provide,decompose,prim_ind};
 use rsbqn::fmt::{fmt_result};
 use rustyline::{Editor, Result};
 use rustyline::error::ReadlineError;
+use bacon_rajan_cc::Cc;
 
 #[cfg(feature = "dhat")]
 use dhat::{Dhat, DhatAlloc};
@@ -27,6 +28,10 @@ fn main() -> Result<()> {
     let runtime = runtime(Some(&root),&mut stack).expect("couldnt load runtime");
     let compiler = run(Some(&root),&mut stack,c(&runtime)).expect("couldnt load compiler");
     let fmt = formatter(Some(&root),&mut stack,&runtime).expect("couldnt load formatter");
+    // initialize vars/names/redef to empty arrays of size 0
+    let vars = V::A(Cc::new(A::new(vec![],vec![0])));
+    let names = V::A(Cc::new(A::new(vec![],vec![0])));
+    let redef = V::A(Cc::new(A::new(vec![],vec![0])));
 
     let mut rl = Editor::<()>::new();
     loop {
@@ -35,7 +40,7 @@ fn main() -> Result<()> {
             Ok(line) => {
                 rl.add_history_entry(line.as_str());
                 let src = new_string(&line);
-                match prog(&mut stack,&compiler,src,&runtime) {
+                match prog(&mut stack,&compiler,src,&runtime,&vars,&names,&redef) {
                     Ok(prog) => {
                         match run(Some(&root),&mut stack,prog) {
                             Ok(exec) => {

@@ -529,17 +529,39 @@ pub fn runtime(root: Option<&Env>,stack: &mut Stack) -> Result<V,Ve> {
     }
 }
 
-pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V) -> Result<Cc<Code>,Ve> {
-    let mut prog = call(stack,2,Vn(Some(compiler)),Vn(Some(&src)),Vn(Some(runtime)))?.into_v().unwrap().into_a().unwrap();
+pub fn sysfns(arity: usize,x: Vn,w:Vn) -> Result<Vs,Ve> {
+    Ok(Vs::V(V::A(Cc::new(A::new(vec![],vec![0])))))
+}
+
+pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V,vars: &V,names: &V,redef: &V) -> Result<Cc<Code>,Ve> {
+    // an array ravel is a vector of owned values
+    // because we are passing the vars/names/redefs as elements in an array, they must be moved to the new prog
+    // this will likely result in excess clones
+    let env = V::A(Cc::new(A::new(vec![runtime.clone(),V::Fn(Fn(sysfns),None),vars.clone(),redef.clone()],vec![4])));
+    let mut prog = call(stack,2,Vn(Some(compiler)),Vn(Some(&src)),Vn(Some(&env)))?.into_v().unwrap().into_a().unwrap();
     info!("prog count = {}",prog.strong_count());
     match prog.get_mut() {
         Some(p) => {
-            let _tokenization = p.r.pop().unwrap();
+            let tokenization = p.r.pop().unwrap();
             let _indices      = p.r.pop().unwrap();
             let bodies        = p.r.pop().unwrap();
             let blocks        = p.r.pop().unwrap();
             let objects       = p.r.pop().unwrap();
             let bytecode      = p.r.pop().unwrap();
+
+            // repl stuff
+            let varlen = vars.as_a().unwrap().r.len();
+            info!("varlen = {}",&varlen);
+            let pnames = &tokenization.as_a().unwrap().r[2].as_a().unwrap().r[0].as_a().unwrap().r;
+            info!("pnames = {:?}",&pnames);
+            let newv = &bodies.as_a().unwrap().r[0].as_a().unwrap().r[2].as_a().unwrap().r[varlen..];
+            info!("newv = {:?}",newv);
+
+            let mut namestmp = names.as_a().unwrap().clone();
+            let namesmut = namestmp.make_unique();
+            let mut addition = newv.iter().map(|i| pnames[usize::from_f64(*i.as_scalar().unwrap()).unwrap()].clone()).collect::<Vec<V>>();
+            namesmut.r.append(&mut addition);
+            // end repl stuff
 
             let bc = bytecode.as_a().unwrap().r.iter().map(|e| match e {
                 V::Scalar(n) => usize::from_f64(*n).unwrap(),
