@@ -671,21 +671,21 @@ pub fn prim_ind(arity:usize, x: Vn,_w: Vn) -> Result<Vs,Ve> {
 
 pub fn glyph(arity:usize, x: Vn,w: Vn) -> Result<Vs,Ve> {
     let glyphs = "+-×÷⋆√⌊⌈|¬∧∨<>≠=≤≥≡≢⊣⊢⥊∾≍⋈↑↓↕«»⌽⍉/⍋⍒⊏⊑⊐⊒∊⍷⊔!˙˜˘¨⌜⁼´˝`∘○⊸⟜⌾⊘◶⎉⚇⍟⎊";
-    let prim =
+    let fmt =
         match x.0.unwrap() {
-            V::BlockInst(_b,Some(prim)) => *prim,
-            V::UserMd1(_b,_a,Some(prim)) => *prim,
-            V::UserMd2(_b,_a,Some(prim)) => *prim,
-            V::Fn(_a,Some(prim)) => *prim,
-            V::R1(_f,Some(prim)) => *prim,
-            V::R2(_f,Some(prim)) => *prim,
-            V::D1(_d1,Some(prim)) => *prim,
-            V::D2(_d2,Some(prim)) => *prim,
-            V::Tr2(_tr2,Some(prim)) => *prim,
-            V::Tr3(_tr3,Some(prim)) => *prim,
-            _ => panic!("something went wrong in glyph"),
+            V::BlockInst(_b,Some(prim)) => new_char(glyphs.chars().nth(*prim).unwrap()),
+            V::UserMd1(_b,_a,Some(prim)) => new_char(glyphs.chars().nth(*prim).unwrap()),
+            V::UserMd2(_b,_a,Some(prim)) => new_char(glyphs.chars().nth(*prim).unwrap()),
+            V::Fn(_a,Some(prim)) => new_char(glyphs.chars().nth(*prim).unwrap()),
+            V::R1(_f,Some(prim)) => new_char(glyphs.chars().nth(*prim).unwrap()),
+            V::R2(_f,Some(prim)) => new_char(glyphs.chars().nth(*prim).unwrap()),
+            V::D1(_d1,Some(prim)) => new_char(glyphs.chars().nth(*prim).unwrap()),
+            V::D2(_d2,Some(prim)) => new_char(glyphs.chars().nth(*prim).unwrap()),
+            V::Tr2(_tr2,Some(prim)) => new_char(glyphs.chars().nth(*prim).unwrap()),
+            V::Tr3(_tr3,Some(prim)) => new_char(glyphs.chars().nth(*prim).unwrap()),
+            xv => new_string(&format!("{}",xv).to_owned()),
         };
-    Ok(Vs::V(new_char(glyphs.chars().nth(prim).unwrap())))
+    Ok(Vs::V(fmt))
 }
 
 pub fn fmtnum(arity:usize, x: Vn,w: Vn) -> Result<Vs,Ve> {
