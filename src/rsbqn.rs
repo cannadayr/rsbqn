@@ -43,19 +43,16 @@ fn main() -> Result<()> {
                     Ok((prog,newnames,newredef)) => {
                         names = V::A(Cc::new(newnames));
                         redef = V::A(Cc::new(newredef));
-                        info!("names = {:?}",&names);
-                        info!("redef = {:?}",&redef);
+                        info!("names = {}",&names);
+                        info!("redef = {}",&redef);
                         match run_in_place(&root,&mut stack,prog) {
                             Ok(exec) => {
-                                match call(&mut stack,0,Vn(Some(&exec)),Vn(None),Vn(None)) {
-                                    Ok(r) => {
-                                        match call(&mut stack,1,Vn(Some(&fmt)),Vn(Some(&r.into_v().unwrap())),Vn(None)) {
-                                            Ok(f) => println!("{}",fmt_result(&f.into_v().unwrap().into_a().unwrap())),
-                                            Err(e) => println!("{}",e),
-                                        }
+                                match call(&mut stack,1,Vn(Some(&fmt)),Vn(Some(&exec)),Vn(None)) {
+                                    Ok(f) => {
+                                        println!("{}",fmt_result(&f.into_v().unwrap().into_a().unwrap()))
                                     },
                                     Err(e) => println!("{}",e),
-                                };
+                                }
                             },
                             Err(e) => println!("{}",e),
                         };

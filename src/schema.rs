@@ -429,7 +429,6 @@ impl Env {
             Env(e) => {
                 let vars_exclusive: &mut Vec<Vh> = unsafe { &mut *e.vars.get() };
                 vars_exclusive.append(&mut vec![None;vars]);
-                info!("vars = {:?}",&vars_exclusive);
             },
         }
     }
