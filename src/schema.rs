@@ -4,7 +4,7 @@ use std::ptr;
 use bacon_rajan_cc::Cc;
 use crate::vm::vm;
 use crate::late_init::LateInit;
-//use log::{debug, trace, error, log_enabled, info, Level};
+use log::{debug, trace, error, log_enabled, info, Level};
 use enum_as_inner::EnumAsInner;
 use num_traits::{cast::FromPrimitive};
 
@@ -422,6 +422,28 @@ impl Env {
                     cur = cur.0.parent.as_ref().unwrap();
                 },
             }
+        }
+    }
+    pub fn extend(&self,vars: usize) {
+        match self {
+            Env(e) => {
+                let vars_exclusive: &mut Vec<Vh> = unsafe { &mut *e.vars.get() };
+                vars_exclusive.append(&mut vec![None;vars]);
+                info!("vars = {:?}",&vars_exclusive);
+            },
+        }
+    }
+    pub fn to_vars(&self) -> V {
+        match self {
+            Env(e) => {
+                let vars_exclusive: &Vec<Vh> = unsafe { &*e.vars.get() };
+                let ravel = vars_exclusive.iter().map(|e| match e {
+                    Some(s) => s.clone(),
+                    None => V::Nothing,
+                } ).collect::<Vec<V>>();
+                let shape = vec![ravel.len()];
+                V::A(Cc::new(A::new(ravel,shape)))
+            },
         }
     }
 }

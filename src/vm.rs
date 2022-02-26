@@ -533,12 +533,13 @@ pub fn sysfns(arity: usize,x: Vn,w:Vn) -> Result<Vs,Ve> {
     Ok(Vs::V(V::A(Cc::new(A::new(vec![],vec![0])))))
 }
 
-pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V,vars: &V,names: &V,redef: &V) -> Result<(Cc<Code>,A,A,A),Ve> {
+pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V,env: &Env,names: &V,redef: &V) -> Result<(Cc<Code>,A,A),Ve> {
     // an array ravel is a vector of owned values
     // because we are passing the vars/names/redefs as elements in an array, they must be moved to the new prog
     // this will likely result in excess clones
-    let env = V::A(Cc::new(A::new(vec![runtime.clone(),V::Fn(Fn(sysfns),None),vars.clone(),redef.clone()],vec![4])));
-    let mut prog = call(stack,2,Vn(Some(compiler)),Vn(Some(&src)),Vn(Some(&env)))?.into_v().unwrap().into_a().unwrap();
+    let vars = env.to_vars();
+    let args = V::A(Cc::new(A::new(vec![runtime.clone(),V::Fn(Fn(sysfns),None),names.clone(),redef.clone()],vec![4])));
+    let mut prog = call(stack,2,Vn(Some(compiler)),Vn(Some(&src)),Vn(Some(&args)))?.into_v().unwrap().into_a().unwrap();
     //info!("prog count = {}",prog.strong_count());
     match prog.get_mut() {
         Some(p) => {
@@ -562,7 +563,6 @@ pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V,vars: &V,names: &V
             let mut newnames = newv.iter().map(|i| pnames[usize::from_f64(*i.as_scalar().unwrap()).unwrap()].clone()).collect::<Vec<V>>();
             namesmut.r.append(&mut newnames);
             namesmut.sh = vec![namesmut.r.len()];
-            info!("namesmut = {:?}",&namesmut);
 
             let mut redeftmp = redef.as_a().unwrap().clone();
             let redefmut = redeftmp.make_unique();
@@ -570,15 +570,9 @@ pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V,vars: &V,names: &V
             let mut newredef = newv.iter().map(|_i| V::Scalar(-1.0)).collect::<Vec<V>>();
             redefmut.r.append(&mut newredef);
             redefmut.sh = vec![redefmut.r.len()];
-            info!("redefmut = {:?}",&redefmut);
 
-            let mut varstmp = vars.as_a().unwrap().clone();
-            let varsmut = varstmp.make_unique();
-            let mut newvars = newv.iter().map(|_i| V::Nothing).collect::<Vec<V>>();
-            varsmut.r.append(&mut newvars);
-            varsmut.sh = vec![varsmut.r.len()];
-            info!("varsmut = {:?}",&varsmut);
-
+            // extend root env
+            env.extend(newv.len());
             // end repl stuff
 
             let bc = bytecode.as_a().unwrap().r.iter().map(|e| match e {
@@ -630,7 +624,7 @@ pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V,vars: &V,names: &V
                 },
                 Err(_b) => panic!("cant get unique ref to program blocks"),
             };
-            Ok((Code::new(bc,objs,blocks_raw,bods),varsmut.to_owned(),namesmut.to_owned(),redefmut.to_owned()))
+            Ok((Code::new(bc,objs,blocks_raw,bods),namesmut.to_owned(),redefmut.to_owned()))
         },
         None => panic!("cant get unique ref to blocks"),
     }
@@ -646,6 +640,17 @@ pub fn formatter(root: Option<&Env>,stack: &mut Stack,runtime: &V) -> Result<V,V
     Ok(fmt1)
 }
 
+pub fn run_in_place(env: &Env,stack: &mut Stack,code: Cc<Code>) -> Result<V,Ve> {
+    let (pos,_locals) =
+        match code.blocks[0].body {
+            Body::Imm(b) => code.bodies[b],
+            Body::Defer(_,_) => panic!("cant run deferred block"),
+        };
+    match vm(&env,&code,pos,stack) {
+        Ok(r) => Ok(r.into_v().unwrap()),
+        Err(e) => Err(e),
+    }
+}
 pub fn run(parent: Option<&Env>,stack: &mut Stack,code: Cc<Code>) -> Result<V,Ve> {
     let child = Env::new(parent,&code.blocks[0],0,None);
     let (pos,_locals) =
