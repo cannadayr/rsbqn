@@ -69,7 +69,7 @@ fn main() -> Result<()> {
                             V::A(a) => {
                                 match a.r.len() {
                                     2 => println!("{}",fmt_err(&a.r[1].as_a().unwrap().r)),
-                                    _ => panic!("some bad err len"),
+                                    _ => println!("{}",fmt_err(&a.r)),
                                 }
                             },
                             _ => panic!("cant error on type"),
