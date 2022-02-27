@@ -10,6 +10,10 @@ pub fn fmt_array(a: &Vec<V>) -> String {
     a.iter().fold(String::new(), |acc, num| acc + &num.to_string() + ",")
 }
 
+pub fn fmt_err(a: &Vec<V>) -> String {
+    a.iter().fold(String::new(), |acc, num| acc + &num.to_string())
+}
+
 pub fn fmt_result(a: &A) -> String {
     let mut acc = String::new();
     for i in 0..a.r.len() {

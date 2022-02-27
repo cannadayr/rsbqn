@@ -3,9 +3,9 @@ use core::f64::{INFINITY,NEG_INFINITY};
 use rsbqn::init_log;
 use rsbqn::vm::{run,run_in_place,call,runtime,prog,formatter};
 use rsbqn::gen::code::{r0,r1,c,f};
-use rsbqn::schema::{new_string,new_char,new_scalar,Body,Code,Env,V,Vs,Vn,Stack,A};
+use rsbqn::schema::{new_string,new_char,new_scalar,Body,Code,Env,V,Vs,Vn,Ve,Stack,A};
 use rsbqn::provide::{provide,decompose,prim_ind};
-use rsbqn::fmt::{fmt_result};
+use rsbqn::fmt::{fmt_result,fmt_err};
 use rustyline::{Editor, Result};
 use rustyline::error::ReadlineError;
 use bacon_rajan_cc::Cc;
@@ -39,7 +39,7 @@ fn main() -> Result<()> {
             Ok(line) => {
                 rl.add_history_entry(line.as_str());
                 let src = new_string(&line);
-                match prog(&mut stack,&compiler,src,&runtime,&root,&names,&redef) {
+                match prog(&mut stack,&compiler,src,&runtime,&root,&names,&redef,-1.0) {
                     Ok((prog,newnames,newredef)) => {
                         names = V::A(Cc::new(newnames));
                         redef = V::A(Cc::new(newredef));
@@ -54,10 +54,27 @@ fn main() -> Result<()> {
                                     Err(e) => println!("{}",e),
                                 }
                             },
-                            Err(e) => println!("{}",e),
+                            Err(e) => match e {
+                                Ve::S(s) => println!("{}",s),
+                                Ve::V(v) => match v {
+                                    V::A(a) => println!("{}",fmt_err(&a.r)),
+                                    _ => panic!("cant error on type"),
+                                },
+                            },
                         };
                     },
-                    Err(e) => println!("{}",e),
+                    Err(e) => match e {
+                        Ve::S(s) => println!("{}",s),
+                        Ve::V(v) => match v {
+                            V::A(a) => {
+                                match a.r.len() {
+                                    2 => println!("{}",fmt_err(&a.r[1].as_a().unwrap().r)),
+                                    _ => panic!("some bad err len"),
+                                }
+                            },
+                            _ => panic!("cant error on type"),
+                        },
+                    },
                 };
             },
             Err(ReadlineError::Interrupted) => {

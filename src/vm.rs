@@ -533,14 +533,13 @@ pub fn sysfns(arity: usize,x: Vn,w:Vn) -> Result<Vs,Ve> {
     Ok(Vs::V(V::A(Cc::new(A::new(vec![],vec![0])))))
 }
 
-pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V,env: &Env,names: &V,redef: &V) -> Result<(Cc<Code>,A,A),Ve> {
+pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V,env: &Env,names: &V,redef: &V,strictness: f64) -> Result<(Cc<Code>,A,A),Ve> {
     // an array ravel is a vector of owned values
     // because we are passing the vars/names/redefs as elements in an array, they must be moved to the new prog
     // this will likely result in excess clones
     let vars = env.to_vars();
     let args = V::A(Cc::new(A::new(vec![runtime.clone(),V::Fn(Fn(sysfns),None),names.clone(),redef.clone()],vec![4])));
     let mut prog = call(stack,2,Vn(Some(compiler)),Vn(Some(&src)),Vn(Some(&args)))?.into_v().unwrap().into_a().unwrap();
-    //info!("prog count = {}",prog.strong_count());
     match prog.get_mut() {
         Some(p) => {
             let tokenization = p.r.pop().unwrap();
@@ -566,8 +565,7 @@ pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V,env: &Env,names: &
 
             let mut redeftmp = redef.as_a().unwrap().clone();
             let redefmut = redeftmp.make_unique();
-            // use -1 as default for now
-            let mut newredef = newv.iter().map(|_i| V::Scalar(-1.0)).collect::<Vec<V>>();
+            let mut newredef = newv.iter().map(|_i| V::Scalar(strictness)).collect::<Vec<V>>();
             redefmut.r.append(&mut newredef);
             redefmut.sh = vec![redefmut.r.len()];
 
