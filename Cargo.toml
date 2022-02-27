@@ -18,6 +18,7 @@ crate-type = ["dylib","rlib"]
 [[bin]]
 name = "rsbqn"
 path = "src/rsbqn.rs"
+required-features = ["repl"]
 
 [profile.bench]
 debug = 1
@@ -30,7 +31,6 @@ env_logger = "0.9.0"
 enum-as-inner = "0.3.3"
 itertools = "0.10.3"
 num-traits = "0.2.14"
-rustyline = "9.1.2"
 
 [dependencies.coz]
 version = "0.1"
@@ -42,10 +42,15 @@ version = "0.2.4"
 optional = true
 default-features = false
 
+[dependencies.rustyline]
+version = "9.1.2"
+optional = true
+default-features = false
+
 [features]
 default = []
-# enable stack debugging
-debug = []
+debug = [] # enable stack debugging
+repl = ["rustyline"] # include rsbqn repl
 coz-fns = ["coz"]
 coz-ops = ["coz"]
 coz-loop = ["coz"]

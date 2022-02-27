@@ -7,7 +7,7 @@ Build
 ------
 
     git restore --source origin/BYTECODE -- src/gen/code.rs
-    cargo build
+    cargo build --features repl
 
 Status
 ------
