@@ -31,23 +31,23 @@ cmd_receive(Port, Acc) ->
 prefix(Name,N,undefined) ->
     [<<"#[test]\n">>,<<"pub fn ">>,Name,<<"_">>,integer_to_list(N),<<"() {\n    ">>,<<"let mut stack = Stack::new();">>,<<"let root = Env::new_root();">>];
 prefix(Name,N,runtime) ->
-    prefix(Name,N,undefined) ++ [<<"let runtimev = runtime(Some(&root),&mut stack); let runtime = runtimev.as_a().unwrap();">>];
+    prefix(Name,N,undefined) ++ [<<"let runtime = runtime(Some(&root),&mut stack).expect(">>,$",<<"runtime failed">>,$",<<").into_a().unwrap();">>];
 prefix(Name,N,compiler) ->
-    [<<"#[test]\n">>,<<"pub fn ">>,Name,<<"_compiler_">>,integer_to_list(N),<<"() {\n    ">>,<<"let mut stack = Stack::new();">>,<<"let runtimev = runtime(Some(&root),&mut stack); let runtime = runtimev.as_a().unwrap();">>,<<"let compiler = c(&runtimev); run(Some(&root),&mut stack,compiler);">>].
+    [<<"#[test]\n">>,<<"pub fn ">>,Name,<<"_compiler_">>,integer_to_list(N),<<"() {\n    ">>,<<"let mut stack = Stack::new();">>,<<"let runtime = runtime(Some(&root),&mut stack).expect(">>,$",<<"runtime failed">>,$",<<").into_a().unwrap();">>,<<"let compiler = c(&runtime); run(Some(&root).unwrap(),&mut stack,compiler);">>].
 suffix() ->
     [<<"}\n">>].
 gen_line(Name,assert,_ByteCode,Code,_Comment,N,compiler) ->
-    [<<"#[should_panic]\n">>,prefix(Name,N,compiler),<<"let desc = r#\"test: ">>,Code,<<"\"#;info!(\"{}\",desc);">>,<<"let src = new_string(\"">>,re:replace(Code, [$"], [$\\, $\\, $"], [{return, list}, global]),<<"\"); let prog = prog(&compiler,src,&runtimev); call(0,Some(&run(Some(&root),&mut stack,prog)),None,None);\n">>,suffix()];
+    [<<"#[should_panic]\n">>,prefix(Name,N,compiler),<<"let desc = r#\"test: ">>,Code,<<"\"#;info!(\"{}\",desc);">>,<<"let src = new_string(\"">>,re:replace(Code, [$"], [$\\, $\\, $"], [{return, list}, global]),<<"\"); let prog = prog(&compiler,src,&runtime); call(0,Some(&run(Some(&root),&mut stack,prog).unwrap()),None,None);\n">>,suffix()];
 gen_line(Name,assert,ByteCode,Code,undefined,N,Dependency) ->
-    [<<"#[should_panic]\n">>,prefix(Name,N,Dependency),<<"{let desc = r#\"test: ">>,Code,<<"\"#;info!(\"{}\",desc);">>,<<"run(Some(&root),&mut stack,">>,ByteCode,<<")};\n">>,suffix()];
+    [<<"#[should_panic]\n">>,prefix(Name,N,Dependency),<<"{let desc = r#\"test: ">>,Code,<<"\"#;info!(\"{}\",desc);">>,<<"run(Some(&root),&mut stack,">>,ByteCode,<<").unwrap()};\n">>,suffix()];
 gen_line(Name,assert,ByteCode,Code,Comment,N,Dependency) ->
-    [<<"#[should_panic]\n">>,prefix(Name,N,Dependency),<<"{let desc = r#\"test: ">>,Comment,<<"\"#;info!(\"{}\",desc);">>,<<"run(Some(&root),&mut stack,">>,ByteCode,<<")}; // ">>,string:trim(erlang:binary_to_list(Code)),<<"\n">>,suffix()];
+    [<<"#[should_panic]\n">>,prefix(Name,N,Dependency),<<"{let desc = r#\"test: ">>,Comment,<<"\"#;info!(\"{}\",desc);">>,<<"run(Some(&root),&mut stack,">>,ByteCode,<<").unwrap()}; // ">>,string:trim(erlang:binary_to_list(Code)),<<"\n">>,suffix()];
 gen_line(Name,Expected,_ByteCode,Code,_Comment,N,compiler) ->
-    [prefix(Name,N,compiler),<<"let desc = r#\"test: ">>,Code,<<"\"#;info!(\"{}\",desc);">>,<<"let src = new_string(\"">>,re:replace(Code, [$"], [$\\, $\\, $"], [{return, list}, global]),<<"\"); ">>,<<"let prog = prog(&compiler,src,&runtimev); assert_eq!(new_scalar(">>,erlang:float_to_binary(Expected,[{decimals, 4},compact]),<<"),call(0,Some(&run(Some(&root),&mut stack,prog)),None,None).into_v().unwrap());\n">>,suffix()];
+    [prefix(Name,N,compiler),<<"let desc = r#\"test: ">>,Code,<<"\"#;info!(\"{}\",desc);">>,<<"let src = new_string(\"">>,re:replace(Code, [$"], [$\\, $\\, $"], [{return, list}, global]),<<"\"); ">>,<<"let prog = prog(&compiler,src,&runtime); assert_eq!(new_scalar(">>,erlang:float_to_binary(Expected,[{decimals, 4},compact]),<<"),call(0,Some(&run(Some(&root),&mut stack,prog).unwrap()),None,None).into_v().unwrap());\n">>,suffix()];
 gen_line(Name,Expected,ByteCode,Code,undefined,N,Dependency) ->
-    [prefix(Name,N,Dependency),<<"{let desc = r#\"test: ">>,Code,<<"\"#;info!(\"{}\",desc);">>,<<"assert_eq!(new_scalar(">>,erlang:float_to_binary(Expected,[{decimals, 4},compact]),<<"),run(Some(&root),&mut stack,">>,ByteCode,<<"));}\n">>,suffix()];
+    [prefix(Name,N,Dependency),<<"{let desc = r#\"test: ">>,Code,<<"\"#;info!(\"{}\",desc);">>,<<"assert_eq!(new_scalar(">>,erlang:float_to_binary(Expected,[{decimals, 4},compact]),<<"),run(Some(&root),&mut stack,">>,ByteCode,<<").unwrap());}\n">>,suffix()];
 gen_line(Name,Expected,ByteCode,Code,Comment,N,Dependency) ->
-    [prefix(Name,N,Dependency),<<"{let desc = r#\"test: ">>,Comment,<<"\"#;info!(\"{}\",desc);">>,<<"assert_eq!(new_scalar(">>,erlang:float_to_binary(Expected,[{decimals, 4},compact]),<<"),run(Some(&root),&mut stack,">>,ByteCode,<<"));} // ">>,string:trim(erlang:binary_to_list(Code)),<<"\n">>,suffix()].
+    [prefix(Name,N,Dependency),<<"{let desc = r#\"test: ">>,Comment,<<"\"#;info!(\"{}\",desc);">>,<<"assert_eq!(new_scalar(">>,erlang:float_to_binary(Expected,[{decimals, 4},compact]),<<"),run(Some(&root),&mut stack,">>,ByteCode,<<").unwrap());} // ">>,string:trim(erlang:binary_to_list(Code)),<<"\n">>,suffix()].
 gen_code(_Name,[],Accm,_N,_Dependency) ->
     lists:reverse(Accm);
 gen_code(Name,Todo,Accm,N,Dependency) ->
