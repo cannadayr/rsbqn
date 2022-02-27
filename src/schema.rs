@@ -205,20 +205,20 @@ impl Vs {
             _ => panic!("can only resolve slots or ref arrays"),
         }
     }
-    pub fn set(&self,d: bool,vs: Vs) -> V {
+    pub fn set(&self,d: bool,vs: Vs) -> Result<V,Ve> {
         match self {
-            Vs::Slot(env,id) => { let v = vs.into_v().unwrap(); env.set(d,*id,&v); v },
+            Vs::Slot(env,id) => { let v = vs.into_v().unwrap(); env.set(d,*id,&v)?; Ok(v) },
             Vs::Ar(a) => {
                 let v = vs.into_v().unwrap().into_a().unwrap();
-                a.r.iter().enumerate().for_each(|(i,e)|
-                    match e {
+                for i in 0..a.r.len() {
+                    match &a.r[i] {
                         Vs::Slot(env,id) => {
-                            env.set(d,*id,&v.r[i]);
+                            env.set(d,*id,&v.r[i])?
                         },
                         _ => panic!("cant set non-slot in ref array"),
                     }
-                );
-                V::A(v)
+                }
+                Ok(V::A(v))
             },
             _ => panic!("can only set slots"),
         }
@@ -391,11 +391,16 @@ impl Env {
             },
         }
     }
-    pub fn set(&self,d: bool,id: usize,v: &V) {
+    pub fn set(&self,d: bool,id: usize,v: &V) -> Result<(),Ve> {
         match self {
             Env(e) => {
-                assert_eq!(d,unsafe { &(*e.vars.get()).get_unchecked(id) }.is_none());
-                unsafe { *(*e.vars.get()).get_unchecked_mut(id) = Some(v.clone())};
+                match d == unsafe { &(*e.vars.get()).get_unchecked(id) }.is_none() {
+                    false => Err(Ve::S("unexpected slot value during assignment")),
+                    true => {
+                        unsafe { *(*e.vars.get()).get_unchecked_mut(id) = Some(v.clone())};
+                        Ok(())
+                    }
+                }
             },
         }
     }

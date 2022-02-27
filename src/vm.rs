@@ -412,7 +412,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Res
                 let i = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
                 let v = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
                 unsafe { stack.s.set_len(l-2) };
-                let r = i.set(true,v);
+                let r = i.set(true,v)?;
                 stack.s.push_unchecked(Vs::V(r));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("SETN",pos-1,stack);
@@ -429,7 +429,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Res
                 let i = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
                 let v = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
                 unsafe { stack.s.set_len(l-2) };
-                let r = i.set(false,v);
+                let r = i.set(false,v)?;
                 stack.s.push_unchecked(Vs::V(r));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("SETU",pos-1,stack);
@@ -451,7 +451,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Res
                     Ok(r) => r,
                     Err(e) => break Err(e),
                 };
-                let r = i.set(false,v);
+                let r = i.set(false,v)?;
                 stack.s.push_unchecked(Vs::V(r));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("SETM",pos-1,stack);
@@ -472,7 +472,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Res
                     Ok(r) => r,
                     Err(e) => break Err(e),
                 };
-                let r = i.set(false,v);
+                let r = i.set(false,v)?;
                 stack.s.push_unchecked(Vs::V(r));
                 #[cfg(feature = "debug")]
                 dbg_stack_out("SETC",pos-1,stack);
