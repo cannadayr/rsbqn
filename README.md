@@ -25,7 +25,7 @@ Status
 |literal|ok|52 passed; 0 failed; 0 ignored;|
 |namespace|N/A|N/A|
 |syntax|FAILED|130 passed; 5 failed; 0 ignored;|
-|token|N/A|N/A|
+|token|ok|27 passed; 0 failed; 0 ignored;|
 
 Test
 -----
