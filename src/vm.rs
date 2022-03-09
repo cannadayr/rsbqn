@@ -651,13 +651,5 @@ pub fn run_in_place(env: &Env,stack: &mut Stack,code: Cc<Code>) -> Result<V,Ve> 
 }
 pub fn run(parent: Option<&Env>,stack: &mut Stack,code: Cc<Code>) -> Result<V,Ve> {
     let child = Env::new(parent,&code.blocks[0],0,None);
-    let (pos,_locals) =
-        match code.blocks[0].body {
-            Body::Imm(b) => code.bodies[b],
-            Body::Defer(_,_) => panic!("cant run deferred block"),
-        };
-    match vm(&child,&code,pos,stack) {
-        Ok(r) => Ok(r.into_v().unwrap()),
-        Err(e) => Err(e),
-    }
+    run_in_place(&child,stack,code)
 }
