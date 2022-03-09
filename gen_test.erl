@@ -144,8 +144,8 @@ runtime_tests(Repo) ->
     file:write_file("tests/under.rs",template(Under,core)),
     Identity = suite(Repo,<<"identity.bqn">>,<<"identity">>,runtime),
     file:write_file("tests/identity.rs",template(Identity,core)).
-    %Literal = suite(Repo,<<"literal.bqn">>,<<"literal">>,runtime),
-    %file:write_file("tests/literal.rs",template(Literal));
+    % literal, & syntax tests can't be precompiled and embedded as bytecode,
+    % as errors might happen during compilation.
 compiler_tests(Repo) ->
     ByteCode = suite(Repo,<<"bytecode.bqn">>,<<"bytecode">>,compiler),
     file:write_file("tests/bytecode_compiler.rs",template(ByteCode,compiler)),
@@ -158,12 +158,14 @@ compiler_tests(Repo) ->
     Under = suite(Repo,<<"under.bqn">>,<<"under">>,compiler),
     file:write_file("tests/under_compiler.rs",template(Under,compiler)),
     Identity = suite(Repo,<<"identity.bqn">>,<<"identity">>,compiler),
-    file:write_file("tests/identity_compiler.rs",template(Identity,compiler)).
-    %Literal = suite(Repo,<<"literal.bqn">>,<<"literal">>,compiler),
-    %file:write_file("tests/literal.rs",template(Literal));
+    file:write_file("tests/identity_compiler.rs",template(Identity,compiler)),
+    Literal = suite(Repo,<<"literal.bqn">>,<<"literal">>,compiler),
+    file:write_file("tests/literal_compiler.rs",template(Literal,compiler)),
+    Syntax = suite(Repo,<<"syntax.bqn">>,<<"syntax">>,compiler),
+    file:write_file("tests/syntax_compiler.rs",template(Syntax,compiler)).
 main([Repo]) ->
-    runtime_tests(Repo);
-    %compiler_tests(Repo);
+    runtime_tests(Repo),
+    compiler_tests(Repo);
 main(_Args) ->
     io:format("bad arguments~n"),
     halt(1).
