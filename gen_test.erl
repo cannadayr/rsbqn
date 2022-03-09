@@ -78,36 +78,42 @@ cast(L) ->
         false ->
             float(erlang:list_to_integer(L))
     end.
+split_comment(Tail,true) ->
+    binary:split(Tail, <<"#">>, [global]);
+split_comment(Tail,false) ->
+    [Tail].
 % # comment
-parse_line(Line,Accm,_HasPct)
+parse_line(Line,Accm,_HasPct,_CommentMode)
     when binary_part(Line,0,1) =:= <<"#">>;
          Line =:= <<>> ->
     Accm;
 %% ! % expression
-parse_line(Line,Accm,_HasPct)
+parse_line(Line,Accm,_HasPct,CommentMode)
     when binary_part(Line,0,1) =:= <<"!">> ->
     [_Head,Tail] = binary:split(Line, <<"%">>, [global]),
-    {Code,Comment} = parse_code(binary:split(Tail, <<"#">>, [global])),
+    {Code,Comment} = parse_code(split_comment(Tail,CommentMode)),
     [{assert,Code,Comment}] ++ Accm;
 % result % expression
-parse_line(Line,Accm,true) ->
+parse_line(Line,Accm,true,CommentMode) ->
     [Head,Tail] = binary:split(Line, <<"%">>, [global]),
     Expected = cast(string:trim(erlang:binary_to_list(Head))),
-    {Code,Comment} = parse_code(binary:split(Tail, <<"#">>, [global])),
+    Src = split_comment(Tail,CommentMode),
+    {Code,Comment} = parse_code(Src),
     [{Expected,Code,Comment}] ++ Accm;
 % expression
-parse_line(Line,Accm,false) ->
-    {Code,Comment} = parse_code(binary:split(Line, <<"#">>, [global])),
+parse_line(Line,Accm,false,CommentMode) ->
+    Src = split_comment(Line,CommentMode),
+    {Code,Comment} = parse_code(Src),
     [{1.0,Code,Comment}] ++ Accm.
-parse([],Accm) ->
+parse([],Accm,_CommentMode) ->
     lists:reverse(Accm);
-parse(Lines,Accm) ->
+parse(Lines,Accm,CommentMode) ->
     Line = hd(Lines),
-    parse(tl(Lines),parse_line(Line,Accm,has_pct(Line))).
-suite(Repo,Name,ShortName,Dependency) ->
+    parse(tl(Lines),parse_line(Line,Accm,has_pct(Line),CommentMode),CommentMode).
+suite(Repo,Name,ShortName,Dependency,CommentMode) ->
     Path = filename:join([Repo,<<"test/cases/">>,Name]),
     {ok, Data} = file:read_file(Path),
-    Args = parse(binary:split(Data, [<<"\n">>], [global]),[]),
+    Args = parse(binary:split(Data, [<<"\n">>], [global]),[],CommentMode),
     Tests = gen_tests(Repo,Args,[]),
     gen_code(ShortName,Tests,[],0,Dependency).
 template(Content,core) ->
