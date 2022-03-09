@@ -37,13 +37,13 @@ prefix(Name,N,compiler) ->
 suffix() ->
     [<<"}\n">>].
 gen_line(Name,assert,_ByteCode,Code,_Comment,N,compiler) ->
-    [<<"#[should_panic]\n">>,prefix(Name,N,compiler),<<"info!(\"test: {}\",r#\"">>,Code,<<"\"#);">>,<<"let src = new_string(r#\"">>,Code,<<"\"#); let prog = prog(&mut stack,&compiler,src,&runtime,&root,&names,&redef,0.0);\n">>,suffix()];
+    [<<"#[should_panic]\n">>,prefix(Name,N,compiler),<<"info!(\"test: {}\",r#\"">>,Code,<<"\"#);">>,<<"let src = new_string(r#\"">>,Code,<<"\"#); let prog = prog(&mut stack,&compiler,src,&runtime,&root,&names,&redef,0.0).expect(">>,$",<<"program compilation failed">>,$",<<");run(Some(&root),&mut stack,prog.0).unwrap();\n">>,suffix()];
 gen_line(Name,assert,ByteCode,Code,undefined,N,Dependency) ->
     [<<"#[should_panic]\n">>,prefix(Name,N,Dependency),<<"{info!(\"test: {}\",r#\"">>,Code,<<"\"#);">>,<<"run(Some(&root),&mut stack,">>,ByteCode,<<").unwrap()};\n">>,suffix()];
 gen_line(Name,assert,ByteCode,Code,Comment,N,Dependency) ->
     [<<"#[should_panic]\n">>,prefix(Name,N,Dependency),<<"{info!(\"test: {}\",r#\"">>,Comment,<<"\"#);">>,<<"run(Some(&root),&mut stack,">>,ByteCode,<<").unwrap()}; // ">>,string:trim(erlang:binary_to_list(Code)),<<"\n">>,suffix()];
 gen_line(Name,Expected,_ByteCode,Code,_Comment,N,compiler) ->
-    [prefix(Name,N,compiler),<<"info!(\"test: {}\",r#\"">>,Code,<<"\"#);">>,<<"let src = new_string(r#\"">>,Code,<<"\"#); ">>,<<"let prog = prog(&mut stack,&compiler,src,&runtime,&root,&names,&redef,0.0); assert_eq!(new_scalar(">>,erlang:float_to_binary(Expected,[{decimals, 4},compact]),<<"),new_scalar(-999.0));\n">>,suffix()];
+    [prefix(Name,N,compiler),<<"info!(\"test: {}\",r#\"">>,Code,<<"\"#);">>,<<"let src = new_string(r#\"">>,Code,<<"\"#); ">>,<<"let prog = prog(&mut stack,&compiler,src,&runtime,&root,&names,&redef,0.0).expect(">>,$",<<"program compilation failed">>,$",<<"); let exec = run(Some(&root),&mut stack,prog.0).unwrap(); assert_eq!(new_scalar(">>,erlang:float_to_binary(Expected,[{decimals, 4},compact]),<<"),exec);\n">>,suffix()];
 gen_line(Name,Expected,ByteCode,Code,undefined,N,Dependency) ->
     [prefix(Name,N,Dependency),<<"{info!(\"test: {}\",r#\"">>,Code,<<"\"#);">>,<<"assert_eq!(new_scalar(">>,erlang:float_to_binary(Expected,[{decimals, 4},compact]),<<"),run(Some(&root),&mut stack,">>,ByteCode,<<").unwrap());}\n">>,suffix()];
 gen_line(Name,Expected,ByteCode,Code,Comment,N,Dependency) ->
