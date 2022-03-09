@@ -37,17 +37,17 @@ prefix(Name,N,compiler) ->
 suffix() ->
     [<<"}\n">>].
 gen_line(Name,assert,_ByteCode,Code,_Comment,N,compiler) ->
-    [<<"#[should_panic]\n">>,prefix(Name,N,compiler),<<"let desc = String::from(r#\"test: ">>,re:replace(Code, [$"], [$\\, $\\, $"], [{return, list}, global]),<<"\"#);info!(\"{}\",desc);">>,<<"let src = new_string(r#\"">>,re:replace(Code, [$"], [$\\, $\\, $"], [{return, list}, global]),<<"\"#); let prog = prog(&mut stack,&compiler,src,&runtime,&root,&names,&redef,0.0);\n">>,suffix()];
+    [<<"#[should_panic]\n">>,prefix(Name,N,compiler),<<"info!(\"test: {}\",r#\"">>,Code,<<"\"#);">>,<<"let src = new_string(r#\"">>,Code,<<"\"#); let prog = prog(&mut stack,&compiler,src,&runtime,&root,&names,&redef,0.0);\n">>,suffix()];
 gen_line(Name,assert,ByteCode,Code,undefined,N,Dependency) ->
-    [<<"#[should_panic]\n">>,prefix(Name,N,Dependency),<<"{let desc = String::from(r#\"test: ">>,re:replace(Code, [$"], [$\\, $\\, $"], [{return, list}, global]),<<"\"#);info!(\"{}\",desc);">>,<<"run(Some(&root),&mut stack,">>,ByteCode,<<").unwrap()};\n">>,suffix()];
+    [<<"#[should_panic]\n">>,prefix(Name,N,Dependency),<<"{info!(\"test: {}\",r#\"">>,Code,<<"\"#);">>,<<"run(Some(&root),&mut stack,">>,ByteCode,<<").unwrap()};\n">>,suffix()];
 gen_line(Name,assert,ByteCode,Code,Comment,N,Dependency) ->
-    [<<"#[should_panic]\n">>,prefix(Name,N,Dependency),<<"{let desc = String::from(r#\"test: ">>,Comment,<<"\"#);info!(\"{}\",desc);">>,<<"run(Some(&root),&mut stack,">>,ByteCode,<<").unwrap()}; // ">>,string:trim(erlang:binary_to_list(Code)),<<"\n">>,suffix()];
+    [<<"#[should_panic]\n">>,prefix(Name,N,Dependency),<<"{info!(\"test: {}\",r#\"">>,Comment,<<"\"#);">>,<<"run(Some(&root),&mut stack,">>,ByteCode,<<").unwrap()}; // ">>,string:trim(erlang:binary_to_list(Code)),<<"\n">>,suffix()];
 gen_line(Name,Expected,_ByteCode,Code,_Comment,N,compiler) ->
-    [prefix(Name,N,compiler),<<"let desc = String::from(r#\"test: ">>,re:replace(Code, [$"], [$\\, $\\, $"], [{return, list}, global]),<<"\"#);info!(\"{}\",desc);">>,<<"let src = new_string(r#\"">>,re:replace(Code, [$"], [$\\, $\\, $"], [{return, list}, global]),<<"\"#); ">>,<<"let prog = prog(&mut stack,&compiler,src,&runtime,&root,&names,&redef,0.0); assert_eq!(new_scalar(">>,erlang:float_to_binary(Expected,[{decimals, 4},compact]),<<"),new_scalar(-999.0));\n">>,suffix()];
+    [prefix(Name,N,compiler),<<"info!(\"test: {}\",r#\"">>,Code,<<"\"#);">>,<<"let src = new_string(r#\"">>,Code,<<"\"#); ">>,<<"let prog = prog(&mut stack,&compiler,src,&runtime,&root,&names,&redef,0.0); assert_eq!(new_scalar(">>,erlang:float_to_binary(Expected,[{decimals, 4},compact]),<<"),new_scalar(-999.0));\n">>,suffix()];
 gen_line(Name,Expected,ByteCode,Code,undefined,N,Dependency) ->
-    [prefix(Name,N,Dependency),<<"{let desc = String::from(r#\"test: ">>,re:replace(Code, [$"], [$\\, $\\, $"], [{return, list}, global]),<<"\"#);info!(\"{}\",desc);">>,<<"assert_eq!(new_scalar(">>,erlang:float_to_binary(Expected,[{decimals, 4},compact]),<<"),run(Some(&root),&mut stack,">>,ByteCode,<<").unwrap());}\n">>,suffix()];
+    [prefix(Name,N,Dependency),<<"{info!(\"test: {}\",r#\"">>,Code,<<"\"#);">>,<<"assert_eq!(new_scalar(">>,erlang:float_to_binary(Expected,[{decimals, 4},compact]),<<"),run(Some(&root),&mut stack,">>,ByteCode,<<").unwrap());}\n">>,suffix()];
 gen_line(Name,Expected,ByteCode,Code,Comment,N,Dependency) ->
-    [prefix(Name,N,Dependency),<<"{let desc = String::from(r#\"test: ">>,Comment,<<"\"#);info!(\"{}\",desc);">>,<<"assert_eq!(new_scalar(">>,erlang:float_to_binary(Expected,[{decimals, 4},compact]),<<"),run(Some(&root),&mut stack,">>,ByteCode,<<").unwrap());} // ">>,string:trim(erlang:binary_to_list(Code)),<<"\n">>,suffix()].
+    [prefix(Name,N,Dependency),<<"{info!(\"test: {}\",r#\"">>,Comment,<<"\"#);">>,<<"assert_eq!(new_scalar(">>,erlang:float_to_binary(Expected,[{decimals, 4},compact]),<<"),run(Some(&root),&mut stack,">>,ByteCode,<<").unwrap());} // ">>,string:trim(erlang:binary_to_list(Code)),<<"\n">>,suffix()].
 gen_code(_Name,[],Accm,_N,_Dependency) ->
     lists:reverse(Accm);
 gen_code(Name,Todo,Accm,N,Dependency) ->
