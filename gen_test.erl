@@ -138,37 +138,39 @@ template(Content,compiler) ->
         <<"\n\n">>
     ]).
 runtime_tests(Repo) ->
-    ByteCode = suite(Repo,<<"bytecode.bqn">>,<<"bytecode">>,undefined),
+    ByteCode = suite(Repo,<<"bytecode.bqn">>,<<"bytecode">>,undefined,true),
     file:write_file("tests/bytecode.rs",template(ByteCode,core)),
-    Simple = suite(Repo,<<"simple.bqn">>,<<"simple">>,runtime),
+    Simple = suite(Repo,<<"simple.bqn">>,<<"simple">>,runtime,true),
     file:write_file("tests/simple.rs",template(Simple,core)),
-    Prim = suite(Repo,<<"prim.bqn">>,<<"prim">>,runtime),
+    Prim = suite(Repo,<<"prim.bqn">>,<<"prim">>,runtime,true),
     file:write_file("tests/prim.rs",template(Prim,core)),
-    Undo = suite(Repo,<<"undo.bqn">>,<<"undo">>,runtime),
+    Undo = suite(Repo,<<"undo.bqn">>,<<"undo">>,runtime,true),
     file:write_file("tests/undo.rs",template(Undo,core)),
-    Under = suite(Repo,<<"under.bqn">>,<<"under">>,runtime),
+    Under = suite(Repo,<<"under.bqn">>,<<"under">>,runtime,true),
     file:write_file("tests/under.rs",template(Under,core)),
-    Identity = suite(Repo,<<"identity.bqn">>,<<"identity">>,runtime),
+    Identity = suite(Repo,<<"identity.bqn">>,<<"identity">>,runtime,true),
     file:write_file("tests/identity.rs",template(Identity,core)).
     % literal, & syntax tests can't be precompiled and embedded as bytecode,
     % as errors might happen during compilation.
 compiler_tests(Repo) ->
-    ByteCode = suite(Repo,<<"bytecode.bqn">>,<<"bytecode">>,compiler),
+    ByteCode = suite(Repo,<<"bytecode.bqn">>,<<"bytecode">>,compiler,true),
     file:write_file("tests/bytecode_compiler.rs",template(ByteCode,compiler)),
-    Simple = suite(Repo,<<"simple.bqn">>,<<"simple">>,compiler),
+    Simple = suite(Repo,<<"simple.bqn">>,<<"simple">>,compiler,true),
     file:write_file("tests/simple_compiler.rs",template(Simple,compiler)),
-    Prim = suite(Repo,<<"prim.bqn">>,<<"prim">>,compiler),
+    Prim = suite(Repo,<<"prim.bqn">>,<<"prim">>,compiler,true),
     file:write_file("tests/prim_compiler.rs",template(Prim,compiler)),
-    Undo = suite(Repo,<<"undo.bqn">>,<<"undo">>,compiler),
+    Undo = suite(Repo,<<"undo.bqn">>,<<"undo">>,compiler,true),
     file:write_file("tests/undo_compiler.rs",template(Undo,compiler)),
-    Under = suite(Repo,<<"under.bqn">>,<<"under">>,compiler),
+    Under = suite(Repo,<<"under.bqn">>,<<"under">>,compiler,true),
     file:write_file("tests/under_compiler.rs",template(Under,compiler)),
-    Identity = suite(Repo,<<"identity.bqn">>,<<"identity">>,compiler),
+    Identity = suite(Repo,<<"identity.bqn">>,<<"identity">>,compiler,true),
     file:write_file("tests/identity_compiler.rs",template(Identity,compiler)),
-    Literal = suite(Repo,<<"literal.bqn">>,<<"literal">>,compiler),
+    Literal = suite(Repo,<<"literal.bqn">>,<<"literal">>,compiler,true),
     file:write_file("tests/literal_compiler.rs",template(Literal,compiler)),
-    Syntax = suite(Repo,<<"syntax.bqn">>,<<"syntax">>,compiler),
-    file:write_file("tests/syntax_compiler.rs",template(Syntax,compiler)).
+    Syntax = suite(Repo,<<"syntax.bqn">>,<<"syntax">>,compiler,true),
+    file:write_file("tests/syntax_compiler.rs",template(Syntax,compiler)),
+    Token = suite(Repo,<<"token.bqn">>,<<"token">>,compiler,false),
+    file:write_file("tests/token_compiler.rs",template(Token,compiler)).
 main([Repo]) ->
     runtime_tests(Repo),
     compiler_tests(Repo);
