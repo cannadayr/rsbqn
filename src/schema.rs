@@ -312,16 +312,16 @@ pub enum Bodies {
 pub struct Code {
     pub bc:    Vec<usize>,
     pub objs:  Vec<V>,
-    pub bodies:Vec<(usize,usize)>,
+    pub body_ids:Vec<(usize,usize)>,
     pub blocks:LateInit<Vec<Cc<Block>>>,
 }
 impl Code {
-    pub fn new(bc: Vec<usize>,objs: Vec<V>,blocks_raw: Vec<(u8,bool,Bodies)>,bodies: Vec<(usize,usize)>) -> Cc<Self> {
-        let code = Cc::new(Self {bc: bc, objs: objs, bodies: bodies, blocks: LateInit::default(), });
+    pub fn new(bc: Vec<usize>,objs: Vec<V>,blocks_raw: Vec<(u8,bool,Bodies)>,body_ids: Vec<(usize,usize)>) -> Cc<Self> {
+        let code = Cc::new(Self {bc: bc, objs: objs, body_ids: body_ids, blocks: LateInit::default(), });
         let blocks_derv = blocks_raw.into_iter().map(|block|
             match block {
-                (typ,imm,body) => {
-                        let b = Block { typ: typ, imm: imm, body: body, code: LateInit::default(), };
+                (typ,imm,bodies) => {
+                        let b = Block { typ: typ, imm: imm, bodies: bodies, code: LateInit::default(), };
                         b.code.init(code.clone());
                         Cc::new(b)
                 }
@@ -335,7 +335,7 @@ impl Code {
 // Block
 #[derive(Debug,PartialEq)]
 pub struct Block {
-    pub typ:u8, pub imm:bool, pub body: Bodies,
+    pub typ:u8, pub imm:bool, pub bodies: Bodies,
     pub code:LateInit<Cc<Code>>,
 }
 
@@ -356,12 +356,12 @@ impl Env {
         // as such, this might be changed back to using safe code depending
         // on how headers are implemented
         let (_pos,locals) =
-            match &block.body {
-                Bodies::Comp(b) => unsafe {*block.code.bodies.get_unchecked(*b) },
+            match &block.bodies {
+                Bodies::Comp(b) => unsafe {*block.code.body_ids.get_unchecked(*b) },
                 Bodies::Exp(mon,dya) => {
                     match arity {
-                        1 => unsafe { *block.code.bodies.get_unchecked(mon[0]) },
-                        2 => unsafe { *block.code.bodies.get_unchecked(dya[0]) },
+                        1 => unsafe { *block.code.body_ids.get_unchecked(mon[0]) },
+                        2 => unsafe { *block.code.body_ids.get_unchecked(dya[0]) },
                         n => panic!("invalid arity for deferred block {}",n),
                     }
                 },
@@ -475,9 +475,9 @@ impl BlockInst {
                 Ok(r)
             },
             true => {
-                let pos = match self.def.body {
+                let pos = match self.def.bodies {
                    Bodies::Comp(b) => {
-                        let (p,_l) = self.def.code.bodies[b];
+                        let (p,_l) = self.def.code.body_ids[b];
                         p
                     }
                     _ => panic!("body immediacy doesnt match block definition"),
@@ -495,9 +495,9 @@ impl BlockInst {
                 Ok(r)
             },
             true => {
-                let pos = match self.def.body {
+                let pos = match self.def.bodies {
                    Bodies::Comp(b) => {
-                        let (p,_l) = self.def.code.bodies[b];
+                        let (p,_l) = self.def.code.body_ids[b];
                         p
                     }
                     _ => panic!("body immediacy doesnt match block definition"),
@@ -579,12 +579,12 @@ pub fn new_scalar<T: Decoder>(n: T) -> V {
 }
 pub fn body_pos(b: &Cc<BlockInst>,arity: usize) -> usize {
     let (pos,_locals) =
-        match &b.def.body {
-            Bodies::Comp(body) => b.def.code.bodies[*body],
+        match &b.def.bodies {
+            Bodies::Comp(body) => b.def.code.body_ids[*body],
             Bodies::Exp(mon,dya) => {
                 match arity {
-                    1 => b.def.code.bodies[mon[0]],
-                    2 => b.def.code.bodies[dya[0]],
+                    1 => b.def.code.body_ids[mon[0]],
+                    2 => b.def.code.body_ids[dya[0]],
                     _ => panic!("bad call arity"),
                 }
             },

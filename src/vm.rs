@@ -44,9 +44,9 @@ fn derv(env: &Env,code: &Cc<Code>,block: &Cc<Block>,stack: &mut Stack) -> Result
     match (block.typ,block.imm) {
         (0,true) => {
             let child = Env::new(Some(env),block,0,None);
-            let pos = match block.body {
+            let pos = match block.bodies {
                 Bodies::Comp(b) => {
-                    let (p,_l) = code.bodies[b];
+                    let (p,_l) = code.body_ids[b];
                     p
                 },
                 _ => panic!("body immediacy derivation doesnt match block definition"),
@@ -681,8 +681,8 @@ pub fn formatter(root: Option<&Env>,stack: &mut Stack,runtime: &V) -> Result<V,V
 
 pub fn run_in_place(env: &Env,stack: &mut Stack,code: Cc<Code>) -> Result<V,Ve> {
     let (pos,_locals) =
-        match code.blocks[0].body {
-            Bodies::Comp(b) => code.bodies[b],
+        match code.blocks[0].bodies {
+            Bodies::Comp(b) => code.body_ids[b],
             Bodies::Exp(_,_) => panic!("cant run deferred block"),
         };
     match vm(&env,&code,pos,stack) {
