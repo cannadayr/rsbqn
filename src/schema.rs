@@ -300,11 +300,11 @@ impl Stacker for Vec<Vs> {
     }
 }
 
-// Body
+// Bodies
 #[derive(Debug,Clone,PartialEq)]
-pub enum Body {
-    Imm(usize),
-    Defer(Vec<usize>,Vec<usize>),
+pub enum Bodies {
+    Comp(usize),
+    Exp(Vec<usize>,Vec<usize>), // Monadic, Dyadic
 }
 
 // Code
@@ -316,7 +316,7 @@ pub struct Code {
     pub blocks:LateInit<Vec<Cc<Block>>>,
 }
 impl Code {
-    pub fn new(bc: Vec<usize>,objs: Vec<V>,blocks_raw: Vec<(u8,bool,Body)>,bodies: Vec<(usize,usize)>) -> Cc<Self> {
+    pub fn new(bc: Vec<usize>,objs: Vec<V>,blocks_raw: Vec<(u8,bool,Bodies)>,bodies: Vec<(usize,usize)>) -> Cc<Self> {
         let code = Cc::new(Self {bc: bc, objs: objs, bodies: bodies, blocks: LateInit::default(), });
         let blocks_derv = blocks_raw.into_iter().map(|block|
             match block {
@@ -335,7 +335,7 @@ impl Code {
 // Block
 #[derive(Debug,PartialEq)]
 pub struct Block {
-    pub typ:u8, pub imm:bool, pub body: Body,
+    pub typ:u8, pub imm:bool, pub body: Bodies,
     pub code:LateInit<Cc<Code>>,
 }
 
@@ -357,8 +357,8 @@ impl Env {
         // on how headers are implemented
         let (_pos,locals) =
             match &block.body {
-                Body::Imm(b) => unsafe {*block.code.bodies.get_unchecked(*b) },
-                Body::Defer(mon,dya) => {
+                Bodies::Comp(b) => unsafe {*block.code.bodies.get_unchecked(*b) },
+                Bodies::Exp(mon,dya) => {
                     match arity {
                         1 => unsafe { *block.code.bodies.get_unchecked(mon[0]) },
                         2 => unsafe { *block.code.bodies.get_unchecked(dya[0]) },
@@ -476,7 +476,7 @@ impl BlockInst {
             },
             true => {
                 let pos = match self.def.body {
-                   Body::Imm(b) => {
+                   Bodies::Comp(b) => {
                         let (p,_l) = self.def.code.bodies[b];
                         p
                     }
@@ -496,7 +496,7 @@ impl BlockInst {
             },
             true => {
                 let pos = match self.def.body {
-                   Body::Imm(b) => {
+                   Bodies::Comp(b) => {
                         let (p,_l) = self.def.code.bodies[b];
                         p
                     }
@@ -580,8 +580,8 @@ pub fn new_scalar<T: Decoder>(n: T) -> V {
 pub fn body_pos(b: &Cc<BlockInst>,arity: usize) -> usize {
     let (pos,_locals) =
         match &b.def.body {
-            Body::Imm(body) => b.def.code.bodies[*body],
-            Body::Defer(mon,dya) => {
+            Bodies::Comp(body) => b.def.code.bodies[*body],
+            Bodies::Exp(mon,dya) => {
                 match arity {
                     1 => b.def.code.bodies[mon[0]],
                     2 => b.def.code.bodies[dya[0]],

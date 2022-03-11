@@ -1,4 +1,4 @@
-use crate::schema::{Env,V,Vs,Vn,Ve,Block,BlockInst,Code,Calleable,Stacker,Stack,Body,A,Ar,Tr2,Tr3,Runtime,Compiler,Prog,D2,D1,Fn,new_scalar,new_string};
+use crate::schema::{Env,V,Vs,Vn,Ve,Block,BlockInst,Code,Calleable,Stacker,Stack,Bodies,A,Ar,Tr2,Tr3,Runtime,Compiler,Prog,D2,D1,Fn,new_scalar,new_string};
 use crate::provide::{provide,decompose,prim_ind,typ,glyph,fmtnum};
 use crate::gen::code::{r0,r1,c,f};
 use crate::fmt::{dbg_stack_out,dbg_stack_in};
@@ -45,7 +45,7 @@ fn derv(env: &Env,code: &Cc<Code>,block: &Cc<Block>,stack: &mut Stack) -> Result
         (0,true) => {
             let child = Env::new(Some(env),block,0,None);
             let pos = match block.body {
-                Body::Imm(b) => {
+                Bodies::Comp(b) => {
                     let (p,_l) = code.bodies[b];
                     p
                 },
@@ -629,14 +629,14 @@ pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V,env: &Env,names: &
                             (
                                 u8::from_f64(*typ).unwrap(),
                                 if 1.0 == *imm { true } else { false },
-                                Body::Imm(usize::from_f64(*body).unwrap())
+                                Bodies::Comp(usize::from_f64(*body).unwrap())
                             ),
                         Some((V::Scalar(typ),V::Scalar(imm),V::A(bodies))) => {
                             let (mon,dya) = bodies.r.iter().collect_tuple().unwrap();
                             (
                                 u8::from_f64(*typ).unwrap(),
                                 if 1.0 == *imm { true } else { false },
-                                Body::Defer(
+                                Bodies::Exp(
                                     mon.as_a().unwrap().r.iter().map(|e| match e {
                                         V::Scalar(n) => usize::from_f64(*n).unwrap(),
                                         _ => panic!("bytecode not a number"),
@@ -649,7 +649,7 @@ pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V,env: &Env,names: &
                             )
                         },
                         _ => panic!("couldn't load compiled block"),
-                    }).collect::<Vec<(u8, bool, Body)>>()
+                    }).collect::<Vec<(u8, bool, Bodies)>>()
                 },
                 Err(_b) => panic!("cant get unique ref to program blocks"),
             };
@@ -682,8 +682,8 @@ pub fn formatter(root: Option<&Env>,stack: &mut Stack,runtime: &V) -> Result<V,V
 pub fn run_in_place(env: &Env,stack: &mut Stack,code: Cc<Code>) -> Result<V,Ve> {
     let (pos,_locals) =
         match code.blocks[0].body {
-            Body::Imm(b) => code.bodies[b],
-            Body::Defer(_,_) => panic!("cant run deferred block"),
+            Bodies::Comp(b) => code.bodies[b],
+            Bodies::Exp(_,_) => panic!("cant run deferred block"),
         };
     match vm(&env,&code,pos,stack) {
         Ok(r) => Ok(r.into_v().unwrap()),

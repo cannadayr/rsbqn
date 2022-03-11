@@ -3,7 +3,7 @@ use core::f64::{INFINITY,NEG_INFINITY};
 use rsbqn::init_log;
 use rsbqn::vm::{run,run_in_place,call,runtime,prog,formatter};
 use rsbqn::gen::code::{r0,r1,c,f};
-use rsbqn::schema::{new_string,new_char,new_scalar,Body,Code,Env,V,Vs,Vn,Ve,Stack,A};
+use rsbqn::schema::{new_string,new_char,new_scalar,Bodies,Code,Env,V,Vs,Vn,Ve,Stack,A};
 use rsbqn::provide::{provide,decompose,prim_ind};
 use rsbqn::fmt::{fmt_result,fmt_err};
 use rustyline::{Editor, Result};

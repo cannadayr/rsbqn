@@ -18,8 +18,8 @@ Tuple ← "("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native tuple
 Block ← Tuple # Native block
 Body ← Tuple # Native body
 Code ← "Code::new("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native code
-Imm ← "Body::Imm("∾⊢∾")"˙ # Native imm fn
-Defer ← "Body::Defer("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native deferred fn
+Compressed ← "Bodies::Comp("∾⊢∾")"˙ # compressed bodies definition
+Exp ← "Bodies::Exp("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # expanded bodies definition
 Ind ← {∾𝕨‿"["‿𝕩‿"].clone()"}  # Native list/array indexing
 Cat ← {∾𝕨‿".concat("‿𝕩‿")"}   # Native list/array concatenation (like ∾)
 # Escape the special characters that appear in BQN sources.
@@ -36,7 +36,7 @@ F ← {'-'¨⌾((𝕩='¯')⊸/)𝕩} •Repr # Native format
 FP ← ∞⊸=◶⟨")"∾˜"new_scalar("∾F,"new_scalar(INFINITY)"⟩       # Format positive number
 FN ← ¯∞⊸=◶⟨")"∾˜"new_scalar("∾F,"new_scalar(NEG_INFINITY)"⟩       # Format positive number
 Num ← 0⊸≤◶⟨FN,FP⟩
-FBlock ← Block ⟨F,⊑⟜"false"‿"true",=◶⟨Imm F,Defer (List F¨)¨⟩⟩ {𝕎𝕩}¨ ⊢
+FBlock ← Block ⟨F,⊑⟜"false"‿"true",=◶⟨Compressed F,Exp (List F¨)¨⟩⟩ {𝕎𝕩}¨ ⊢
 
 glyphs ← Import "glyphs.bqn"
 _getComp ← { (4+useInd) ↑ (𝕗 Import "c.bqn"){𝔽} }

@@ -122,7 +122,7 @@ template(Content,core) ->
         <<"use core::f64::{INFINITY,NEG_INFINITY};\n">>,
         <<"use rsbqn::init_log;\n">>,
         <<"use rsbqn::vm::{run,call,runtime,prog};\n">>,
-        <<"use rsbqn::schema::{Code,Env,new_scalar,new_char,new_string,Body,A,Decoder,V,Stack};\n\n">>,
+        <<"use rsbqn::schema::{Code,Env,new_scalar,new_char,new_string,Bodies,A,Decoder,V,Stack};\n\n">>,
         <<"\n\n">>,Content,<<"\n\n">>
     ]);
 template(Content,compiler) ->
@@ -131,7 +131,7 @@ template(Content,compiler) ->
         <<"use core::f64::{INFINITY,NEG_INFINITY};\n">>,
         <<"use rsbqn::init_log;\n">>,
         <<"use rsbqn::vm::{run,call,runtime,prog};\n">>,
-        <<"use rsbqn::schema::{Code,Env,new_scalar,new_char,new_string,Body,A,Decoder,V,Stack};\n">>,
+        <<"use rsbqn::schema::{Code,Env,new_scalar,new_char,new_string,Bodies,A,Decoder,V,Stack};\n">>,
         <<"use rsbqn::gen::code::c;\n">>,
         <<"use bacon_rajan_cc::Cc;\n\n">>,
         Content,
