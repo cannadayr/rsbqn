@@ -191,7 +191,7 @@ pub enum Vs {
     V(V),
     Slot(Env,usize),
     Ar(Ar),
-    Match,
+    Match(Option<V>),
     Nothing
 }
 impl Vs {
@@ -206,34 +206,26 @@ impl Vs {
             _ => panic!("can only resolve slots or ref arrays"),
         }
     }
-    pub fn set(&self,d: bool,vs: Vs) -> Result<V,Ve> {
+    pub fn set(&self,d: bool,v: &V) -> Result<V,Ve> {
         match self {
-            Vs::Slot(env,id) => { let v = vs.into_v().unwrap(); env.set(d,*id,&v)?; Ok(v) },
+            Vs::Slot(env,id) => { env.set(d,*id,v)?; Ok(v.clone()) },
             Vs::Ar(a) => {
-                let v = vs.into_v().unwrap().into_a().unwrap();
-                if (v.sh != a.sh) {
+                let va = v.as_a().unwrap();
+                if (va.sh != a.sh) {
                     Err(Ve::S("target and value shapes don't match"))
                 }
                 else {
                     for i in 0..a.r.len() {
-                        match &a.r[i] {
-                            Vs::Slot(env,id) => {
-                                env.set(d,*id,&v.r[i])?
-                            },
-                            Vs::Match => (),
-                            Vs::Ar(_b) => {
-                                &a.r[i].set(d,Vs::V(v.r[i].clone()));
-                            },
-                            _ => panic!("cant set non-slot in ref array"),
-                        }
+                        &a.r[i].set(d,&va.r[i]);
                     }
-                    Ok(V::A(v))
+                    Ok(v.clone())
                 }
             },
-            Vs::Match => {
-                // TODO needs additional panic test
-                let v = vs.into_v().unwrap();
-                Ok(v)
+            Vs::Match(mb) => match mb {
+                Some(m) => {
+                    if m != v { Err(Ve::S("")) } else { Ok(v.clone()) }
+                },
+                None => Ok(v.clone()),
             },
             _ => panic!("can only set slots"),
         }
