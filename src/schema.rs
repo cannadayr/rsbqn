@@ -191,6 +191,7 @@ pub enum Vs {
     V(V),
     Slot(Env,usize),
     Ar(Ar),
+    Match,
     Nothing
 }
 impl Vs {
@@ -210,15 +211,29 @@ impl Vs {
             Vs::Slot(env,id) => { let v = vs.into_v().unwrap(); env.set(d,*id,&v)?; Ok(v) },
             Vs::Ar(a) => {
                 let v = vs.into_v().unwrap().into_a().unwrap();
-                for i in 0..a.r.len() {
-                    match &a.r[i] {
-                        Vs::Slot(env,id) => {
-                            env.set(d,*id,&v.r[i])?
-                        },
-                        _ => panic!("cant set non-slot in ref array"),
-                    }
+                if (v.sh != a.sh) {
+                    Err(Ve::S("target and value shapes don't match"))
                 }
-                Ok(V::A(v))
+                else {
+                    for i in 0..a.r.len() {
+                        match &a.r[i] {
+                            Vs::Slot(env,id) => {
+                                env.set(d,*id,&v.r[i])?
+                            },
+                            Vs::Match => (),
+                            Vs::Ar(_b) => {
+                                &a.r[i].set(d,Vs::V(v.r[i].clone()));
+                            },
+                            _ => panic!("cant set non-slot in ref array"),
+                        }
+                    }
+                    Ok(V::A(v))
+                }
+            },
+            Vs::Match => {
+                // TODO needs additional panic test
+                let v = vs.into_v().unwrap();
+                Ok(v)
             },
             _ => panic!("can only set slots"),
         }
@@ -523,10 +538,12 @@ impl A {
 #[derive(Debug,Clone)]
 pub struct Ar {
     r: Vec<Vs>,
+    sh: Vec<usize>,
 }
 impl Ar {
     pub fn new(r: Vec<Vs>) -> Self {
-        Self { r: r }
+        let sh = vec![r.len()];
+        Self { r: r, sh: sh }
     }
 }
 

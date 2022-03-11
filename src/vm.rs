@@ -402,6 +402,18 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Res
                 #[cfg(feature = "coz-ops")]
                 coz::end!("VARM");
             },
+            44 => { // NOTM
+                pos += 1;
+                #[cfg(feature = "coz-ops")]
+                coz::begin!("NOTM");
+                #[cfg(feature = "debug")]
+                dbg_stack_in("NOTM",pos-1,"".to_string(),stack);
+                stack.s.push_unchecked(Vs::Match);
+                #[cfg(feature = "debug")]
+                dbg_stack_out("NOTM",pos-1,stack);
+                #[cfg(feature = "coz-ops")]
+                coz::end!("NOTM");
+            },
             48 => { // SETN
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
