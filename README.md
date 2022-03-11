@@ -14,7 +14,7 @@ Status
 
 |TEST|STATUS|DETAIL
 |---|---|---|
-|bytecode|FAILED|36 passed; 1 failed; 0 ignored;|
+|bytecode|ok|37 passed; 0 failed; 0 ignored;|
 |identity|ok|14 passed; 0 failed; 0 ignored;|
 |prim|ok|556 passed; 0 failed; 0 ignored;|
 |simple|ok|20 passed; 0 failed; 0 ignored;|
@@ -24,8 +24,9 @@ Status
 |header|N/A|N/A|
 |literal|ok|52 passed; 0 failed; 0 ignored;|
 |namespace|N/A|N/A|
-|syntax|FAILED|130 passed; 5 failed; 0 ignored;|
+|syntax|ok|135 passed; 0 failed; 0 ignored;|
 |token|ok|27 passed; 0 failed; 0 ignored;|
+|unhead|N/A|N/A|
 
 Test
 -----
