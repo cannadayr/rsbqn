@@ -437,7 +437,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Res
                 let i = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
                 let v = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
                 unsafe { stack.s.set_len(l-2) };
-                i.set(true,v);
+                i.set(true,v.as_v().unwrap());
                 #[cfg(feature = "debug")]
                 dbg_stack_out("SETH",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
