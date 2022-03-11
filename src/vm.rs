@@ -414,6 +414,22 @@ pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Res
                 #[cfg(feature = "coz-ops")]
                 coz::end!("NOTM");
             },
+            47 => { // SETH
+                pos += 1;
+                #[cfg(feature = "coz-ops")]
+                coz::begin!("SETH");
+                #[cfg(feature = "debug")]
+                dbg_stack_in("SETH",pos-1,"".to_string(),stack);
+                let l = stack.s.len();
+                let i = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
+                let v = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
+                unsafe { stack.s.set_len(l-2) };
+                i.set(true,v);
+                #[cfg(feature = "debug")]
+                dbg_stack_out("SETH",pos-1,stack);
+                #[cfg(feature = "coz-ops")]
+                coz::end!("SETH");
+            },
             48 => { // SETN
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
