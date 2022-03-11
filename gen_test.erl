@@ -33,7 +33,7 @@ prefix(Name,N,undefined) ->
 prefix(Name,N,runtime) ->
     prefix(Name,N,undefined) ++ [<<"let runtime = runtime(Some(&root),&mut stack).expect(">>,$",<<"runtime failed">>,$",<<").into_a().unwrap();">>];
 prefix(Name,N,compiler) ->
-    [<<"#[test]\n">>,<<"pub fn ">>,Name,<<"_compiler_">>,integer_to_list(N),<<"() {\n    ">>,<<"let root = Env::new_root();">>,<<"let mut stack = Stack::new();">>,<<"let runtime = runtime(Some(&root),&mut stack).expect(">>,$",<<"runtime failed">>,$",<<");">>,<<"let compiler = run(Some(&root),&mut stack,c(&runtime)).expect(">>,$",<<"compiler failed">>,$",<<");">>,<<"let names = V::A(Cc::new(A::new(vec![],vec![0])));">>,<<"let redef = V::A(Cc::new(A::new(vec![],vec![0])));">>].
+    [<<"#[test]\n">>,<<"pub fn ">>,Name,<<"_">>,integer_to_list(N),<<"() {\n    ">>,<<"let root = Env::new_root();">>,<<"let mut stack = Stack::new();">>,<<"let runtime = runtime(Some(&root),&mut stack).expect(">>,$",<<"runtime failed">>,$",<<");">>,<<"let compiler = run(Some(&root),&mut stack,c(&runtime)).expect(">>,$",<<"compiler failed">>,$",<<");">>,<<"let names = V::A(Cc::new(A::new(vec![],vec![0])));">>,<<"let redef = V::A(Cc::new(A::new(vec![],vec![0])));">>].
 suffix() ->
     [<<"}\n">>].
 gen_line(Name,assert,_ByteCode,Code,_Comment,N,compiler) ->
@@ -149,28 +149,25 @@ runtime_tests(Repo) ->
     Under = suite(Repo,<<"under.bqn">>,<<"under">>,runtime,true),
     file:write_file("tests/under.rs",template(Under,core)),
     Identity = suite(Repo,<<"identity.bqn">>,<<"identity">>,runtime,true),
-    file:write_file("tests/identity.rs",template(Identity,core)).
-    % literal, & syntax tests can't be precompiled and embedded as bytecode,
-    % as errors might happen during compilation.
+    file:write_file("tests/identity.rs",template(Identity,core)),
+    Fill = suite(Repo,<<"fill.bqn">>,<<"fill">>,runtime,true),
+    file:write_file("tests/fill.rs",template(Fill,core)).
+% The following tests can't be precompiled and embedded as bytecode,
+% as errors might happen during compilation.
 compiler_tests(Repo) ->
-    ByteCode = suite(Repo,<<"bytecode.bqn">>,<<"bytecode">>,compiler,true),
-    file:write_file("tests/bytecode_compiler.rs",template(ByteCode,compiler)),
-    Simple = suite(Repo,<<"simple.bqn">>,<<"simple">>,compiler,true),
-    file:write_file("tests/simple_compiler.rs",template(Simple,compiler)),
-    Prim = suite(Repo,<<"prim.bqn">>,<<"prim">>,compiler,true),
-    file:write_file("tests/prim_compiler.rs",template(Prim,compiler)),
-    Undo = suite(Repo,<<"undo.bqn">>,<<"undo">>,compiler,true),
-    file:write_file("tests/undo_compiler.rs",template(Undo,compiler)),
-    Under = suite(Repo,<<"under.bqn">>,<<"under">>,compiler,true),
-    file:write_file("tests/under_compiler.rs",template(Under,compiler)),
-    Identity = suite(Repo,<<"identity.bqn">>,<<"identity">>,compiler,true),
-    file:write_file("tests/identity_compiler.rs",template(Identity,compiler)),
     Literal = suite(Repo,<<"literal.bqn">>,<<"literal">>,compiler,true),
-    file:write_file("tests/literal_compiler.rs",template(Literal,compiler)),
+    file:write_file("tests/literal.rs",template(Literal,compiler)),
     Syntax = suite(Repo,<<"syntax.bqn">>,<<"syntax">>,compiler,true),
-    file:write_file("tests/syntax_compiler.rs",template(Syntax,compiler)),
+    file:write_file("tests/syntax.rs",template(Syntax,compiler)),
+    % token level tests require CommentMode =:= false
     Token = suite(Repo,<<"token.bqn">>,<<"token">>,compiler,false),
-    file:write_file("tests/token_compiler.rs",template(Token,compiler)).
+    file:write_file("tests/token.rs",template(Token,compiler)),
+    Header = suite(Repo,<<"header.bqn">>,<<"header">>,compiler,true),
+    file:write_file("tests/header.rs",template(Header,compiler)),
+    Namespace = suite(Repo,<<"namespace.bqn">>,<<"namespace">>,compiler,true),
+    file:write_file("tests/namespace.rs",template(Namespace,compiler)),
+    Unhead = suite(Repo,<<"unhead.bqn">>,<<"unhead">>,compiler,true),
+    file:write_file("tests/unhead.rs",template(Unhead,compiler)).
 main([Repo]) ->
     runtime_tests(Repo),
     compiler_tests(Repo);
