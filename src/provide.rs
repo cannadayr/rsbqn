@@ -25,8 +25,8 @@ fn dbg_args(fun: &str, arity: usize, x: &Vn, w: &Vn) {
         _ => ()
     };
 }
-fn dbg_rtn(fun: &str,arity: usize, r: &Vs) {
-    info!("rtn     {}/{}: rtn = {}",fun,arity,r);
+fn dbg_rtn(fun: &str,arity: usize, r: &Result<Vs,Ve>) {
+    info!("rtn     {}/{}: rtn = {:?}",fun,arity,r);
 }
 
 // Type
@@ -556,7 +556,7 @@ pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Result<Vs,Ve> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("decompose");
     #[cfg(feature = "debug")]
-    dbg_args("decompose",arity,&x,&w);
+    dbg_args("decompose",arity,&x,&Vn(None));
     let r =
     match arity {
         1 => {
@@ -569,7 +569,7 @@ pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Result<Vs,Ve> {
                     _ => false
                 }
             {
-                Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(-1.0),unsafe { x.0.unwrap_unchecked() }.clone()],vec![2]))))
+                Ok(Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(-1.0),unsafe { x.0.unwrap_unchecked() }.clone()],vec![2])))))
             }
             else if // primitives
                 match unsafe { (&x).0.as_ref().unwrap_unchecked() } {
@@ -586,7 +586,7 @@ pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Result<Vs,Ve> {
                     _ => false,
                 }
             {
-                Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(0.0),unsafe { x.0.unwrap_unchecked() }.clone()],vec![2]))))
+                Ok(Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(0.0),unsafe { x.0.unwrap_unchecked() }.clone()],vec![2])))))
             }
             else if // repr
                 match unsafe { (&x).0.as_ref().unwrap_unchecked() } {
@@ -601,7 +601,7 @@ pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Result<Vs,Ve> {
                         match t {
                             4 => {
                                 let D1(f,g) = a.deref();
-                                Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(4.0),g.clone(),f.clone()],vec![3]))))
+                                Ok(Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(4.0),g.clone(),f.clone()],vec![3])))))
                             },
                             _ => return Err(Ve::S("UserMd1 illegal decompose")),
                         }
@@ -611,7 +611,7 @@ pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Result<Vs,Ve> {
                         match t {
                             5 => {
                                 let D2(f,g,h) = a.deref();
-                                Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(5.0),g.clone(),f.clone(),h.clone()],vec![4]))))
+                                Ok(Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(5.0),g.clone(),f.clone(),h.clone()],vec![4])))))
                             },
                             _ => return Err(Ve::S("UserMd2 illegal decompose")),
                         }
@@ -623,21 +623,21 @@ pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Result<Vs,Ve> {
                 match unsafe { (&x).0.as_ref().unwrap_unchecked() } {
                     V::D1(d1,None) => {
                         let D1(m,f) = (*d1).deref();
-                        Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(4.0),f.clone(),m.clone()],vec![3]))))
+                        Ok(Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(4.0),f.clone(),m.clone()],vec![3])))))
                     },
                     V::D2(d2,None) => {
                         let D2(m,f,g) = (*d2).deref();
-                        Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(5.0),f.clone(),m.clone(),g.clone()],vec![4]))))
+                        Ok(Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(5.0),f.clone(),m.clone(),g.clone()],vec![4])))))
                     },
                     V::Tr2(tr2,None) => {
                         let Tr2(g,h) = (*tr2).deref();
-                        Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(2.0),g.clone(),h.clone()],vec![3]))))
+                        Ok(Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(2.0),g.clone(),h.clone()],vec![3])))))
                     },
                     V::Tr3(tr3,None) => {
                         let Tr3(f,g,h) = (*tr3).deref();
-                        Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(3.0),f.clone(),g.clone(),h.clone()],vec![4]))))
+                        Ok(Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(3.0),f.clone(),g.clone(),h.clone()],vec![4])))))
                     },
-                    _ => Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(1.0),x.0.unwrap().clone()],vec![2])))),
+                    _ => Ok(Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(1.0),x.0.unwrap().clone()],vec![2])))),)
                 }
             }
         },
@@ -645,7 +645,7 @@ pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Result<Vs,Ve> {
     };
     #[cfg(feature = "debug")]
     dbg_rtn("decompose",arity,&r);
-    Ok(r)
+    r
 }
 
 pub fn prim_ind(arity:usize, x: Vn,_w: Vn) -> Result<Vs,Ve> {
