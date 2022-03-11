@@ -33,7 +33,7 @@ prefix(Name,N,undefined) ->
 prefix(Name,N,runtime) ->
     prefix(Name,N,undefined) ++ [<<"let runtime = runtime(Some(&root),&mut stack).expect(">>,$",<<"runtime failed">>,$",<<").into_a().unwrap();">>];
 prefix(Name,N,compiler) ->
-    [<<"#[test]\n">>,<<"pub fn ">>,Name,<<"_compiler_">>,integer_to_list(N),<<"() {\n    ">>,<<"let root = Env::new_root();">>,<<"let mut stack = Stack::new();">>,<<"let runtime = runtime(Some(&root),&mut stack).expect(">>,$",<<"runtime failed">>,$",<<");">>,<<"let compiler = run(Some(&root),&mut stack,c(&runtime)).expect(">>,$",<<"compiler failed">>,$",<<");">>,<<"let mut names = V::A(Cc::new(A::new(vec![],vec![0])));">>,<<"let mut redef = V::A(Cc::new(A::new(vec![],vec![0])));">>].
+    [<<"#[test]\n">>,<<"pub fn ">>,Name,<<"_compiler_">>,integer_to_list(N),<<"() {\n    ">>,<<"let root = Env::new_root();">>,<<"let mut stack = Stack::new();">>,<<"let runtime = runtime(Some(&root),&mut stack).expect(">>,$",<<"runtime failed">>,$",<<");">>,<<"let compiler = run(Some(&root),&mut stack,c(&runtime)).expect(">>,$",<<"compiler failed">>,$",<<");">>,<<"let names = V::A(Cc::new(A::new(vec![],vec![0])));">>,<<"let redef = V::A(Cc::new(A::new(vec![],vec![0])));">>].
 suffix() ->
     [<<"}\n">>].
 gen_line(Name,assert,_ByteCode,Code,_Comment,N,compiler) ->
