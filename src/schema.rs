@@ -112,20 +112,23 @@ impl Calleable for V {
                 let args = vec![Some(self.clone()),x.none_or_clone(),w.none_or_clone(),Some(m.clone()),Some(f.clone())];
                 let env = Env::new(Some(&b.parent),&b.def,arity,Some(args));
                 let pos = body_pos(b,arity);
-                vm(&env,&b.def.code,None,None,pos,stack)
+                let (bodies,body_id) = bodies(b,arity);
+                vm(&env,&b.def.code,bodies,body_id,pos,stack)
             },
             V::UserMd2(b,mods,_prim) => {
                 let D2(m,f,g) = mods.deref();
                 let args = vec![Some(self.clone()),x.none_or_clone(),w.none_or_clone(),Some(m.clone()),Some(f.clone()),Some(g.clone())]; // cloning args is slow
                 let env = Env::new(Some(&b.parent),&b.def,arity,Some(args)); // creating a new env is slow
                 let pos = body_pos(b,arity);
-                vm(&env,&b.def.code,None,None,pos,stack)
+                let (bodies,body_id) = bodies(b,arity);
+                vm(&env,&b.def.code,bodies,body_id,pos,stack)
             },
             V::BlockInst(b,_prim) => {
                 let args = vec![Some(self.clone()),x.none_or_clone(),w.none_or_clone()];
                 let env = Env::new(Some(&b.parent),&b.def,arity,Some(args));
                 let pos = body_pos(b,arity);
-                vm(&env,&b.def.code,None,None,pos,stack)
+                let (bodies,body_id) = bodies(b,arity);
+                vm(&env,&b.def.code,bodies,body_id,pos,stack)
             },
             V::Scalar(n) => Ok(Vs::V(V::Scalar(*n))),
             V::Char(c) => Ok(Vs::V(V::Char(*c))),
@@ -593,6 +596,18 @@ pub fn body_pos(b: &Cc<BlockInst>,arity: usize) -> usize {
             },
         };
     pos
+}
+pub fn bodies(b: &Cc<BlockInst>,arity: usize) -> (Option<&Vec<usize>>,Option<usize>) {
+    match &b.def.bodies {
+        Bodies::Comp(body) => (None,None),
+        Bodies::Exp(Exp(mon,dya)) => {
+            match arity {
+                1 => (Some(mon),Some(0)),
+                2 => (Some(dya),Some(0)),
+                _ => panic!("bad call arity"),
+            }
+        },
+    }
 }
 pub fn new_char(n: char) -> V {
     V::Char(n)

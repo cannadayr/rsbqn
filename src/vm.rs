@@ -70,7 +70,7 @@ fn incr(stack: &mut Stack) {
     stack.fp = stack.s.len();
 }
 
-pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<Exp>,body_id: Option<usize>,mut pos: usize,mut stack: &mut Stack) -> Result<Vs,Ve>  {
+pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<usize>,mut pos: usize,mut stack: &mut Stack) -> Result<Vs,Ve>  {
     #[cfg(feature = "debug")]
     incr(stack);
     #[cfg(feature = "debug")]
