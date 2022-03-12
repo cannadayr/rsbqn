@@ -1,6 +1,7 @@
 use std::ops::Deref;
 use std::cell::UnsafeCell;
 use std::ptr;
+use std::iter::FromIterator;
 use bacon_rajan_cc::Cc;
 use crate::vm::vm;
 use crate::late_init::LateInit;
@@ -213,15 +214,20 @@ impl Vs {
         match self {
             Vs::Slot(env,id) => { env.set(d,*id,v)?; Ok(v.clone()) },
             Vs::Ar(a) => {
-                let va = v.as_a().unwrap();
-                if (va.sh != a.sh) {
-                    Err(Ve::S("target and value shapes don't match"))
-                }
-                else {
-                    for i in 0..a.r.len() {
-                        &a.r[i].set(d,&va.r[i]);
-                    }
-                    Ok(v.clone())
+                match v {
+                    V::A(va) => {
+                        let va = v.as_a().unwrap();
+                        if (va.sh != a.sh) {
+                            Err(Ve::S("target and value shapes don't match"))
+                        }
+                        else {
+                            for i in 0..a.r.len() {
+                                &a.r[i].set(d,&va.r[i]);
+                            }
+                            Ok(v.clone())
+                        }
+                    },
+                    _ => Err(Ve::S("")),
                 }
             },
             Vs::Match(mb) => match mb {
@@ -350,6 +356,7 @@ pub struct Block {
 pub struct EnvUnboxed {
     pub parent:Option<Env>,
     pub vars:   UnsafeCell<Vec<Vh>>,
+    pub num_args: usize,
 }
 
 #[derive(Clone,Debug)]
@@ -372,23 +379,35 @@ impl Env {
                     }
                 },
             };
-        let vars =
+        let (vars,num_args) =
             match args {
                 None => {
                     let mut v: Vec<Vh> = Vec::with_capacity(locals);
                     v.resize_with(locals, || None);
-                    v
+                    (v,0)
                 },
                 Some(mut v) => {
+                    let n = v.len();
                     v.resize_with(locals, || None);
-                    v
+                    (v,n)
                 },
             };
-        let env = EnvUnboxed {parent: parent.cloned(), vars: UnsafeCell::new(vars) };
+        let env = EnvUnboxed {parent: parent.cloned(), vars: UnsafeCell::new(vars), num_args: num_args };
         Self(Cc::new(env))
     }
+    pub fn reinit(&self,locals: usize) -> Self {
+        match self {
+            Env(e) => {
+                let vars_exclusive: &Vec<Vh> = unsafe { &*e.vars.get() };
+                let mut vars = Vec::from_iter(vars_exclusive[0..e.num_args-1].iter().cloned());
+                vars.resize_with(locals, || None);
+                let env = EnvUnboxed {parent: e.parent.clone(), vars: UnsafeCell::new(vars), num_args: e.num_args };
+                Self(Cc::new(env))
+            },
+        }
+    }
     pub fn new_root() -> Self {
-        let env = EnvUnboxed {parent: None, vars: UnsafeCell::new(vec![]) };
+        let env = EnvUnboxed {parent: None, vars: UnsafeCell::new(vec![]), num_args: 0 };
         Self(Cc::new(env))
     }
     // get, set, and get_drop use unsafe code

@@ -437,7 +437,19 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 let i = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
                 let v = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
                 unsafe { stack.s.set_len(l-2) };
-                i.set(true,v.as_v().unwrap());
+                match i.set(true,v.as_v().unwrap()) {
+                    Ok(r) => (), // continue
+                    Err(_) => {
+                        // move to next body in list
+                        match (bodies,body_id) {
+                            (Some(b),Some(id)) => {
+                                let (p,locals) = unsafe { code.body_ids.get_unchecked(b[id+1]) };
+                                break vm(&env.reinit(*locals),&code,Some(b),Some(id+1),*p,stack);
+                            }
+                            _ => panic!("no successive body in SETH"),
+                        };
+                    },
+                }
                 #[cfg(feature = "debug")]
                 dbg_stack_out("SETH",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
