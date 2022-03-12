@@ -51,7 +51,7 @@ fn derv(env: &Env,code: &Cc<Code>,block: &Cc<Block>,stack: &mut Stack) -> Result
                 },
                 _ => panic!("body immediacy derivation doesnt match block definition"),
             };
-            vm(&child,code,pos,stack)
+            vm(&child,code,None,None,pos,stack)
         },
         (_typ,_imm) => {
             let block_inst = BlockInst::new(env.clone(),block.clone());
@@ -70,7 +70,7 @@ fn incr(stack: &mut Stack) {
     stack.fp = stack.s.len();
 }
 
-pub fn vm(env: &Env,code: &Cc<Code>,mut pos: usize,mut stack: &mut Stack) -> Result<Vs,Ve>  {
+pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<Exp>,body_id: Option<usize>,mut pos: usize,mut stack: &mut Stack) -> Result<Vs,Ve>  {
     #[cfg(feature = "debug")]
     incr(stack);
     #[cfg(feature = "debug")]
@@ -685,7 +685,7 @@ pub fn run_in_place(env: &Env,stack: &mut Stack,code: Cc<Code>) -> Result<V,Ve> 
             Bodies::Comp(b) => code.body_ids[b],
             Bodies::Exp(Exp(_,_)) => panic!("cant run deferred block"),
         };
-    match vm(&env,&code,pos,stack) {
+    match vm(&env,&code,None,None,pos,stack) {
         Ok(r) => Ok(r.into_v().unwrap()),
         Err(e) => Err(e),
     }

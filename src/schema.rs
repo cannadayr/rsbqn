@@ -112,20 +112,20 @@ impl Calleable for V {
                 let args = vec![Some(self.clone()),x.none_or_clone(),w.none_or_clone(),Some(m.clone()),Some(f.clone())];
                 let env = Env::new(Some(&b.parent),&b.def,arity,Some(args));
                 let pos = body_pos(b,arity);
-                vm(&env,&b.def.code,pos,stack)
+                vm(&env,&b.def.code,None,None,pos,stack)
             },
             V::UserMd2(b,mods,_prim) => {
                 let D2(m,f,g) = mods.deref();
                 let args = vec![Some(self.clone()),x.none_or_clone(),w.none_or_clone(),Some(m.clone()),Some(f.clone()),Some(g.clone())]; // cloning args is slow
                 let env = Env::new(Some(&b.parent),&b.def,arity,Some(args)); // creating a new env is slow
                 let pos = body_pos(b,arity);
-                vm(&env,&b.def.code,pos,stack)
+                vm(&env,&b.def.code,None,None,pos,stack)
             },
             V::BlockInst(b,_prim) => {
                 let args = vec![Some(self.clone()),x.none_or_clone(),w.none_or_clone()];
                 let env = Env::new(Some(&b.parent),&b.def,arity,Some(args));
                 let pos = body_pos(b,arity);
-                vm(&env,&b.def.code,pos,stack)
+                vm(&env,&b.def.code,None,None,pos,stack)
             },
             V::Scalar(n) => Ok(Vs::V(V::Scalar(*n))),
             V::Char(c) => Ok(Vs::V(V::Char(*c))),
@@ -487,7 +487,7 @@ impl BlockInst {
                 };
                 let D1(m,f) = args;
                 let env = Env::new(Some(&self.parent),&self.def,arity,Some(vec![Some(m.clone()),Some(f.clone())]));
-                vm(&env,&self.def.code,pos,stack)
+                vm(&env,&self.def.code,None,None,pos,stack)
             },
         }
     }
@@ -507,7 +507,7 @@ impl BlockInst {
                 };
                 let D2(m,f,g) = args;
                 let env = Env::new(Some(&self.parent),&self.def,arity,Some(vec![Some(m.clone()),Some(f.clone()),Some(g.clone())]));
-                vm(&env,&self.def.code,pos,stack)
+                vm(&env,&self.def.code,None,None,pos,stack)
             },
         }
     }
