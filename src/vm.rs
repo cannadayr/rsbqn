@@ -1,4 +1,4 @@
-use crate::schema::{Env,V,Vs,Vn,Ve,Block,BlockInst,Code,Calleable,Stacker,Stack,Bodies,A,Ar,Tr2,Tr3,Runtime,Compiler,Prog,D2,D1,Fn,new_scalar,new_string};
+use crate::schema::{Env,V,Vs,Vn,Ve,Block,BlockInst,Code,Calleable,Stacker,Stack,Bodies,Exp,A,Ar,Tr2,Tr3,Runtime,Compiler,Prog,D2,D1,Fn,new_scalar,new_string};
 use crate::provide::{provide,decompose,prim_ind,typ,glyph,fmtnum};
 use crate::gen::code::{r0,r1,c,f};
 use crate::fmt::{dbg_stack_out,dbg_stack_in};
@@ -636,7 +636,7 @@ pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V,env: &Env,names: &
                             (
                                 u8::from_f64(*typ).unwrap(),
                                 if 1.0 == *imm { true } else { false },
-                                Bodies::Exp(
+                                Bodies::Exp(Exp(
                                     mon.as_a().unwrap().r.iter().map(|e| match e {
                                         V::Scalar(n) => usize::from_f64(*n).unwrap(),
                                         _ => panic!("bytecode not a number"),
@@ -645,7 +645,7 @@ pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V,env: &Env,names: &
                                         V::Scalar(n) => usize::from_f64(*n).unwrap(),
                                         _ => panic!("bytecode not a number"),
                                     }).collect::<Vec<usize>>()
-                                )
+                                ))
                             )
                         },
                         _ => panic!("couldn't load compiled block"),
@@ -683,7 +683,7 @@ pub fn run_in_place(env: &Env,stack: &mut Stack,code: Cc<Code>) -> Result<V,Ve> 
     let (pos,_locals) =
         match code.blocks[0].bodies {
             Bodies::Comp(b) => code.body_ids[b],
-            Bodies::Exp(_,_) => panic!("cant run deferred block"),
+            Bodies::Exp(Exp(_,_)) => panic!("cant run deferred block"),
         };
     match vm(&env,&code,pos,stack) {
         Ok(r) => Ok(r.into_v().unwrap()),

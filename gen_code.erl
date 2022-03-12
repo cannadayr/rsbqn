@@ -46,7 +46,7 @@ main([Repo]) ->
         <<"use log::{debug};\n">>,
         <<"use core::f64::{INFINITY,NEG_INFINITY};\n">>,
         <<"use crate::vm::run;\n">>,
-        <<"use crate::schema::{Code,new_scalar,new_char,new_string,Bodies,A,Decoder,V};\n">>,
+        <<"use crate::schema::{Code,new_scalar,new_char,new_string,Bodies,Exp,A,Decoder,V};\n">>,
         <<"use bacon_rajan_cc::Cc;\n">>,
         <<"pub fn r0(provide: &A) -> Cc<Code> {\nCode::new(">>,utf8(R0),<<")\n}\n\n">>,
         <<"pub fn r1(provide: &A,runtime_0v: &V) -> Cc<Code> {let runtime_0 = runtime_0v.as_a().unwrap();\nCode::new(">>,utf8(R1),<<")\n}\n\n">>,

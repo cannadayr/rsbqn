@@ -304,8 +304,11 @@ impl Stacker for Vec<Vs> {
 #[derive(Debug,Clone,PartialEq)]
 pub enum Bodies {
     Comp(usize),
-    Exp(Vec<usize>,Vec<usize>), // Monadic, Dyadic
+    Exp(Exp), // expanded body definition
 }
+
+#[derive(Debug,Clone,PartialEq)]
+pub struct Exp(pub Vec<usize>,pub Vec<usize>); // Monadic, Dyadic
 
 // Code
 #[derive(Default,Debug,PartialEq)]
@@ -358,7 +361,7 @@ impl Env {
         let (_pos,locals) =
             match &block.bodies {
                 Bodies::Comp(b) => unsafe {*block.code.body_ids.get_unchecked(*b) },
-                Bodies::Exp(mon,dya) => {
+                Bodies::Exp(Exp(mon,dya)) => {
                     match arity {
                         1 => unsafe { *block.code.body_ids.get_unchecked(mon[0]) },
                         2 => unsafe { *block.code.body_ids.get_unchecked(dya[0]) },
@@ -581,7 +584,7 @@ pub fn body_pos(b: &Cc<BlockInst>,arity: usize) -> usize {
     let (pos,_locals) =
         match &b.def.bodies {
             Bodies::Comp(body) => b.def.code.body_ids[*body],
-            Bodies::Exp(mon,dya) => {
+            Bodies::Exp(Exp(mon,dya)) => {
                 match arity {
                     1 => b.def.code.body_ids[mon[0]],
                     2 => b.def.code.body_ids[dya[0]],
