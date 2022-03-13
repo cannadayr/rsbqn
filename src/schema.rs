@@ -502,16 +502,20 @@ impl BlockInst {
                 Ok(r)
             },
             true => {
-                let pos = match self.def.bodies {
+                let (pos,bodies,body_id) = match &self.def.bodies {
                    Bodies::Comp(b) => {
-                        let (p,_l) = self.def.code.body_ids[b];
-                        p
+                        let (p,_l) = self.def.code.body_ids[*b];
+                        (p,None,None)
+                    }
+                   Bodies::Head(amb) => {
+                        let (p,_l) = self.def.code.body_ids[amb[0]];
+                        (p,Some(amb),Some(0))
                     }
                     _ => panic!("body immediacy doesnt match block definition"),
                 };
                 let D1(m,f) = args;
                 let env = Env::new(Some(&self.parent),&self.def,arity,Some(vec![Some(m.clone()),Some(f.clone())]));
-                vm(&env,&self.def.code,None,None,pos,stack)
+                vm(&env,&self.def.code,bodies,body_id,pos,stack)
             },
         }
     }
