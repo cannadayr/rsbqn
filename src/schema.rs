@@ -401,7 +401,7 @@ impl Env {
         match self {
             Env(e) => {
                 let vars_exclusive: &Vec<Vh> = unsafe { &*e.vars.get() };
-                let mut vars = Vec::from_iter(vars_exclusive[0..e.num_args-1].iter().cloned());
+                let mut vars = Vec::from_iter(vars_exclusive[0..e.num_args].iter().cloned());
                 vars.resize_with(locals, || None);
                 let env = EnvUnboxed {parent: e.parent.clone(), vars: UnsafeCell::new(vars), num_args: e.num_args };
                 Self(Cc::new(env))
