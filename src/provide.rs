@@ -28,7 +28,7 @@ fn dbg_args(fun: &str, arity: usize, x: &Vn, w: &Vn) {
 fn dbg_rtn(fun: &str,arity: usize, r: &Result<Vs,Ve>) {
     match r {
         Ok(r) => debug!("rtn     {}/{}: rtn = {}",fun,arity,r),
-        Err(e) => info!("rtn     {}/{}: rtn = {}",fun,arity,e),
+        Err(e) => debug!("rtn     {}/{}: rtn = {}",fun,arity,e),
     }
 }
 
