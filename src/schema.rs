@@ -312,12 +312,13 @@ impl Stacker for Vec<Vs> {
 // Bodies
 #[derive(Debug,Clone,PartialEq)]
 pub enum Bodies {
-    Comp(usize),
-    Exp(Exp), // expanded body definition
+    Comp(usize), // compressed
+    Head(Vec<usize>), // compressed with header
+    Exp(Vec<usize>,Vec<usize>), // expanded
 }
 
-#[derive(Debug,Clone,PartialEq)]
-pub struct Exp(pub Vec<usize>,pub Vec<usize>); // Monadic, Dyadic
+//#[derive(Debug,Clone,PartialEq)]
+//pub struct Exp(pub Vec<usize>,pub Vec<usize>); // Monadic, Dyadic
 
 // Code
 #[derive(Default,Debug,PartialEq)]
@@ -371,7 +372,8 @@ impl Env {
         let (_pos,locals) =
             match &block.bodies {
                 Bodies::Comp(b) => unsafe {*block.code.body_ids.get_unchecked(*b) },
-                Bodies::Exp(Exp(mon,dya)) => {
+                Bodies::Head(amb) => unsafe { *block.code.body_ids.get_unchecked(amb[0]) },
+                Bodies::Exp(mon,dya) => {
                     match arity {
                         1 => unsafe { *block.code.body_ids.get_unchecked(mon[0]) },
                         2 => unsafe { *block.code.body_ids.get_unchecked(dya[0]) },
@@ -606,7 +608,8 @@ pub fn body_pos(b: &Cc<BlockInst>,arity: usize) -> usize {
     let (pos,_locals) =
         match &b.def.bodies {
             Bodies::Comp(body) => b.def.code.body_ids[*body],
-            Bodies::Exp(Exp(mon,dya)) => {
+            Bodies::Head(amb) => b.def.code.body_ids[amb[0]],
+            Bodies::Exp(mon,dya) => {
                 match arity {
                     1 => b.def.code.body_ids[mon[0]],
                     2 => b.def.code.body_ids[dya[0]],
@@ -619,7 +622,8 @@ pub fn body_pos(b: &Cc<BlockInst>,arity: usize) -> usize {
 pub fn bodies(b: &Cc<BlockInst>,arity: usize) -> (Option<&Vec<usize>>,Option<usize>) {
     match &b.def.bodies {
         Bodies::Comp(body) => (None,None),
-        Bodies::Exp(Exp(mon,dya)) => {
+        Bodies::Head(amb) => (Some(amb),Some(0)),
+        Bodies::Exp(mon,dya) => {
             match arity {
                 1 => (Some(mon),Some(0)),
                 2 => (Some(dya),Some(0)),

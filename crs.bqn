@@ -19,7 +19,7 @@ Block ← Tuple # Native block
 Body ← Tuple # Native body
 Code ← "Code::new("∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # Native code
 Compressed ← "Bodies::Comp("∾⊢∾")"˙ # compressed bodies definition
-Exp ← "Bodies::Exp(Exp("∾"))"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # expanded bodies definition
+Exp ← ≠◶⟨"","Bodies::Head(","Bodies::Exp("⟩∾")"∾˜(0<≠)◶⟨"",1↓·∾","⊸∾¨⟩ # expanded bodies definition
 Ind ← {∾𝕨‿"["‿𝕩‿"].clone()"}  # Native list/array indexing
 Cat ← {∾𝕨‿".concat("‿𝕩‿")"}   # Native list/array concatenation (like ∾)
 # Escape the special characters that appear in BQN sources.

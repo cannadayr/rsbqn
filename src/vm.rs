@@ -1,4 +1,4 @@
-use crate::schema::{Env,V,Vs,Vn,Ve,Block,BlockInst,Code,Calleable,Stacker,Stack,Bodies,Exp,A,Ar,Tr2,Tr3,Runtime,Compiler,Prog,D2,D1,Fn,new_scalar,new_string};
+use crate::schema::{Env,V,Vs,Vn,Ve,Block,BlockInst,Code,Calleable,Stacker,Stack,Bodies,A,Ar,Tr2,Tr3,Runtime,Compiler,Prog,D2,D1,Fn,new_scalar,new_string};
 use crate::provide::{provide,decompose,prim_ind,typ,glyph,fmtnum};
 use crate::gen::code::{r0,r1,c,f};
 use crate::fmt::{dbg_stack_out,dbg_stack_in};
@@ -44,10 +44,14 @@ fn derv(env: &Env,code: &Cc<Code>,block: &Cc<Block>,stack: &mut Stack) -> Result
     match (block.typ,block.imm) {
         (0,true) => {
             let child = Env::new(Some(env),block,0,None);
-            let pos = match block.bodies {
+            let (pos,bodies,body_id) = match &block.bodies {
                 Bodies::Comp(b) => {
-                    let (p,_l) = code.body_ids[b];
-                    p
+                    let (p,_l) = code.body_ids[*b];
+                    (p,None,None)
+                },
+                Bodies::Head(amb) => {
+                    let (p,_l) = code.body_ids[amb[0]];
+                    (p,Some(amb),Some(0))
                 },
                 _ => panic!("body immediacy derivation doesnt match block definition"),
             };
@@ -644,21 +648,39 @@ pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V,env: &Env,names: &
                                 Bodies::Comp(usize::from_f64(*body).unwrap())
                             ),
                         Some((V::Scalar(typ),V::Scalar(imm),V::A(bodies))) => {
-                            let (mon,dya) = bodies.r.iter().collect_tuple().unwrap();
-                            (
-                                u8::from_f64(*typ).unwrap(),
-                                if 1.0 == *imm { true } else { false },
-                                Bodies::Exp(Exp(
-                                    mon.as_a().unwrap().r.iter().map(|e| match e {
-                                        V::Scalar(n) => usize::from_f64(*n).unwrap(),
-                                        _ => panic!("bytecode not a number"),
-                                    }).collect::<Vec<usize>>(),
-                                    dya.as_a().unwrap().r.iter().map(|e| match e {
-                                        V::Scalar(n) => usize::from_f64(*n).unwrap(),
-                                        _ => panic!("bytecode not a number"),
-                                    }).collect::<Vec<usize>>()
-                                ))
-                            )
+                            match bodies.r.len() {
+                                1 => {
+                                    let amb = &bodies.r[0];
+                                    (
+                                        u8::from_f64(*typ).unwrap(),
+                                        if 1.0 == *imm { true } else { false },
+                                        Bodies::Head(
+                                            amb.as_a().unwrap().r.iter().map(|e| match e {
+                                                V::Scalar(n) => usize::from_f64(*n).unwrap(),
+                                                _ => panic!("bytecode not a number"),
+                                            }).collect::<Vec<usize>>(),
+                                        )
+                                    )
+                                },
+                                2 => {
+                                    let (mon,dya) = bodies.r.iter().collect_tuple().unwrap();
+                                    (
+                                        u8::from_f64(*typ).unwrap(),
+                                        if 1.0 == *imm { true } else { false },
+                                        Bodies::Exp(
+                                            mon.as_a().unwrap().r.iter().map(|e| match e {
+                                                V::Scalar(n) => usize::from_f64(*n).unwrap(),
+                                                _ => panic!("bytecode not a number"),
+                                            }).collect::<Vec<usize>>(),
+                                            dya.as_a().unwrap().r.iter().map(|e| match e {
+                                                V::Scalar(n) => usize::from_f64(*n).unwrap(),
+                                                _ => panic!("bytecode not a number"),
+                                            }).collect::<Vec<usize>>()
+                                        )
+                                    )
+                                },
+                                _ => panic!("unaccounted for headers len"),
+                            }
                         },
                         _ => panic!("couldn't load compiled block"),
                     }).collect::<Vec<(u8, bool, Bodies)>>()
@@ -695,7 +717,8 @@ pub fn run_in_place(env: &Env,stack: &mut Stack,code: Cc<Code>) -> Result<V,Ve> 
     let (pos,_locals) =
         match code.blocks[0].bodies {
             Bodies::Comp(b) => code.body_ids[b],
-            Bodies::Exp(Exp(_,_)) => panic!("cant run deferred block"),
+            Bodies::Head(_) => panic!("cant run Head bodies"),
+            Bodies::Exp(_,_) => panic!("cant run Expanded bodies"),
         };
     match vm(&env,&code,None,None,pos,stack) {
         Ok(r) => Ok(r.into_v().unwrap()),
