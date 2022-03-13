@@ -75,9 +75,9 @@ fn incr(stack: &mut Stack) {
 }
 
 pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<usize>,mut pos: usize,mut stack: &mut Stack) -> Result<Vs,Ve>  {
-    #[cfg(feature = "debug")]
+    #[cfg(feature = "debug-ops")]
     incr(stack);
-    #[cfg(feature = "debug")]
+    #[cfg(feature = "debug-ops")]
     debug!("new eval");
     loop {
         // we are making the following assumptions:
@@ -91,10 +91,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 coz::begin!("PUSH");
                 let x = unsafe { *code.bc.get_unchecked(pos) };pos+=1;
                 let r = code.objs[x].clone();
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_in("PUSH",pos-2,format!("{} {}",&x,&r),stack);
                 stack.s.push_unchecked(Vs::V(r));
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_out("PUSH",pos-2,stack);
                 #[cfg(feature = "coz-ops")]
                 coz::end!("PUSH");
@@ -109,10 +109,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                     Ok(r) => r,
                     Err(e) => break Err(e),
                 };
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_in("DFND",pos-2,format!("{} {}",&x,&r),stack);
                 stack.s.push_unchecked(r);
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_out("DFND",pos-2,stack);
                 #[cfg(feature = "coz-ops")]
                 coz::end!("DFND");
@@ -121,10 +121,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("POPS");
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_in("POPS",pos-1,"".to_string(),stack);
                 let _ = stack.s.pop_unchecked();
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_out("POPS",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
                 coz::end!("POPS");
@@ -133,7 +133,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("RETN");
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_in("RETN",pos-1,"".to_string(),stack);
                 #[cfg(feature = "coz-ops")]
                 coz::end!("RETN");
@@ -144,11 +144,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("ARRO");
                 let x = unsafe { *code.bc.get_unchecked(pos) };pos+=1;
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_in("ARRO",pos-2,format!("{}",&x),stack);
                 let v = stack.s.pop_list_unchecked(x);
                 stack.s.push_unchecked(list(v));
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_out("ARRO",pos-2,stack);
                 #[cfg(feature = "coz-ops")]
                 coz::end!("ARRO");
@@ -158,11 +158,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("ARRM");
                 let x = unsafe { *code.bc.get_unchecked(pos) };pos+=1;
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_in("ARRM",pos-2,format!("{}",&x),stack);
                 let v = stack.s.pop_ref_list_unchecked(x);
                 stack.s.push_unchecked(Vs::Ar(Ar::new(v)));
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_out("ARRM",pos-2,stack);
                 #[cfg(feature = "coz-ops")]
                 coz::end!("ARRM");
@@ -171,7 +171,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("FN1C");
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_in("FN1C",pos-1,"".to_string(),stack);
                 let l = stack.s.len();
                 let f = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
@@ -183,7 +183,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                     Err(e) => break Err(e),
                 };
                 stack.s.push_unchecked(r);
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_out("FN1C",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
                 coz::end!("FN1C");
@@ -192,7 +192,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("FN1O");
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_in("FN1O",pos-1,"".to_string(),stack);
                 let l = stack.s.len();
                 let f = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
@@ -207,7 +207,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                         },
                     };
                 stack.s.push_unchecked(r);
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_out("FN1O",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
                 coz::end!("FN1O");
@@ -216,7 +216,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("FN2C");
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_in("FN2C",pos-1,"".to_string(),stack);
                 let l = stack.s.len();
                 let w = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
@@ -229,7 +229,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                     Err(e) => break Err(e),
                 };
                 stack.s.push_unchecked(r);
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_out("FN2C",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
                 coz::end!("FN2C");
@@ -238,7 +238,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("FN2O");
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_in("FN2O",pos-1,"".to_string(),stack);
                 let l = stack.s.len();
                 let w = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
@@ -258,7 +258,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                         },
                     };
                 stack.s.push_unchecked(r);
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_out("FN2O",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
                 coz::end!("FN2O");
@@ -271,11 +271,11 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 let g = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
                 let h = unsafe { ptr::read(stack.s.as_ptr().add(l-2)) };
                 unsafe { stack.s.set_len(l-2) };
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_in("TR2D",pos-1,format!("{} {}",&g,&h),stack);
                 let t = Vs::V(V::Tr2(Cc::new(Tr2::new(g,h)),None));
                 stack.s.push_unchecked(t);
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_out("TR2D",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
                 coz::end!("TR2D");
@@ -284,7 +284,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("TR3D");
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_in("TR3D",pos-1,"".to_string(),stack);
                 let l = stack.s.len();
                 let f = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
@@ -293,7 +293,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 unsafe { stack.s.set_len(l-3) };
                 let t = Vs::V(V::Tr3(Cc::new(Tr3::new(f,g,h)),None));
                 stack.s.push_unchecked(t);
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_out("TR3D",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
                 coz::end!("TR3D");
@@ -302,7 +302,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("TR3O");
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_in("TR3O",pos-1,"".to_string(),stack);
                 let l = stack.s.len();
                 let f = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
@@ -315,7 +315,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                         _ => Vs::V(V::Tr3(Cc::new(Tr3::new(f,g,h)),None)),
                     };
                 stack.s.push_unchecked(t);
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_out("TR3O",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
                 coz::end!("TR3O");
@@ -324,7 +324,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("MD1C");
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_in("MD1C",pos-1,"".to_string(),stack);
                 let l = stack.s.len();
                 let f = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
@@ -335,7 +335,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                     Err(e) => break Err(e),
                 };
                 stack.s.push_unchecked(r);
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_out("MD1C",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
                 coz::end!("MD1C");
@@ -344,7 +344,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("MD2C");
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_in("MD2C",pos-1,"".to_string(),stack);
                 let l = stack.s.len();
                 let f = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
@@ -356,7 +356,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                     Err(e) => break Err(e),
                 };
                 stack.s.push_unchecked(r);
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_out("MD2C",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
                 coz::end!("MD2C");
@@ -368,10 +368,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 let x = unsafe { *code.bc.get_unchecked(pos) };pos+=1;
                 let w = unsafe { *code.bc.get_unchecked(pos) };pos+=1;
                 let t = env.ge(x);
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_in("VARO",pos-3,format!("{} {}",&x,&w),stack);
                 stack.s.push_unchecked(Vs::V(t.get(w)));
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_out("VARO",pos-3,stack);
                 #[cfg(feature = "coz-ops")]
                 coz::end!("VARO");
@@ -383,10 +383,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 let x = unsafe { *code.bc.get_unchecked(pos) };pos+=1;
                 let w = unsafe { *code.bc.get_unchecked(pos) };pos+=1;
                 let t = env.ge(x);
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_in("VARU",pos-3,format!("{} {}",&x,&w),stack);
                 stack.s.push_unchecked(Vs::V(t.get_drop(w)));
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_out("VARU",pos-3,stack);
                 #[cfg(feature = "coz-ops")]
                 coz::end!("VARU");
@@ -398,10 +398,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 let x = unsafe { *code.bc.get_unchecked(pos) };pos+=1;
                 let w = unsafe { *code.bc.get_unchecked(pos) };pos+=1;
                 let t = env.ge(x);
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_in("VARM",pos-3,format!("{} {}",&x,&w),stack);
                 stack.s.push_unchecked(Vs::Slot(t.clone(),w));
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_out("VARM",pos-3,stack);
                 #[cfg(feature = "coz-ops")]
                 coz::end!("VARM");
@@ -411,10 +411,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("VFYM");
                 let m = stack.s.pop_unchecked();
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_in("VFYM",pos-1,"".to_string(),stack);
                 stack.s.push_unchecked(Vs::Match(Some(m.into_v().unwrap())));
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_out("VFYM",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
                 coz::end!("VFYM");
@@ -423,10 +423,10 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("NOTM");
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_in("NOTM",pos-1,"".to_string(),stack);
                 stack.s.push_unchecked(Vs::Match(None));
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_out("NOTM",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
                 coz::end!("NOTM");
@@ -435,7 +435,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("SETH");
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_in("SETH",pos-1,"".to_string(),stack);
                 let l = stack.s.len();
                 let i = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
@@ -454,7 +454,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                         };
                     },
                 }
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_out("SETH",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
                 coz::end!("SETH");
@@ -463,7 +463,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("SETN");
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_in("SETN",pos-1,"".to_string(),stack);
                 let l = stack.s.len();
                 let i = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
@@ -471,7 +471,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 unsafe { stack.s.set_len(l-2) };
                 let r = i.set(true,v.as_v().unwrap())?;
                 stack.s.push_unchecked(Vs::V(r));
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_out("SETN",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
                 coz::end!("SETN");
@@ -480,7 +480,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("SETU");
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_in("SETU",pos-1,"".to_string(),stack);
                 let l = stack.s.len();
                 let i = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
@@ -488,7 +488,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 unsafe { stack.s.set_len(l-2) };
                 let r = i.set(false,v.as_v().unwrap())?;
                 stack.s.push_unchecked(Vs::V(r));
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_out("SETU",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
                 coz::end!("SETU");
@@ -497,7 +497,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("SETM");
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_in("SETM",pos-1,"".to_string(),stack);
                 let l = stack.s.len();
                 let i = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
@@ -510,7 +510,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 };
                 let r = i.set(false,v.as_v().unwrap())?;
                 stack.s.push_unchecked(Vs::V(r));
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_out("SETM",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
                 coz::end!("SETM");
@@ -519,7 +519,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("SETC");
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_in("SETC",pos-1,"".to_string(),stack);
                 let l = stack.s.len();
                 let i = unsafe { ptr::read(stack.s.as_ptr().add(l-1)) };
@@ -531,7 +531,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 };
                 let r = i.set(false,v.as_v().unwrap())?;
                 stack.s.push_unchecked(Vs::V(r));
-                #[cfg(feature = "debug")]
+                #[cfg(feature = "debug-ops")]
                 dbg_stack_out("SETC",pos-1,stack);
                 #[cfg(feature = "coz-ops")]
                 coz::end!("SETC");
