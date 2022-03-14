@@ -406,6 +406,36 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 #[cfg(feature = "coz-ops")]
                 coz::end!("VARM");
             },
+            42 => { // PRED
+                //panic!("PREDSTOP");
+                pos += 1;
+                #[cfg(feature = "coz-ops")]
+                coz::begin!("PRED");
+                let pred = stack.s.pop_unchecked();
+                #[cfg(feature = "debug-ops")]
+                dbg_stack_in("PRED",pos-1,"".to_string(),stack);
+                match &pred {
+                    Vs::V(v) => match &v {
+                        V::Scalar(n) if *n == 1.0 => (),
+                        V::Scalar(n) if *n == 0.0 => {
+                            // move to next body in list
+                            match (bodies,body_id) {
+                                (Some(b),Some(id)) => {
+                                    let (p,locals) = unsafe { code.body_ids.get_unchecked(b[id+1]) };
+                                    break vm(&env.reinit(*locals),&code,Some(b),Some(id+1),*p,stack);
+                                }
+                                _ => panic!("no successive body in PRED"),
+                            };
+                        }
+                        _ => panic!("PRED not 0 or 1"),
+                    },
+                    _ => (),
+                }
+                #[cfg(feature = "debug-ops")]
+                dbg_stack_out("PRED",pos-1,stack);
+                #[cfg(feature = "coz-ops")]
+                coz::end!("PRED");
+            },
             43 => { // VFYM
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
