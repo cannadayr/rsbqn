@@ -216,13 +216,12 @@ impl Vs {
             Vs::Ar(a) => {
                 match v {
                     V::A(va) => {
-                        let va = v.as_a().unwrap();
                         if (va.sh != a.sh) {
                             Err(Ve::S("target and value shapes don't match"))
                         }
                         else {
                             for i in 0..a.r.len() {
-                                &a.r[i].set(d,&va.r[i]);
+                                let _ = &a.r[i].set(d,&va.r[i])?;
                             }
                             Ok(v.clone())
                         }
