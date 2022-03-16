@@ -21,7 +21,7 @@ Status
 |under|FAILED|40 passed; 1 failed; 0 ignored;|
 |undo|ok|68 passed; 0 failed; 0 ignored;|
 |fill|N/A|N/A|
-|header|N/A|N/A|
+|header|FAILED|146 passed; 4 failed; 0 ignored;|
 |literal|ok|52 passed; 0 failed; 0 ignored;|
 |namespace|N/A|N/A|
 |syntax|ok|135 passed; 0 failed; 0 ignored;|
