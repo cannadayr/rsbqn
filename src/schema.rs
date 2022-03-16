@@ -118,8 +118,8 @@ impl Calleable for V {
             },
             V::UserMd2(b,mods,_prim) => {
                 let D2(m,f,g) = mods.deref();
-                let args = vec![Some(self.clone()),x.none_or_clone(),w.none_or_clone(),Some(m.clone()),Some(f.clone()),Some(g.clone())]; // cloning args is slow
-                let env = Env::new(Some(&b.parent),&b.def,arity,Some(args)); // creating a new env is slow
+                let args = vec![Some(self.clone()),x.none_or_clone(),w.none_or_clone(),Some(m.clone()),Some(f.clone()),Some(g.clone())];
+                let env = Env::new(Some(&b.parent),&b.def,arity,Some(args));
                 let pos = body_pos(b,arity);
                 let (bodies,body_id) = bodies(b,arity);
                 vm(&env,&b.def.code,bodies,body_id,pos,stack)
@@ -357,6 +357,7 @@ pub struct EnvUnboxed {
     pub parent:Option<Env>,
     pub vars:   UnsafeCell<Vec<Vh>>,
     pub num_args: usize,
+    pub init_args: Option<Vec<Vh>>
 }
 
 #[derive(Clone,Debug)]
@@ -381,34 +382,44 @@ impl Env {
                 },
             };
         let (vars,num_args) =
-            match args {
+            match &args {
                 None => {
                     let mut v: Vec<Vh> = Vec::with_capacity(locals);
                     v.resize_with(locals, || None);
                     (v,0)
                 },
-                Some(mut v) => {
+                Some(v) => {
                     let n = v.len();
-                    v.resize_with(locals, || None);
-                    (v,n)
+                    let mut s = v.clone();
+                    s.resize_with(locals, || None);
+                    (s,n)
                 },
             };
-        let env = EnvUnboxed {parent: parent.cloned(), vars: UnsafeCell::new(vars), num_args: num_args };
+        let env = EnvUnboxed {parent: parent.cloned(), vars: UnsafeCell::new(vars), num_args: num_args, init_args: args };
         Self(Cc::new(env))
     }
     pub fn reinit(&self,locals: usize) -> Self {
         match self {
-            Env(e) => {
-                let vars_exclusive: &Vec<Vh> = unsafe { &*e.vars.get() };
-                let mut vars = Vec::from_iter(vars_exclusive[0..e.num_args].iter().cloned());
-                vars.resize_with(locals, || None);
-                let env = EnvUnboxed {parent: e.parent.clone(), vars: UnsafeCell::new(vars), num_args: e.num_args };
-                Self(Cc::new(env))
+            Env(env) => {
+                let vars =
+                    match &env.init_args {
+                        None => {
+                            let mut v: Vec<Vh> = Vec::with_capacity(locals);
+                            v.resize_with(locals, || None);
+                            v
+                        },
+                        Some(v) => {
+                            let mut s = v.clone();
+                            s.resize_with(locals, || None);
+                            s
+                        },
+                    };
+                Self(Cc::new(EnvUnboxed {parent: env.parent.clone(), vars: UnsafeCell::new(vars), num_args: env.num_args, init_args: env.init_args.clone() }))
             },
         }
     }
     pub fn new_root() -> Self {
-        let env = EnvUnboxed {parent: None, vars: UnsafeCell::new(vec![]), num_args: 0 };
+        let env = EnvUnboxed {parent: None, vars: UnsafeCell::new(vec![]), num_args: 0, init_args: None };
         Self(Cc::new(env))
     }
     // get, set, and get_drop use unsafe code
@@ -445,7 +456,7 @@ impl Env {
                         Some(v) => v.clone(),
                         None => panic!("heap slot is undefined"),
                     };
-                unsafe { *(*e.vars.get()).get_unchecked_mut(id) = None };
+                unsafe { drop((*e.vars.get()).get_unchecked_mut(id)) };
                 r
             },
         }

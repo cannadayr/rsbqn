@@ -55,7 +55,7 @@ fn derv(env: &Env,code: &Cc<Code>,block: &Cc<Block>,stack: &mut Stack) -> Result
                 },
                 _ => panic!("body immediacy derivation doesnt match block definition"),
             };
-            vm(&child,code,None,None,pos,stack)
+            vm(&child,code,bodies,body_id,pos,stack)
         },
         (_typ,_imm) => {
             let block_inst = BlockInst::new(env.clone(),block.clone());
@@ -104,13 +104,13 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("DFND");
                 let x = unsafe { *code.bc.get_unchecked(pos) };pos+=1;
+                #[cfg(feature = "debug-ops")]
+                dbg_stack_in("DFND",pos-2,format!("{}",&x),stack);
                 let r =
                 match derv(&env,&code,&code.blocks[x],&mut stack) {
                     Ok(r) => r,
                     Err(e) => break Err(e),
                 };
-                #[cfg(feature = "debug-ops")]
-                dbg_stack_in("DFND",pos-2,format!("{} {}",&x,&r),stack);
                 stack.s.push_unchecked(r);
                 #[cfg(feature = "debug-ops")]
                 dbg_stack_out("DFND",pos-2,stack);
@@ -407,13 +407,12 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 coz::end!("VARM");
             },
             42 => { // PRED
-                //panic!("PREDSTOP");
                 pos += 1;
                 #[cfg(feature = "coz-ops")]
                 coz::begin!("PRED");
-                let pred = stack.s.pop_unchecked();
                 #[cfg(feature = "debug-ops")]
                 dbg_stack_in("PRED",pos-1,"".to_string(),stack);
+                let pred = stack.s.pop_unchecked();
                 match &pred {
                     Vs::V(v) => match &v {
                         V::Scalar(n) if *n == 1.0 => (),
@@ -744,9 +743,12 @@ pub fn formatter(root: Option<&Env>,stack: &mut Stack,runtime: &V) -> Result<V,V
 }
 
 pub fn run_in_place(env: &Env,stack: &mut Stack,code: Cc<Code>) -> Result<V,Ve> {
-    let (pos,_locals) =
+    let pos =
         match code.blocks[0].bodies {
-            Bodies::Comp(b) => code.body_ids[b],
+            Bodies::Comp(b) => {
+                let (pos,_locals) = code.body_ids[b];
+                pos
+            },
             Bodies::Head(_) => panic!("cant run Head bodies"),
             Bodies::Exp(_,_) => panic!("cant run Expanded bodies"),
         };
