@@ -65,9 +65,18 @@ fn derv(env: &Env,code: &Cc<Code>,block: &Cc<Block>,stack: &mut Stack) -> Result
     }
 }
 
-fn list(ravel: Vec<V>) -> Vs {
+fn list(ravel: Vec<V>,fill: Option<V>) -> Vs {
     let shape = vec![ravel.len() as usize];
-    Vs::V(V::A(Cc::new(A::new(ravel,shape))))
+    Vs::V(V::A(Cc::new(A::new(ravel,shape,fill))))
+}
+// determines list fill
+// use-case for dependent types
+fn llst(ravel: Vec<V>) -> Vs {
+    let fill = match ravel.iter().all(|e| matches!(e,V::Nothing)) {
+        true => Some(new_scalar(0)),
+        false => None,
+    };
+    list(ravel,fill)
 }
 
 fn incr(stack: &mut Stack) {
@@ -147,7 +156,7 @@ pub fn vm(env: &Env,code: &Cc<Code>,bodies: Option<&Vec<usize>>,body_id: Option<
                 #[cfg(feature = "debug-ops")]
                 dbg_stack_in("ARRO",pos-2,format!("{}",&x),stack);
                 let v = stack.s.pop_list_unchecked(x);
-                stack.s.push_unchecked(list(v));
+                stack.s.push_unchecked(llst(v));
                 #[cfg(feature = "debug-ops")]
                 dbg_stack_out("ARRO",pos-2,stack);
                 #[cfg(feature = "coz-ops")]
@@ -607,7 +616,7 @@ pub fn runtime(root: Option<&Env>,stack: &mut Stack) -> Result<V,Ve> {
                 }
             }
             info!("runtime loaded");
-            let prim_fns = V::A(Cc::new(A::new(vec![V::Fn(Fn(decompose),None),V::Fn(Fn(prim_ind),None)],vec![2])));
+            let prim_fns = V::A(Cc::new(A::new(vec![V::Fn(Fn(decompose),None),V::Fn(Fn(prim_ind),None)],vec![2],None)));
             let _ = call(stack,1,Vn(Some(&set_prims)),Vn(Some(&prim_fns)),Vn(None));
             Ok(V::A(prims))
         },
@@ -616,7 +625,7 @@ pub fn runtime(root: Option<&Env>,stack: &mut Stack) -> Result<V,Ve> {
 }
 
 pub fn sysfns(arity: usize,x: Vn,w:Vn) -> Result<Vs,Ve> {
-    Ok(Vs::V(V::A(Cc::new(A::new(vec![],vec![0])))))
+    Ok(Vs::V(V::A(Cc::new(A::new(vec![],vec![0],None)))))
 }
 
 pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V,env: &Env,names: &V,redef: &V,strictness: f64) -> Result<(Cc<Code>,A,A),Ve> {
@@ -624,7 +633,7 @@ pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V,env: &Env,names: &
     // because we are passing the vars/names/redefs as elements in an array, they must be moved to the new prog
     // this will likely result in excess clones
     let vars = env.to_vars();
-    let args = V::A(Cc::new(A::new(vec![runtime.clone(),V::Fn(Fn(sysfns),None),names.clone(),redef.clone()],vec![4])));
+    let args = V::A(Cc::new(A::new(vec![runtime.clone(),V::Fn(Fn(sysfns),None),names.clone(),redef.clone()],vec![4],None)));
     let mut prog = call(stack,2,Vn(Some(compiler)),Vn(Some(&src)),Vn(Some(&args)))?.into_v().unwrap().into_a().unwrap();
     match prog.get_mut() {
         Some(p) => {
@@ -734,7 +743,7 @@ pub fn prog(stack: &mut Stack,compiler: &V,src: V,runtime: &V,env: &Env,names: &
 
 pub fn formatter(root: Option<&Env>,stack: &mut Stack,runtime: &V) -> Result<V,Ve> {
     let formatter = run(root,stack,f(&runtime)).expect("couldnt load fmt");
-    let fmt_fns = V::A(Cc::new(A::new(vec![V::Fn(Fn(typ),None),V::Fn(Fn(decompose),None),V::Fn(Fn(glyph),None),V::Fn(Fn(fmtnum),None)],vec![4])));
+    let fmt_fns = V::A(Cc::new(A::new(vec![V::Fn(Fn(typ),None),V::Fn(Fn(decompose),None),V::Fn(Fn(glyph),None),V::Fn(Fn(fmtnum),None)],vec![4],None)));
     let mut fmt = call(stack,1,Vn(Some(&formatter)),Vn(Some(&fmt_fns)),Vn(None)).expect("fmt malformed").into_v().unwrap().into_a().unwrap();
     let mut fmt1 = fmt.make_unique();
     let repr = fmt1.r.pop().unwrap();

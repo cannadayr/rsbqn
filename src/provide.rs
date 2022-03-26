@@ -1,4 +1,4 @@
-use crate::schema::{A,V,Vn,Vs,Ve,Decoder,D1,D2,Tr2,Tr3,Fn,R1,R2,Stack,new_string,new_char};
+use crate::schema::{A,V,Vn,Vs,Ve,Decoder,D1,D2,Tr2,Tr3,Fn,R1,R2,Stack,new_string,new_char,new_scalar};
 use crate::vm::{call};
 use bacon_rajan_cc::Cc;
 use std::cmp::max;
@@ -101,7 +101,7 @@ fn group_len(arity: usize, x: Vn, w: Vn) -> Result<Vs,Ve> {
                         }
                         i += 1;
                     }
-                    Ok(Vs::V(V::A(Cc::new(A::new(r.clone(),vec![r.len() as usize])))))
+                    Ok(Vs::V(V::A(Cc::new(A::new(r.clone(),vec![r.len() as usize],Some(new_scalar(0)))))))
                 },
                 _ => Err(Ve::S("group_len 𝕩 is not an array")),
             }
@@ -120,7 +120,7 @@ fn group_len(arity: usize, x: Vn, w: Vn) -> Result<Vs,Ve> {
                         }
                         i += 1;
                     }
-                    Ok(Vs::V(V::A(Cc::new(A::new(r.clone(),vec![r.len() as usize])))))
+                    Ok(Vs::V(V::A(Cc::new(A::new(r.clone(),vec![r.len() as usize],Some(new_scalar(0)))))))
                 },
                 _ => Err(Ve::S("group_len 𝕩 is not an array")),
             }
@@ -143,7 +143,7 @@ fn group_ord(arity: usize, x: Vn, w: Vn) -> Result<Vs,Ve> {
                         s[e.to_f64() as usize] += 1.0;
                     });
                     let shape = vec![r.len().clone()];
-                    Ok(Vs::V(V::A(Cc::new(A::new(r.clone(),shape)))))
+                    Ok(Vs::V(V::A(Cc::new(A::new(r.clone(),shape,None)))))
                 },
                 _ => Err(Ve::S("dyadic group_ord x is not an array")),
             }
@@ -354,7 +354,7 @@ fn shape(arity: usize, x: Vn, _w: Vn) -> Result<Vs,Ve> {
             V::A(xa) => {
                 let ravel = xa.sh.iter().map(|n| V::Scalar(*n as i64 as f64)).collect::<Vec<V>>();
                 let shape = vec![ravel.len()];
-                Ok(Vs::V(V::A(Cc::new(A::new(ravel,shape)))))
+                Ok(Vs::V(V::A(Cc::new(A::new(ravel,shape,Some(new_scalar(0)))))))
             },
             _ => Err(Ve::S("shape 𝕩 is not an array")),
         },
@@ -368,7 +368,7 @@ fn reshape(arity: usize, x: Vn, w: Vn) -> Result<Vs,Ve> {
     match arity {
         1 => {
             match unsafe { x.0.unwrap_unchecked() } {
-                V::A(xa) => Ok(Vs::V(V::A(Cc::new(A::new(xa.r.clone(),vec![xa.r.len()]))))),
+                V::A(xa) => Ok(Vs::V(V::A(Cc::new(A::new(xa.r.clone(),vec![xa.r.len()],xa.fill.clone()))))),
                 _ => Err(Ve::S("monadic reshape no arr")),
             }
         },
@@ -379,7 +379,7 @@ fn reshape(arity: usize, x: Vn, w: Vn) -> Result<Vs,Ve> {
                         V::Scalar(n) => *n as usize,
                         _ => panic!("W ravel is not a num"),
                     }).collect::<Vec<usize>>();
-                    Ok(Vs::V(V::A(Cc::new(A::new(ax.r.clone(),sh)))))
+                    Ok(Vs::V(V::A(Cc::new(A::new(ax.r.clone(),sh,ax.fill.clone())))))
                 },
                 _ => Err(Ve::S("dydic reshape no match")),
             }
@@ -414,7 +414,7 @@ fn windows(arity: usize, x: Vn, _w: Vn) -> Result<Vs,Ve> {
     coz::scope!("windows");
     match arity {
         1 => match unsafe { x.0.unwrap_unchecked() } {
-            V::Scalar(n) => Ok(Vs::V(V::A(Cc::new(A::new((0..*n as i64).map(|v| V::Scalar(v as f64)).collect::<Vec<V>>(),vec![*n as usize]))))),
+            V::Scalar(n) => Ok(Vs::V(V::A(Cc::new(A::new((0..*n as i64).map(|v| V::Scalar(v as f64)).collect::<Vec<V>>(),vec![*n as usize],Some(new_scalar(0))))))),
             _ => Err(Ve::S("x is not a number")),
         },
         _ => panic!("illegal windows arity"),
@@ -436,7 +436,7 @@ fn table(stack: &mut Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Result<Vs,Ve> {
                     })
                 }
                 let sh = (*xa).sh.clone();
-                Ok(Vs::V(V::A(Cc::new(A::new(ravel,sh)))))
+                Ok(Vs::V(V::A(Cc::new(A::new(ravel,sh,None)))))
             },
             _ => Err(Ve::S("monadic table x is not an array")),
         },
@@ -453,7 +453,7 @@ fn table(stack: &mut Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Result<Vs,Ve> {
                         }
                     }
                     let sh = (*wa).sh.clone().into_iter().chain((*xa).sh.clone().into_iter()).collect();
-                    Ok(Vs::V(V::A(Cc::new(A::new(ravel,sh)))))
+                    Ok(Vs::V(V::A(Cc::new(A::new(ravel,sh,None)))))
                 },
                 _ => Err(Ve::S("dyadic table not an array")),
             }
@@ -492,7 +492,7 @@ fn scan(stack: &mut Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Result<Vs,Ve> {
                             i += 1;
                         }
                     };
-                    Ok(Vs::V(V::A(Cc::new(A::new(r,s.to_vec())))))
+                    Ok(Vs::V(V::A(Cc::new(A::new(r,s.to_vec(),a.fill.clone())))))
                 },
                 _ => Err(Ve::S("monadic scan x is not an array")),
             }
@@ -501,7 +501,7 @@ fn scan(stack: &mut Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Result<Vs,Ve> {
             let (wr,wa) = match unsafe { w.0.unwrap_unchecked() } {
                 V::A(wa) => (wa.sh.len(),wa.clone()),
                 // TODO `wa` doesn't actually need to be a ref counted array
-                V::Scalar(ws) => (0,Cc::new(A::new(vec![V::Scalar(*ws)],vec![1]))),
+                V::Scalar(ws) => (0,Cc::new(A::new(vec![V::Scalar(*ws)],vec![1],Some(new_scalar(0))))),
                 _ => return Err(Ve::S("dyadic scan w is invalid type")),
             };
             match unsafe { x.0.unwrap_unchecked() } {
@@ -532,7 +532,7 @@ fn scan(stack: &mut Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Result<Vs,Ve> {
                             i += 1;
                         }
                     };
-                    Ok(Vs::V(V::A(Cc::new(A::new(r,s.to_vec())))))
+                    Ok(Vs::V(V::A(Cc::new(A::new(r,s.to_vec(),xa.fill.clone())))))
                 },
                 _ => Err(Ve::S("dyadic scan x or w is not an array")),
             }
@@ -580,7 +580,7 @@ pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Result<Vs,Ve> {
                     _ => false
                 }
             {
-                Ok(Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(-1.0),unsafe { x.0.unwrap_unchecked() }.clone()],vec![2])))))
+                Ok(Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(-1.0),unsafe { x.0.unwrap_unchecked() }.clone()],vec![2],None)))))
             }
             else if // primitives
                 match unsafe { (&x).0.as_ref().unwrap_unchecked() } {
@@ -597,7 +597,7 @@ pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Result<Vs,Ve> {
                     _ => false,
                 }
             {
-                Ok(Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(0.0),unsafe { x.0.unwrap_unchecked() }.clone()],vec![2])))))
+                Ok(Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(0.0),unsafe { x.0.unwrap_unchecked() }.clone()],vec![2],None)))))
             }
             else if // repr
                 match unsafe { (&x).0.as_ref().unwrap_unchecked() } {
@@ -612,7 +612,7 @@ pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Result<Vs,Ve> {
                         match t {
                             4 => {
                                 let D1(f,g) = a.deref();
-                                Ok(Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(4.0),g.clone(),f.clone()],vec![3])))))
+                                Ok(Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(4.0),g.clone(),f.clone()],vec![3],None)))))
                             },
                             _ => return Err(Ve::S("UserMd1 illegal decompose")),
                         }
@@ -622,7 +622,7 @@ pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Result<Vs,Ve> {
                         match t {
                             5 => {
                                 let D2(f,g,h) = a.deref();
-                                Ok(Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(5.0),g.clone(),f.clone(),h.clone()],vec![4])))))
+                                Ok(Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(5.0),g.clone(),f.clone(),h.clone()],vec![4],None)))))
                             },
                             _ => return Err(Ve::S("UserMd2 illegal decompose")),
                         }
@@ -634,21 +634,21 @@ pub fn decompose(arity:usize, x: Vn,_w: Vn) -> Result<Vs,Ve> {
                 match unsafe { (&x).0.as_ref().unwrap_unchecked() } {
                     V::D1(d1,None) => {
                         let D1(m,f) = (*d1).deref();
-                        Ok(Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(4.0),f.clone(),m.clone()],vec![3])))))
+                        Ok(Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(4.0),f.clone(),m.clone()],vec![3],None)))))
                     },
                     V::D2(d2,None) => {
                         let D2(m,f,g) = (*d2).deref();
-                        Ok(Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(5.0),f.clone(),m.clone(),g.clone()],vec![4])))))
+                        Ok(Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(5.0),f.clone(),m.clone(),g.clone()],vec![4],None)))))
                     },
                     V::Tr2(tr2,None) => {
                         let Tr2(g,h) = (*tr2).deref();
-                        Ok(Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(2.0),g.clone(),h.clone()],vec![3])))))
+                        Ok(Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(2.0),g.clone(),h.clone()],vec![3],None)))))
                     },
                     V::Tr3(tr3,None) => {
                         let Tr3(f,g,h) = (*tr3).deref();
-                        Ok(Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(3.0),f.clone(),g.clone(),h.clone()],vec![4])))))
+                        Ok(Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(3.0),f.clone(),g.clone(),h.clone()],vec![4],None)))))
                     },
-                    _ => Ok(Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(1.0),x.0.unwrap().clone()],vec![2])))),)
+                    _ => Ok(Vs::V(V::A(Cc::new(A::new(vec![V::Scalar(1.0),x.0.unwrap().clone()],vec![2],None)))),)
                 }
             }
         },
@@ -733,5 +733,5 @@ pub fn provide() -> A {
                    V::R2(R2(fill_by),None),
                    V::R2(R2(cases),None),
                    V::R2(R2(catches),None)];
-    A::new(fns,vec![23])
+    A::new(fns,vec![23],None)
 }

@@ -33,7 +33,7 @@ prefix(Name,N,undefined) ->
 prefix(Name,N,runtime) ->
     prefix(Name,N,undefined) ++ [<<"let runtime = runtime(Some(&root),&mut stack).expect(">>,$",<<"runtime failed">>,$",<<").into_a().unwrap();">>];
 prefix(Name,N,compiler) ->
-    [<<"#[test]\n">>,<<"pub fn ">>,Name,<<"_">>,integer_to_list(N),<<"() {\n    ">>,<<"init_log();\n">>,<<"let root = Env::new_root();">>,<<"let mut stack = Stack::new();">>,<<"let runtime = runtime(Some(&root),&mut stack).expect(">>,$",<<"runtime failed">>,$",<<");">>,<<"let compiler = run(Some(&root),&mut stack,c(&runtime)).expect(">>,$",<<"compiler failed">>,$",<<");">>,<<"let names = V::A(Cc::new(A::new(vec![],vec![0])));">>,<<"let redef = V::A(Cc::new(A::new(vec![],vec![0])));">>].
+    [<<"#[test]\n">>,<<"pub fn ">>,Name,<<"_">>,integer_to_list(N),<<"() {\n    ">>,<<"init_log();\n">>,<<"let root = Env::new_root();">>,<<"let mut stack = Stack::new();">>,<<"let runtime = runtime(Some(&root),&mut stack).expect(">>,$",<<"runtime failed">>,$",<<");">>,<<"let compiler = run(Some(&root),&mut stack,c(&runtime)).expect(">>,$",<<"compiler failed">>,$",<<");">>,<<"let names = V::A(Cc::new(A::new(vec![],vec![0],None)));">>,<<"let redef = V::A(Cc::new(A::new(vec![],vec![0],None)));">>].
 suffix() ->
     [<<"}\n">>].
 gen_line(Name,assert,_ByteCode,Code,_Comment,N,compiler) ->
@@ -54,14 +54,17 @@ gen_code(Name,Todo,Accm,N,Dependency) ->
     {Expected,ByteCode,Code,Comment} = hd(Todo),
     Line = gen_line(Name,Expected,ByteCode,Code,Comment,N,Dependency),
     gen_code(Name,tl(Todo),[Line] ++ Accm,N+1,Dependency).
-gen_tests(_Repo,[],Accm) ->
+gen_tests(_Repo,[],_Dependency,Accm) ->
     lists:reverse(Accm);
-gen_tests(Repo,Args,Accm) ->
+gen_tests(Repo,Args,Dependency,Accm) when Dependency =:= runtime; Dependency =:= undefined ->
    {Expected,Code,Comment} = hd(Args),
     {ok,CurDir} = file:get_cwd(),
     {Cmd,CmdArgs} = { erlang:binary_to_list(filename:join([CurDir, <<"crs.bqn">>])),[Repo,io_lib:format("~ts",[Code])] },
     {ok,Result} = cmd(Cmd,CmdArgs),
-    gen_tests(Repo,tl(Args),[{Expected,string:trim(Result),Code,Comment}]++Accm).
+    gen_tests(Repo,tl(Args),runtime,[{Expected,string:trim(Result),Code,Comment}]++Accm);
+gen_tests(Repo,Args,compiler,Accm) ->
+   {Expected,Code,Comment} = hd(Args),
+    gen_tests(Repo,tl(Args),compiler,[{Expected,undefined,Code,Comment}]++Accm).
 parse_code([Code]) ->
     {Code,undefined};
 parse_code([Code,Comment]) ->
@@ -114,7 +117,7 @@ suite(Repo,Name,ShortName,Dependency,CommentMode) ->
     Path = filename:join([Repo,<<"test/cases/">>,Name]),
     {ok, Data} = file:read_file(Path),
     Args = parse(binary:split(Data, [<<"\n">>], [global]),[],CommentMode),
-    Tests = gen_tests(Repo,Args,[]),
+    Tests = gen_tests(Repo,Args,Dependency,[]),
     gen_code(ShortName,Tests,[],0,Dependency).
 template(Content,core) ->
     erlang:iolist_to_binary([
@@ -149,9 +152,7 @@ runtime_tests(Repo) ->
     Under = suite(Repo,<<"under.bqn">>,<<"under">>,runtime,true),
     file:write_file("tests/under.rs",template(Under,core)),
     Identity = suite(Repo,<<"identity.bqn">>,<<"identity">>,runtime,true),
-    file:write_file("tests/identity.rs",template(Identity,core)),
-    Fill = suite(Repo,<<"fill.bqn">>,<<"fill">>,runtime,true),
-    file:write_file("tests/fill.rs",template(Fill,core)).
+    file:write_file("tests/identity.rs",template(Identity,core)).
 % The following tests can't be precompiled and embedded as bytecode,
 % as errors might happen during compilation.
 compiler_tests(Repo) ->
@@ -164,6 +165,8 @@ compiler_tests(Repo) ->
     file:write_file("tests/token.rs",template(Token,compiler)),
     Header = suite(Repo,<<"header.bqn">>,<<"header">>,compiler,true),
     file:write_file("tests/header.rs",template(Header,compiler)),
+    Fill = suite(Repo,<<"fill.bqn">>,<<"fill">>,compiler,true),
+    file:write_file("tests/fill.rs",template(Fill,compiler)),
     Namespace = suite(Repo,<<"namespace.bqn">>,<<"namespace">>,compiler,true),
     file:write_file("tests/namespace.rs",template(Namespace,compiler)),
     Unhead = suite(Repo,<<"unhead.bqn">>,<<"unhead">>,compiler,true),

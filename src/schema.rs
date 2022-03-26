@@ -205,7 +205,7 @@ impl Vs {
             Vs::Ar(a) => {
                 let shape = vec![a.r.len() as usize];
                 let ravel = a.r.iter().map(|e| match e { Vs::Slot(env,id) => env.get(*id), _ => panic!("ref array contains a non-slot"), }).collect::<Vec<V>>();
-                V::A(Cc::new(A::new(ravel,shape)))
+                V::A(Cc::new(A::new(ravel,shape,None)))
             },
             _ => panic!("can only resolve slots or ref arrays"),
         }
@@ -490,7 +490,7 @@ impl Env {
                     None => V::Nothing,
                 } ).collect::<Vec<V>>();
                 let shape = vec![ravel.len()];
-                V::A(Cc::new(A::new(ravel,shape)))
+                V::A(Cc::new(A::new(ravel,shape,None)))
             },
         }
     }
@@ -560,10 +560,11 @@ impl PartialEq for BlockInst {
 pub struct A {
     pub r: Vec<V>,
     pub sh: Vec<usize>,
+    pub fill: Option<V>,
 }
 impl A {
-    pub fn new(r: Vec<V>,sh: Vec<usize>) -> Self {
-        Self { r: r, sh: sh }
+    pub fn new(r: Vec<V>,sh: Vec<usize>,fill: Option<V>) -> Self {
+        Self { r: r, sh: sh, fill: fill }
     }
 }
 
@@ -652,5 +653,5 @@ pub fn new_char(n: char) -> V {
 pub fn new_string(n: &str) -> V {
     let ravel = n.to_string().chars().map(|c| V::Char(c)).collect::<Vec<V>>();
     let shape = vec![ravel.len() as usize];
-    V::A(Cc::new(A::new(ravel,shape)))
+    V::A(Cc::new(A::new(ravel,shape,Some(new_char(' ')))))
 }
