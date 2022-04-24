@@ -3,7 +3,7 @@ use core::f64::{INFINITY,NEG_INFINITY};
 use rsbqn::init_log;
 use rsbqn::vm::{run,run_in_place,call,runtime,prog,formatter};
 use rsbqn::gen::code::{r0,r1,c,f};
-use rsbqn::schema::{new_string,new_char,new_scalar,Bodies,Exp,Code,Env,V,Vs,Vn,Ve,Stack,A};
+use rsbqn::schema::{new_string,new_char,new_scalar,Bodies,Code,Env,V,Vs,Vn,Ve,Stack,A};
 use rsbqn::provide::{provide,decompose,prim_ind};
 use rsbqn::fmt::{fmt_result,fmt_err};
 use rustyline::{Editor, Result};
@@ -29,8 +29,8 @@ fn main() -> Result<()> {
     let compiler = run(Some(&root),&mut stack,c(&runtime)).expect("couldnt load compiler");
     let fmt = formatter(Some(&root),&mut stack,&runtime).expect("couldnt load formatter");
     // initialize names/redef to empty arrays of size 0
-    let mut names = V::A(Cc::new(A::new(vec![],vec![0])));
-    let mut redef = V::A(Cc::new(A::new(vec![],vec![0])));
+    let mut names = V::A(Cc::new(A::new(vec![],vec![0],None)));
+    let mut redef = V::A(Cc::new(A::new(vec![],vec![0],None)));
 
     let mut rl = Editor::<()>::new();
     loop {
