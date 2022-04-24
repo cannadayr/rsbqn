@@ -58,7 +58,8 @@ fn main() -> Result<()> {
                                 Ve::S(s) => println!("{}",s),
                                 Ve::V(v) => match v {
                                     V::A(a) => println!("{}",fmt_err(&a.r)),
-                                    _ => panic!("cant error on type"),
+                                    V::Scalar(n) => println!("Err: {}",n),
+                                    _ => panic!("can't error on type"),
                                 },
                             },
                         };
