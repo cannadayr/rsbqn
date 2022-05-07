@@ -56,15 +56,53 @@ pub fn typ(arity: usize, x: Vn, _w: Vn) -> Result<Vs,Ve> {
         _ => panic!("typ arity not implemented"),
     }
 }
+// Utility fn for fill
+fn to_fill(x: &V) -> V {
+    match x {
+        V::Scalar(_n) => new_scalar(0),
+        V::A(a) => V::A(Cc::new(A::new(a.r.iter().map(to_fill).collect::<Vec<V>>(),a.sh.clone(),a.fill.clone()))),
+        V::Char(_c) => new_char(' '),
+        V::UserMd1(_b,_a,_prim) => panic!("to_fill UserMd1"),
+        V::UserMd2(_b,_a,_prim) => panic!("to_fill UserMd2"),
+        V::D1(_d1,_prim) => panic!("to_fill D1"),
+        V::D2(_d2,_prim) => panic!("to_fill D2"),
+        V::Tr2(_tr3,_prim) => panic!("to_fill Tr2"),
+        V::Tr3(_tr3,_prim) => panic!("to_fill Tr3"),
+        V::Fn(_fn,_prim) => panic!("to_fill Fn"),
+        V::R1(_r1,_prim) => panic!("to_fill R1"),
+        V::R2(_r2,_prim) => panic!("to_fill R2"),
+        V::BlockInst(b,_prim) => panic!("to_fill BlockInst"),
+        V::Nothing => panic!("to_fill Nothing"),
+    }
+}
 // Fill
-fn fill(arity: usize, x: Vn, _w: Vn) -> Result<Vs,Ve> {
+fn fill(arity: usize, x: Vn, w: Vn) -> Result<Vs,Ve> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("fill");
+    dbg_args("fill",arity,&x,&w);
+    let r =
     match arity {
-        1 => Ok(Vs::V(V::Scalar(0.0))),
-        2 => Ok(Vs::V(unsafe { x.0.unwrap_unchecked() }.clone() )),
+        1 => {
+            match unsafe { x.0.unwrap_unchecked() } {
+                V::A(xa) => match &xa.fill {
+                    None => {
+                        Err(Ve::S("fill does not exist"))
+                    },
+                    Some(f) => Ok(Vs::V(f.clone())),
+                },
+                _ => Err(Ve::S("mon fill not an array")),
+            }
+        },
+        2 => match unsafe { (x.0.unwrap_unchecked(),w.0.unwrap_unchecked()) } {
+            (V::A(xa),ws) => {
+                Ok(Vs::V(V::A(Cc::new(A::new(xa.r.clone(),xa.sh.clone(),Some(to_fill(ws)))))))
+            },
+            _ => Err(Ve::S("dy fill not an array"))
+        },
         _ => panic!("illegal fill arity"),
-    }
+    };
+    dbg_rtn("fill",arity,&r);
+    r
 }
 // Log
 fn log(arity: usize, x: Vn, w: Vn) -> Result<Vs,Ve> {
@@ -540,11 +578,35 @@ fn scan(stack: &mut Stack,arity: usize, f: Vn, x: Vn, w: Vn) -> Result<Vs,Ve> {
         _ => panic!("illegal scan arity"),
     }
 }
+
+fn a2fill(x: Vn) -> Result<Vs,Ve> {
+    match typ(1,Vn(Some(&x.0.unwrap())),Vn(None))?.into_v().unwrap().into_scalar().unwrap().min(3.0) {
+        0.0 => Ok(Vs::V(x.0.unwrap().clone())),
+        1.0 => Ok(Vs::V(new_scalar(0))),
+        2.0 => Ok(Vs::V(new_char(' '))),
+        _ => panic!("no matching a2fill"),
+    }
+}
 // _fillBy_
-fn fill_by(stack:&mut Stack,arity: usize, f: Vn, _g: Vn, x: Vn, w: Vn) -> Result<Vs,Ve> {
+fn fill_by(stack:&mut Stack,arity: usize, f: Vn, g: Vn, x: Vn, w: Vn) -> Result<Vs,Ve> {
     #[cfg(feature = "coz-fns")]
     coz::scope!("fill_by");
-    call(stack,arity,f,x,w)
+    match arity {
+        2 => {
+            let x_fill = match unsafe { &x.0.unwrap_unchecked() } {
+                V::A(a) => a.fill.clone(),
+                xs => Some(a2fill(Vn(Some(xs)))?.into_v().unwrap()),
+            };
+            let w_fill = match unsafe { &w.0.unwrap_unchecked() } {
+                V::A(a) => a.fill.clone(),
+                ws => Some(a2fill(Vn(Some(ws)))?.into_v().unwrap()),
+            };
+            let r_fill = to_fill(&call(stack,2,Vn(g.0),Vn(x_fill.as_ref()),Vn(w_fill.as_ref()))?.into_v().unwrap());
+            let r = call(stack,arity,f,x,w)?.into_v().unwrap();
+            panic!("in fill_by");
+        },
+        _ => panic!("illegal fill_by arity"),
+    }
 }
 // ⊘
 fn cases(stack:&mut Stack,arity: usize, f: Vn, g: Vn, x: Vn, w: Vn) -> Result<Vs,Ve> {
